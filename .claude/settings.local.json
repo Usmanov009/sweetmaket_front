@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(python3:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npm install:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3001)",
+      "Bash(taskkill:*)",
+      "Bash(node server/index.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"test@test.com\"\",\"\"password\"\":\"\"wrong\"\"}')",
+      "Bash(cp /c/Users/Ika85/OneDrive/Desktop/sweetmarket/server/index.js /c/Users/Ika85/OneDrive/Desktop/sweetmarket-api/index.js)",
+      "Bash(cp /c/Users/Ika85/OneDrive/Desktop/sweetmarket/server/db.js /c/Users/Ika85/OneDrive/Desktop/sweetmarket-api/db.js)",
+      "Bash(cp /c/Users/Ika85/OneDrive/Desktop/sweetmarket/server/db.json /c/Users/Ika85/OneDrive/Desktop/sweetmarket-api/db.json)",
+      "Bash(cp /c/Users/Ika85/OneDrive/Desktop/sweetmarket/server/controllers/*.js /c/Users/Ika85/OneDrive/Desktop/sweetmarket-api/controllers/)",
+      "Bash(cp /c/Users/Ika85/OneDrive/Desktop/sweetmarket/server/routes/*.js /c/Users/Ika85/OneDrive/Desktop/sweetmarket-api/routes/)",
+      "Bash(cmd /c \"netstat -ano | findstr :3001\")",
+      "Bash(cmd /c \"netstat -ano | findstr LISTENING | findstr 3001\")",
+      "Bash(powershell -Command \"Get-Process -Id \\(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue\\).OwningProcess -ErrorAction SilentlyContinue | Select-Object Id, Name\")"
+    ]
+  }
+}

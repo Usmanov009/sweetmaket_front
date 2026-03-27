@@ -1,0 +1,616 @@
+{
+  "users": [
+    {
+      "id": "mn5y1auoaci9",
+      "phone": "+998 90 303 03 03",
+      "firstName": "aziz",
+      "lastName": "karimov",
+      "name": "aziz karimov",
+      "createdAt": "2026-03-25T11:11:42.384Z"
+    },
+    {
+      "id": "mn6baygl55ma",
+      "phone": "+998 90 202 10 51",
+      "firstName": "imron",
+      "lastName": "usmanov",
+      "name": "imron usmanov",
+      "createdAt": "2026-03-25T17:23:07.893Z"
+    },
+    {
+      "id": "mn79krkwl60s",
+      "phone": "+998 99 997 97 97",
+      "firstName": "дбдд",
+      "lastName": "тим",
+      "name": "дбдд тим",
+      "createdAt": "2026-03-26T09:22:32.480Z"
+    }
+  ],
+  "otps": [],
+  "orders": [
+    {
+      "id": "mn69zx502ftn",
+      "userId": "mn5y1auoaci9",
+      "items": [
+        {
+          "id": "custom_1774457181654",
+          "emoji": "🎂",
+          "name": "Торт на заказ · Малиновый",
+          "detail": "Юбилейный · Фруктовый · SweetMarket Чиланзар",
+          "price": 191000,
+          "qty": 1
+        }
+      ],
+      "total": 171900,
+      "bakery": {
+        "id": 5,
+        "name": "SweetMarket Сергели",
+        "address": "ул. Сергели, 15",
+        "hours": "10:00–20:00",
+        "rating": "4.6",
+        "emoji": "🍫",
+        "lat": 41.2234,
+        "lng": 69.2345
+      },
+      "paymentMode": "card",
+      "cardInfo": null,
+      "status": "pending",
+      "createdAt": "2026-03-25T16:46:33.348Z"
+    },
+    {
+      "id": "mn6a7vntjlz3",
+      "userId": "mn5y1auoaci9",
+      "items": [
+        {
+          "id": "custom_1774457559717",
+          "emoji": "🎂",
+          "name": "Торт на заказ · Красный Вельвет",
+          "detail": "Мини · Цветочный · SweetMarket Чиланзар",
+          "price": 114000,
+          "qty": 1
+        }
+      ],
+      "total": 102600,
+      "bakery": {
+        "id": 3,
+        "name": "SweetMarket Мирзо Улугбек",
+        "address": "ул. Мирзо Улугбека, 56",
+        "hours": "09:00–20:00",
+        "rating": "4.7",
+        "emoji": "🍰",
+        "lat": 41.3156,
+        "lng": 69.3401
+      },
+      "paymentMode": "cash",
+      "cardInfo": null,
+      "status": "pending",
+      "createdAt": "2026-03-25T16:52:44.681Z"
+    },
+    {
+      "id": "mn6b9nhog7qc",
+      "userId": "mn5y1auoaci9",
+      "items": [
+        {
+          "id": "custom_1774459319013",
+          "emoji": "🎂",
+          "category": "tort",
+          "name": "Торт на заказ · Фисташковый",
+          "detail": "Юбилейный · Фруктовый · SweetMarket Шайхонтохур",
+          "price": 196000,
+          "qty": 1
+        }
+      ],
+      "total": 176400,
+      "bakery": {
+        "id": 2,
+        "name": "SweetMarket Юнусобод",
+        "address": "пр. Амира Темура, 107",
+        "hours": "10:00–22:00",
+        "rating": "4.8",
+        "emoji": "🧁",
+        "lat": 41.3465,
+        "lng": 69.3012
+      },
+      "paymentMode": "cash",
+      "cardInfo": null,
+      "status": "pending",
+      "createdAt": "2026-03-25T17:22:07.020Z"
+    },
+    {
+      "id": "mn6bckxq5sya",
+      "userId": "mn6baygl55ma",
+      "items": [
+        {
+          "id": "custom_1774459416809",
+          "emoji": "🎭",
+          "category": "makaron",
+          "name": "Тематический · Малиновый",
+          "detail": "Большой · Детский · SweetMarket Сергели",
+          "price": 190000,
+          "qty": 1
+        }
+      ],
+      "total": 171000,
+      "bakery": {
+        "id": 5,
+        "name": "SweetMarket Сергели",
+        "address": "ул. Сергели, 15",
+        "hours": "10:00–20:00",
+        "rating": "4.6",
+        "emoji": "🍫",
+        "lat": 41.2234,
+        "lng": 69.2345
+      },
+      "paymentMode": "card",
+      "cardInfo": {
+        "last4": "1231",
+        "brand": "UzCard",
+        "expiry": "12/31"
+      },
+      "status": "pending",
+      "createdAt": "2026-03-25T17:24:23.678Z"
+    },
+    {
+      "id": "mn6bdhbgvs3w",
+      "userId": "mn6baygl55ma",
+      "items": [
+        {
+          "id": "custom_1774459489001",
+          "emoji": "🎂",
+          "category": "tort",
+          "bg": "#fce4ec",
+          "name": "Торт на заказ · Красный Вельвет",
+          "detail": "Мини · Цветочный · SweetMarket Чиланзар",
+          "price": 114000,
+          "qty": 1
+        }
+      ],
+      "total": 102600,
+      "bakery": {
+        "id": 4,
+        "name": "SweetMarket Шайхонтохур",
+        "address": "ул. Навои, 32",
+        "hours": "09:00–21:00",
+        "rating": "4.9",
+        "emoji": "🎂",
+        "lat": 41.3089,
+        "lng": 69.2756
+      },
+      "paymentMode": "cash",
+      "cardInfo": null,
+      "status": "pending",
+      "createdAt": "2026-03-25T17:25:05.644Z"
+    },
+    {
+      "id": "mn8nmx4so2qa",
+      "userId": "mn79krkwl60s",
+      "items": [
+        {
+          "id": 2,
+          "emoji": "🍰",
+          "category": "tort",
+          "bg": "linear-gradient(135deg,#7CC9FC,#a8d8f8)",
+          "name": "Малиновый Торт",
+          "detail": "Круглый · 4 порции · Сливочный",
+          "price": 109000,
+          "qty": 1
+        }
+      ],
+      "total": 98100,
+      "bakery": {
+        "id": 2,
+        "name": "SweetMarket Юнусобод",
+        "address": "пр. Амира Темура, 107",
+        "hours": "10:00–22:00",
+        "rating": "4.8",
+        "emoji": "🧁",
+        "lat": 41.3465,
+        "lng": 69.3012
+      },
+      "paymentMode": "card",
+      "cardInfo": {
+        "last4": "1231",
+        "brand": "UzCard",
+        "expiry": "23/13"
+      },
+      "status": "pending",
+      "createdAt": "2026-03-27T08:43:53.788Z"
+    }
+  ],
+  "cards": [
+    {
+      "id": "mn6a8fpnnsyz",
+      "userId": "mn5y1auoaci9",
+      "last4": "1231",
+      "brand": "UzCard",
+      "expiry": "31/23",
+      "holderName": "EQWEQWE WEWQEQ",
+      "isDefault": true,
+      "createdAt": "2026-03-25T16:53:10.667Z"
+    },
+    {
+      "id": "mn6bca7ib2ga",
+      "userId": "mn6baygl55ma",
+      "last4": "1231",
+      "brand": "UzCard",
+      "expiry": "12/31",
+      "holderName": "IMRON USMANOV",
+      "isDefault": true,
+      "createdAt": "2026-03-25T17:24:09.774Z"
+    },
+    {
+      "id": "mn8nmlt8wivg",
+      "userId": "mn79krkwl60s",
+      "last4": "1231",
+      "brand": "UzCard",
+      "expiry": "23/13",
+      "holderName": "WQDQD DWQDWD",
+      "isDefault": true,
+      "createdAt": "2026-03-27T08:43:39.116Z"
+    }
+  ],
+  "notifications": [
+    {
+      "icon": "🎂",
+      "title": "Xush kelibsiz SweetMarket ga!",
+      "sub": "Siz uchun maxsus takliflar tayyorlandi",
+      "time": "Hozirgina",
+      "id": "mn5y1auo2cfr",
+      "userId": "mn5y1auoaci9",
+      "read": false
+    },
+    {
+      "icon": "🎉",
+      "title": "Bugun 15% chegirma!",
+      "sub": "SWEET15 promo kodidan foydalaning",
+      "time": "1 soat oldin",
+      "id": "mn5y1auo504f",
+      "userId": "mn5y1auoaci9",
+      "read": false
+    },
+    {
+      "icon": "🎂",
+      "title": "Xush kelibsiz SweetMarket ga!",
+      "sub": "Siz uchun maxsus takliflar tayyorlandi",
+      "time": "Hozirgina",
+      "id": "mn6bayglblc5",
+      "userId": "mn6baygl55ma",
+      "read": false
+    },
+    {
+      "icon": "🎉",
+      "title": "Bugun 15% chegirma!",
+      "sub": "SWEET15 promo kodidan foydalaning",
+      "time": "1 soat oldin",
+      "id": "mn6baygl0g7t",
+      "userId": "mn6baygl55ma",
+      "read": false
+    },
+    {
+      "icon": "🎂",
+      "title": "Xush kelibsiz SweetMarket ga!",
+      "sub": "Siz uchun maxsus takliflar tayyorlandi",
+      "time": "Hozirgina",
+      "id": "mn79krkwhfd0",
+      "userId": "mn79krkwl60s",
+      "read": false
+    },
+    {
+      "icon": "🎉",
+      "title": "Bugun 15% chegirma!",
+      "sub": "SWEET15 promo kodidan foydalaning",
+      "time": "1 soat oldin",
+      "id": "mn79krkwclnk",
+      "userId": "mn79krkwl60s",
+      "read": false
+    }
+  ],
+  "birthdays": [
+    {
+      "id": "mn6baygl9klw",
+      "userId": "mn6baygl55ma",
+      "emoji": "🎂",
+      "name": "Onam",
+      "date": "12 Апреля"
+    },
+    {
+      "id": "mn6bayglqgfm",
+      "userId": "mn6baygl55ma",
+      "emoji": "🎉",
+      "name": "Do'stim",
+      "date": "3 Июня"
+    },
+    {
+      "id": "mn79krkwy8re",
+      "userId": "mn79krkwl60s",
+      "emoji": "🎂",
+      "name": "Onam",
+      "date": "12 Апреля"
+    },
+    {
+      "id": "mn79krkwe91e",
+      "userId": "mn79krkwl60s",
+      "emoji": "🎉",
+      "name": "Do'stim",
+      "date": "3 Июня"
+    }
+  ],
+  "notifications_templates": [
+    {
+      "icon": "🎂",
+      "title": "Xush kelibsiz SweetMarket ga!",
+      "sub": "Siz uchun maxsus takliflar tayyorlandi",
+      "time": "Hozirgina"
+    },
+    {
+      "icon": "🎉",
+      "title": "Bugun 15% chegirma!",
+      "sub": "SWEET15 promo kodidan foydalaning",
+      "time": "1 soat oldin"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "emoji": "🎂",
+      "name": "Классик Вельвет",
+      "price": 89000,
+      "rating": "4.9",
+      "badge": "#1",
+      "badgeColor": "#052558",
+      "bg": "linear-gradient(135deg,#a8d8f8,#C2E8FF)",
+      "liked": false,
+      "category": "tort",
+      "desc": "Классический красный бархат с кремом маскарпоне. Нежный бисквит."
+    },
+    {
+      "id": 2,
+      "emoji": "🍰",
+      "name": "Малиновый Торт",
+      "price": 109000,
+      "rating": "4.8",
+      "badge": "HOT",
+      "badgeColor": "#527FB0",
+      "bg": "linear-gradient(135deg,#7CC9FC,#a8d8f8)",
+      "liked": false,
+      "category": "tort",
+      "desc": "Свежая малина, лёгкий мусс и зеркальная глазурь. Летний шедевр."
+    },
+    {
+      "id": 5,
+      "emoji": "🌸",
+      "name": "Цветочный Торт",
+      "price": 95000,
+      "rating": "4.6",
+      "badge": "NEW",
+      "badgeColor": "#1a7a3a",
+      "bg": "linear-gradient(135deg,#ffb3d1,#ffd6e7)",
+      "liked": false,
+      "category": "tort",
+      "desc": "Съедобные цветы. Весенний стиль. Крем на основе сливок."
+    }
+  ],
+  "explore_users": [
+    {
+      "id": "u1",
+      "username": "@malika_sweet",
+      "name": "Малика Юсупова",
+      "avatar": "👩‍🍳",
+      "followers": 4200,
+      "bio": "Профессиональный кондитер · Тошкент",
+      "color": "linear-gradient(135deg,#011023,#7CC9FC)"
+    },
+    {
+      "id": "u2",
+      "username": "@eco_cakes",
+      "name": "Эко Кейкс",
+      "avatar": "🌿",
+      "followers": 1800,
+      "bio": "Натуральные торты без консервантов",
+      "color": "linear-gradient(135deg,#2d6a4f,#74c69d)"
+    },
+    {
+      "id": "u3",
+      "username": "@flower_art",
+      "name": "Дилноза Рашидова",
+      "avatar": "👩‍🎨",
+      "followers": 3100,
+      "bio": "Цветочные декорации · Art Cake Studio",
+      "color": "linear-gradient(135deg,#c9184a,#ff758f)"
+    },
+    {
+      "id": "u4",
+      "username": "@sweet_studio",
+      "name": "Sweet Studio UZ",
+      "avatar": "🧁",
+      "followers": 8900,
+      "bio": "Официальная студия тортов · с 2018",
+      "color": "linear-gradient(135deg,#527FB0,#7CC9FC)"
+    },
+    {
+      "id": "u5",
+      "username": "@ocean_sweets",
+      "name": "Бахром Камолов",
+      "avatar": "🍰",
+      "followers": 920,
+      "bio": "Морские десерты · Самарканд",
+      "color": "linear-gradient(135deg,#023e8a,#48cae4)"
+    },
+    {
+      "id": "u6",
+      "username": "@choco_master",
+      "name": "Шоколад Мастер",
+      "avatar": "🍫",
+      "followers": 5600,
+      "bio": "Шоколадные шедевры ручной работы",
+      "color": "linear-gradient(135deg,#3d1a00,#8B4513)"
+    }
+  ],
+  "explore_posts": [
+    {
+      "id": "mn68n6e0lz4z",
+      "source": "user",
+      "public": true,
+      "userId": "mn5y1auoaci9",
+      "name": "Капкейки 12 шт",
+      "desc": "Мини · Шоколадный · Фруктовый",
+      "emoji": "🧁",
+      "bg": "#fff3e0",
+      "price": 0,
+      "tags": [
+        "cupcake",
+        "choco"
+      ],
+      "likes": 1,
+      "createdAt": "2026-03-25T16:08:39.193Z",
+      "likedBy": [
+        "mn79krkwl60s"
+      ]
+    },
+    {
+      "id": "mn68nr8lqe3g",
+      "source": "user",
+      "public": true,
+      "userId": "mn5y1auoaci9",
+      "name": "Торт на заказ",
+      "desc": "Мини · Красный Вельвет · Цветочный",
+      "emoji": "🎂",
+      "bg": "#fce4ec",
+      "price": 0,
+      "tags": [
+        "tort",
+        "velvet"
+      ],
+      "likes": 1,
+      "createdAt": "2026-03-25T16:09:06.213Z",
+      "likedBy": [
+        "mn79krkwl60s"
+      ]
+    },
+    {
+      "id": "mn68ufk28y1t",
+      "source": "user",
+      "public": true,
+      "userId": "mn5y1auoaci9",
+      "name": "Торт на заказ",
+      "desc": "Мини · Красный Вельвет · Цветочный",
+      "emoji": "🎂",
+      "bg": "#fce4ec",
+      "price": 0,
+      "tags": [
+        "tort",
+        "velvet"
+      ],
+      "likes": 1,
+      "createdAt": "2026-03-25T16:14:17.666Z",
+      "likedBy": [
+        "mn79krkwl60s"
+      ]
+    },
+    {
+      "id": "mn69lv86t6qb",
+      "source": "user",
+      "public": true,
+      "userId": "mn5y1auoaci9",
+      "name": "Торт на заказ",
+      "desc": "Большой · Шоколадный · Шоколадный",
+      "emoji": "🎂",
+      "bg": "#fce4ec",
+      "price": 0,
+      "tags": [
+        "tort",
+        "choco"
+      ],
+      "likes": 1,
+      "createdAt": "2026-03-25T16:35:37.686Z",
+      "likedBy": [
+        "mn79krkwl60s"
+      ]
+    },
+    {
+      "id": "mn6b9hzh5hrm",
+      "source": "user",
+      "public": true,
+      "userId": "mn5y1auoaci9",
+      "name": "Торт на заказ",
+      "desc": "Юбилейный · Фисташковый · Фруктовый",
+      "emoji": "🎂",
+      "bg": "#fce4ec",
+      "price": 196000,
+      "tags": [
+        "tort",
+        "pista"
+      ],
+      "likes": 0,
+      "createdAt": "2026-03-25T17:21:59.885Z"
+    },
+    {
+      "id": "mn6bd54tekze",
+      "source": "user",
+      "public": true,
+      "userId": "mn6baygl55ma",
+      "name": "Торт на заказ",
+      "desc": "Мини · Красный Вельвет · Цветочный",
+      "emoji": "🎂",
+      "bg": "#fce4ec",
+      "price": 114000,
+      "tags": [
+        "tort",
+        "velvet"
+      ],
+      "likes": 0,
+      "createdAt": "2026-03-25T17:24:49.853Z"
+    }
+  ],
+  "bakeries": [
+    {
+      "id": 1,
+      "name": "SweetMarket Чиланзар",
+      "address": "ул. Чиланзарская, 12",
+      "hours": "09:00–21:00",
+      "rating": "4.9",
+      "emoji": "🎂",
+      "lat": 41.2845,
+      "lng": 69.204
+    },
+    {
+      "id": 2,
+      "name": "SweetMarket Юнусобод",
+      "address": "пр. Амира Темура, 107",
+      "hours": "10:00–22:00",
+      "rating": "4.8",
+      "emoji": "🧁",
+      "lat": 41.3465,
+      "lng": 69.3012
+    },
+    {
+      "id": 3,
+      "name": "SweetMarket Мирзо Улугбек",
+      "address": "ул. Мирзо Улугбека, 56",
+      "hours": "09:00–20:00",
+      "rating": "4.7",
+      "emoji": "🍰",
+      "lat": 41.3156,
+      "lng": 69.3401
+    },
+    {
+      "id": 4,
+      "name": "SweetMarket Шайхонтохур",
+      "address": "ул. Навои, 32",
+      "hours": "09:00–21:00",
+      "rating": "4.9",
+      "emoji": "🎂",
+      "lat": 41.3089,
+      "lng": 69.2756
+    },
+    {
+      "id": 5,
+      "name": "SweetMarket Сергели",
+      "address": "ул. Сергели, 15",
+      "hours": "10:00–20:00",
+      "rating": "4.6",
+      "emoji": "🍫",
+      "lat": 41.2234,
+      "lng": 69.2345
+    }
+  ]
+}
