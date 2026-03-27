@@ -1,0 +1,95 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "emoji": "🎂",
+      "name": "Классик Вельвет",
+      "price": 89000,
+      "rating": "4.9",
+      "badge": "#1",
+      "badgeColor": "#052558",
+      "bg": "linear-gradient(135deg,#a8d8f8,#C2E8FF)",
+      "liked": false,
+      "category": "tort",
+      "desc": "Классический красный бархат с кремом маскарпоне. Нежный бисквит."
+    },
+    {
+      "id": 2,
+      "emoji": "🍰",
+      "name": "Малиновый Торт",
+      "price": 109000,
+      "rating": "4.8",
+      "badge": "HOT",
+      "badgeColor": "#527FB0",
+      "bg": "linear-gradient(135deg,#7CC9FC,#a8d8f8)",
+      "liked": false,
+      "category": "tort",
+      "desc": "Свежая малина, лёгкий мусс и зеркальная глазурь. Летний шедевр."
+    },
+    {
+      "id": 5,
+      "emoji": "🌸",
+      "name": "Цветочный Торт",
+      "price": 95000,
+      "rating": "4.6",
+      "badge": "NEW",
+      "badgeColor": "#1a7a3a",
+      "bg": "linear-gradient(135deg,#ffb3d1,#ffd6e7)",
+      "liked": false,
+      "category": "tort",
+      "desc": "Съедобные цветы. Весенний стиль. Крем на основе сливок."
+    }
+  ],
+  "bakeries": [
+    {
+      "id": 1,
+      "name": "SweetMarket Чиланзар",
+      "address": "ул. Чиланзарская, 12",
+      "hours": "09:00–21:00",
+      "rating": "4.9",
+      "emoji": "🎂",
+      "lat": 41.2845,
+      "lng": 69.204
+    },
+    {
+      "id": 2,
+      "name": "SweetMarket Юнусобод",
+      "address": "пр. Амира Темура, 107",
+      "hours": "10:00–22:00",
+      "rating": "4.8",
+      "emoji": "🧁",
+      "lat": 41.3465,
+      "lng": 69.3012
+    },
+    {
+      "id": 3,
+      "name": "SweetMarket Мирзо Улугбек",
+      "address": "ул. Мирзо Улугбека, 56",
+      "hours": "09:00–20:00",
+      "rating": "4.7",
+      "emoji": "🍰",
+      "lat": 41.3156,
+      "lng": 69.3401
+    },
+    {
+      "id": 4,
+      "name": "SweetMarket Шайхонтохур",
+      "address": "ул. Навои, 32",
+      "hours": "09:00–21:00",
+      "rating": "4.9",
+      "emoji": "🎂",
+      "lat": 41.3089,
+      "lng": 69.2756
+    },
+    {
+      "id": 5,
+      "name": "SweetMarket Сергели",
+      "address": "ул. Сергели, 15",
+      "hours": "10:00–20:00",
+      "rating": "4.6",
+      "emoji": "🍫",
+      "lat": 41.2234,
+      "lng": 69.2345
+    }
+  ]
+}

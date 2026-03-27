@@ -1,10 +1,9 @@
 const router = require('express').Router();
-const { readDB } = require('../utils/db');
+const { bakeries } = require('../db/static.json');
 
 // GET /api/bakeries
 router.get('/', (req, res) => {
-  const db = readDB();
-  res.json(db.bakeries || []);
+  res.json(bakeries || []);
 });
 
 module.exports = router;

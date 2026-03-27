@@ -1,16 +1,14 @@
 const router = require('express').Router();
-const { readDB } = require('../utils/db');
+const { products } = require('../db/static.json');
 
 // GET /api/products
 router.get('/', (req, res) => {
-  const db = readDB();
-  res.json(db.products || []);
+  res.json(products || []);
 });
 
 // GET /api/products/:id
 router.get('/:id', (req, res) => {
-  const db = readDB();
-  const product = (db.products || []).find(p => p.id == req.params.id);
+  const product = (products || []).find(p => p.id == req.params.id);
   if (!product) return res.status(404).json({ error: 'Mahsulot topilmadi' });
   res.json(product);
 });
