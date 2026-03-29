@@ -27,11 +27,17 @@ app.use('/api/cards',         auth, require('./routes/cards'));
 app.use('/api/notifications', auth, require('./routes/notifications'));
 app.use('/api/birthdays',     auth, require('./routes/birthdays'));
 
+// Global async error handler
+app.use((err, _req, res, _next) => {
+  console.error('❌ Route xato:', err.message);
+  res.status(500).json({ error: err.message });
+});
+
 // Production: serve built frontend
 if (isProd) {
   const distPath = path.join(__dirname, '..', 'dist');
   app.use(express.static(distPath));
-  app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
+  app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
 }
 
 const server = app.listen(PORT, '0.0.0.0', () => {
