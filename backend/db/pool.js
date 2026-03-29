@@ -2,6 +2,10 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 const https = require('https');
 
 const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.error('❌ DATABASE_URL muhit o\'zgaruvchisi topilmadi! Render → Environment da qo\'shing.');
+  process.exit(1);
+}
 const dbUrl = new URL(DATABASE_URL);
 
 function neonQuery(text, params = []) {
