@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:backend": "node --watch backend/server.js",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:backend\"",
-    "build": "npm install --prefix backend && vite build",
+    "build": "vite build",
     "start": "node backend/server.js",
     "lint": "eslint .",
     "preview": "vite preview"

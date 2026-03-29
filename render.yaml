@@ -2,7 +2,7 @@ services:
   - type: web
     name: sweetmarket
     env: node
-    buildCommand: npm install && npm install --prefix backend && npm run build
+    buildCommand: npm install --include=dev && npm install --prefix backend && npx vite build
     startCommand: node backend/server.js
     envVars:
       - key: NODE_ENV
