@@ -435,12 +435,10 @@ function ExplorePage({ C, isDesktop, onAddToCart, user }) {
   const toggleLike = id => {
     const isLiked = likedIds.includes(id);
     setLikedIds(prev => isLiked ? prev.filter(x => x !== id) : [...prev, id]);
-    setAllPosts(prev => prev.map(p => p.id === id ? { ...p, likes: (p.likes||0) + (isLiked ? -1 : 1) } : p));
     api.post(`/api/explore/posts/${id}/like`).then(res => {
       setAllPosts(prev => prev.map(p => p.id === id ? { ...p, likes: res.likes } : p));
     }).catch(() => {
       setLikedIds(prev => isLiked ? [...prev, id] : prev.filter(x => x !== id));
-      setAllPosts(prev => prev.map(p => p.id === id ? { ...p, likes: (p.likes||0) + (isLiked ? 1 : -1) } : p));
     });
   };
 
