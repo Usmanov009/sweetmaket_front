@@ -43,12 +43,18 @@ function Toggle({ on, onToggle, C }) {
 ═══════════════════════════════════════════════════════ */
 function TrashIcon(){ return <Trash2 size={15} strokeWidth={2.5}/>; }
 
-function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, cards, bakeries, setPage }) {
+function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, cards, setCards, bakeries, setPage }) {
   const [payMethod,    setPay]          =useState(0);
   const [confirmId,    setConfirmId]    =useState(null);
   const [removing,     setRemoving]     =useState(null);
   const [selectedBakery, setSelectedBakery] = useState(null);
   const [selectedCardId, setSelectedCardId] = useState(null);
+  const [cardModal,    setCardModal]    =useState(false);
+  const [newCard, setNewCard] =useState({cardNumber:'',brand:'UzCard',expiry:'',holderName:'',linkedPhone:'+998'});
+  const [cardLoading, setCardLoading]  =useState(false);
+  const formatCardNum = (v) => v.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
+  const formatExpiry  = (v) => { const d=v.replace(/\D/g,'').slice(0,4); return d.length>2?d.slice(0,2)+'/'+d.slice(2):d; };
+  const inp = {width:'100%',background:C.s2,border:`1.5px solid ${C.border}`,borderRadius:14,padding:'13px 16px',color:C.dark,fontSize:14,outline:'none',marginBottom:10};
 
   const methods=[{icon:'🏦',label:'Karta',mode:'card'},{icon:'💵',label:'Naqd',mode:'cash'}];
   const safeIdx = payMethod < methods.length ? payMethod : 0;
@@ -174,7 +180,7 @@ function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, 
               <div style={{fontSize:12,color:C.muted,marginBottom:14,lineHeight:1.5}}>
                 To'lov uchun UzCard yoki Humo kartangizni qo'shing
               </div>
-              <button onClick={()=>setPage('profile')}
+              <button onClick={()=>setCardModal(true)}
                 style={{padding:'10px 24px',borderRadius:12,border:'none',
                   background:`linear-gradient(135deg,${C.navy},${C.mid})`,
                   color:'#fff',cursor:'pointer',fontWeight:700,fontSize:13,
@@ -224,7 +230,7 @@ function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, 
                 );
               })}
               {/* add another card shortcut */}
-              <button onClick={()=>setPage('profile')}
+              <button onClick={()=>setCardModal(true)}
                 style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',
                   borderRadius:14,border:`1.5px dashed ${C.border}`,background:'transparent',
                   cursor:'pointer',color:C.muted,fontSize:13,fontWeight:600,transition:'all .15s'}}
@@ -252,11 +258,75 @@ function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, 
   );
 
   return (
-    <div style={{maxWidth:600,margin:'0 auto',padding:`${topPad}px 16px ${isDesktop?32:100}px`}}>
-      {bakeryBlock}
-      {itemsList}
-      {totalBlock}
-    </div>
+    <>
+      
+      {cardModal&&(
+        <BottomModal C={C} onClose={()=>setCardModal(false)} title="💳 Добавить карту">
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            {[
+              {id:'UzCard',label:'🟦 UzCard',grad:'linear-gradient(135deg,#1d4ed8,#2563eb)'},
+              {id:'Humo',  label:'🟩 Humo',  grad:'linear-gradient(135deg,#059669,#10b981)'},
+            ].map(b=>(
+              <button key={b.id} onClick={()=>setNewCard(c=>({...c,brand:b.id}))}
+                style={{flex:1,padding:'12px 6px',borderRadius:14,border:`2px solid ${newCard.brand===b.id?'transparent':C.border}`,
+                  background:newCard.brand===b.id?b.grad:'transparent',color:newCard.brand===b.id?'#fff':C.muted,
+                  cursor:'pointer',fontWeight:700,fontSize:13,transition:'all .15s',
+                  boxShadow:newCard.brand===b.id?'0 4px 14px rgba(0,0,0,.2)':'none'}}>
+                {b.label}
+              </button>
+            ))}
+          </div>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Номер карты</label>
+            <input value={newCard.cardNumber} onChange={e=>setNewCard(c=>({...c,cardNumber:formatCardNum(e.target.value)}))}
+              placeholder="0000 0000 0000 0000" inputMode="numeric"
+              style={{...inp,fontFamily:'monospace',fontSize:17,letterSpacing:2,marginBottom:0}}/>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Срок действия</label>
+            <input value={newCard.expiry} onChange={e=>setNewCard(c=>({...c,expiry:formatExpiry(e.target.value)}))}
+              placeholder="ММ/ГГ" inputMode="numeric" style={{...inp,marginBottom:0}}/>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Имя владельца</label>
+            <input value={newCard.holderName} onChange={e=>setNewCard(c=>({...c,holderName:e.target.value}))}
+              placeholder="AZIZ KARIMOV" style={{...inp,textTransform:'uppercase',marginBottom:0}}/>
+          </div>
+          <div style={{marginBottom:20}}>
+            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Телефон, привязанный к карте</label>
+            <input value={newCard.linkedPhone}
+              onChange={e=>setNewCard(c=>({...c,linkedPhone:formatPhone(e.target.value)}))}
+              onKeyDown={e=>{if(['Backspace','Delete'].includes(e.key)&&rawDigits(newCard.linkedPhone).length<=3)e.preventDefault();}}
+              placeholder="+998 90 123 45 67" inputMode="tel" style={{...inp,marginBottom:0}}/>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button onClick={()=>setCardModal(false)} style={{flex:1,padding:'14px',borderRadius:14,border:`1.5px solid ${C.border}`,background:'transparent',color:C.muted,cursor:'pointer',fontWeight:600,fontSize:14}}>Отмена</button>
+            {(()=>{
+              const digits=newCard.cardNumber.replace(/s/g,'');
+              const valid=digits.length===16&&newCard.expiry.length===5&&isValidPhone(newCard.linkedPhone);
+              return (
+                <button disabled={!valid||cardLoading}
+                  onClick={async()=>{
+                    const d=newCard.cardNumber.replace(/s/g,'');
+                    const payload={last4:d.slice(-4),brand:newCard.brand,expiry:newCard.expiry,holderName:newCard.holderName.trim().toUpperCase(),linkedPhone:newCard.linkedPhone};
+                    setCardLoading(true);
+                    try{const card=await api.post('/api/cards',payload);setCards(p=>[...p,card]);setSelectedCardId(card.id);setCardModal(false);setNewCard({cardNumber:'',brand:'UzCard',expiry:'',holderName:'',linkedPhone:'+998'});}
+                    catch(e){toast('❌ '+e.message);}finally{setCardLoading(false);}
+                  }}
+                  style={{flex:2,padding:'14px',borderRadius:14,border:'none',background:`linear-gradient(135deg,${C.navy},${C.mid})`,color:'#fff',cursor:(!valid||cardLoading)?'default':'pointer',fontWeight:700,fontSize:14,opacity:(!valid||cardLoading)?.45:1,transition:'opacity .2s'}}>
+                  {cardLoading?'Сохранение...':'💳 Добавить карту'}
+                </button>
+              );
+            })()}
+          </div>
+        </BottomModal>
+      )}
+      <div style={{maxWidth:600,margin:'0 auto',padding:`${topPad}px 16px ${isDesktop?32:100}px`}}>
+        {bakeryBlock}
+        {itemsList}
+        {totalBlock}
+      </div>
+    </>
   );
 }
 
@@ -1494,7 +1564,7 @@ export default function App() {
   const renderPage = () => {
     if (page === 'login') return <LoginPage onLogin={handleLogin} goSignup={() => setPage('signup')} C={C} isDesktop={isDesktop} />;
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
-    if (page === 'cart') return <CartPage toast={toast} cartItems={cartItems} setCartItems={setCartItems} C={C} onAddToOrder={handleAddToOrder} isDesktop={isDesktop} cards={cards} bakeries={bakeries} setPage={setPage} />;
+    if (page === 'cart') return <CartPage toast={toast} cartItems={cartItems} setCartItems={setCartItems} C={C} onAddToOrder={handleAddToOrder} isDesktop={isDesktop} cards={cards} setCards={setCards} bakeries={bakeries} setPage={setPage} />;
     if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} onAddToCart={handleAddToCart} user={user} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} onAddToCart={handleAddToCart} />;
