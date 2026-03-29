@@ -405,7 +405,7 @@ function BakeryPickerMap({ C, selected, onSelect, bakeries = [] }) {
 /* ═══════════════════════════════════════════════════════
    EXPLORE PAGE
 ═══════════════════════════════════════════════════════ */
-function ExplorePage({ C, isDesktop, onAddToCart, user }) {
+function ExplorePage({ C, isDesktop, onAddToCart, toast, user }) {
   const [search,   setSearch]   = useState('');
   const [likedIds, setLikedIds] = useState([]);
   const [allPosts, setAllPosts] = useState([]);
@@ -528,8 +528,18 @@ function ExplorePage({ C, isDesktop, onAddToCart, user }) {
                 </span>
               </div>
 
-              {/* image */}
-              <CakeVisual category={card.tags?.[0]} bg={card.bg||'#fce4ec'} height={220}/>
+              {/* image — tap to add to cart */}
+              <div style={{position:'relative',cursor:'pointer'}} onClick={()=>{
+                onAddToCart?.({id:'explore_'+card.id+'_'+Date.now(),emoji:card.emoji||'🎂',category:card.tags?.[0]||'tort',bg:card.bg||'#fce4ec',name:card.name,detail:card.desc||card.userName||'',price:card.price||89000,qty:1});
+                toast?.('🛒 Savatchaga qo\'shildi!');
+              }}>
+                <CakeVisual category={card.tags?.[0]} bg={card.bg||'#fce4ec'} height={220}/>
+                <div style={{position:'absolute',bottom:10,right:12,background:'rgba(0,0,0,.45)',
+                  borderRadius:20,padding:'5px 12px',color:'#fff',fontSize:12,fontWeight:700,
+                  backdropFilter:'blur(4px)',pointerEvents:'none'}}>
+                  🛒 Savatchaga
+                </div>
+              </div>
 
               {/* actions */}
               <div style={{padding:'10px 16px 4px',display:'flex',alignItems:'center',gap:14}}>
@@ -1564,7 +1574,7 @@ export default function App() {
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
     if (page === 'cart') return <CartPage toast={toast} cartItems={cartItems} setCartItems={setCartItems} C={C} onAddToOrder={handleAddToOrder} isDesktop={isDesktop} cards={cards} setCards={setCards} bakeries={bakeries} setPage={setPage} />;
     if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
-    if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} onAddToCart={handleAddToCart} user={user} />;
+    if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} onAddToCart={handleAddToCart} toast={toast} user={user} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} onAddToCart={handleAddToCart} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} cards={cards} setCards={setCards} />;
     return <HomePage toast={toast} onAddToCart={handleAddToCart} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} />;
