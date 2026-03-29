@@ -505,7 +505,7 @@ function ExplorePage({ C, isDesktop, onAddToCart, user }) {
       <div style={{display:'flex',flexDirection:'column',gap:0}}>
         {matchedPosts.map(card => {
           const liked = likedIds.includes(card.id);
-          const likeCount = (card.likes||0) + (liked?1:0);
+          const likeCount = card.likes||0;
           const authorName = card.userName || 'Foydalanuvchi';
           const ts = card.createdAt ? new Date(card.createdAt).toLocaleDateString('ru-RU',{day:'numeric',month:'long'}) : '';
           return (
