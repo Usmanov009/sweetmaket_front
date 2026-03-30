@@ -2,16 +2,12 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 const https = require('https');
 
 const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) {
-  console.error('❌ DATABASE_URL muhit o\'zgaruvchisi topilmadi! Render → Environment da qo\'shing.');
-  process.exit(1);
-}
-const dbUrl = new URL(DATABASE_URL);
 
 function neonQuery(text, params = []) {
+  if (!DATABASE_URL) return Promise.reject(new Error('DATABASE_URL sozlanmagan'));
+  const dbUrl = new URL(DATABASE_URL);
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({ query: text, params });
-
     const req = https.request({
       hostname: dbUrl.hostname,
       port: 443,
@@ -37,7 +33,6 @@ function neonQuery(text, params = []) {
         }
       });
     });
-
     req.on('error', reject);
     req.on('timeout', () => { req.destroy(); reject(new Error('DB timeout')); });
     req.write(body);
