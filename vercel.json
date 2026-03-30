@@ -3,6 +3,7 @@
   "buildCommand": "npm install --include=dev && npm install --prefix backend && npx vite build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/backend/server.js" }
+    { "source": "/api/:path*", "destination": "/api/index" },
+    { "source": "/((?!api).*)", "destination": "/index.html" }
   ]
 }
