@@ -9,11 +9,17 @@ const app  = express();
 const PORT = process.env.PORT || 3001;
 const isProd = process.env.NODE_ENV === 'production';
 
-app.use(cors({
-  origin: isProd ? true : 'http://localhost:5173',
-  credentials: true,
-}));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+
+// Lazy DB init — runs once on first request
+let dbReady = false;
+app.use(async (_req, _res, next) => {
+  if (!dbReady) {
+    try { await initDB(); dbReady = true; } catch {}
+  }
+  next();
+});
 
 // Public routes
 app.use('/api/auth',     require('./routes/auth'));
@@ -27,36 +33,26 @@ app.use('/api/cards',         auth, require('./routes/cards'));
 app.use('/api/notifications', auth, require('./routes/notifications'));
 app.use('/api/birthdays',     auth, require('./routes/birthdays'));
 
-// Global async error handler
+// Global error handler
 app.use((err, _req, res, _next) => {
   console.error('❌ Route xato:', err.message);
   res.status(500).json({ error: err.message });
 });
 
-// Production: serve built frontend
-if (isProd) {
-  const distPath = path.join(__dirname, '..', 'dist');
-  app.use(express.static(distPath));
-  app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+// Local dev: serve static + listen
+if (require.main === module) {
+  if (isProd) {
+    const distPath = path.join(__dirname, '..', 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+  }
+  const server = app.listen(PORT, '0.0.0.0', () =>
+    console.log(`✅ SweetMarket backend: http://0.0.0.0:${PORT}`)
+  );
+  server.on('error', err => {
+    if (err.code === 'EADDRINUSE') { console.error(`❌ Port ${PORT} band!`); process.exit(1); }
+  });
 }
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ SweetMarket backend: http://0.0.0.0:${PORT}`);
-  const tryInit = (attempt = 1) => {
-    initDB()
-      .then(() => console.log('✅ Neon DB tayyor'))
-      .catch(err => {
-        console.error(`⚠️  DB init urinish ${attempt}:`, err.message);
-        if (attempt < 5) setTimeout(() => tryInit(attempt + 1), 3000 * attempt);
-        else console.error('❌ DB init muvaffaqiyatsiz tugadi');
-      });
-  };
-  tryInit();
-});
-
-server.on('error', err => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${PORT} band!`);
-    process.exit(1);
-  }
-});
+// Vercel serverless export
+module.exports = app;

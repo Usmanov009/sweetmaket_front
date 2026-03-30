@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "buildCommand": "npm install --include=dev && npm install --prefix backend && npx vite build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/backend/server.js" }
+  ]
+}
