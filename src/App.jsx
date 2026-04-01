@@ -292,23 +292,16 @@ function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, 
             <input value={newCard.holderName} onChange={e=>setNewCard(c=>({...c,holderName:e.target.value}))}
               placeholder="AZIZ KARIMOV" style={{...inp,textTransform:'uppercase',marginBottom:0}}/>
           </div>
-          <div style={{marginBottom:20}}>
-            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Телефон, привязанный к карте</label>
-            <input value={newCard.linkedPhone}
-              onChange={e=>setNewCard(c=>({...c,linkedPhone:formatPhone(e.target.value)}))}
-              onKeyDown={e=>{if(['Backspace','Delete'].includes(e.key)&&rawDigits(newCard.linkedPhone).length<=3)e.preventDefault();}}
-              placeholder="+998 90 123 45 67" inputMode="tel" style={{...inp,marginBottom:0}}/>
-          </div>
           <div style={{display:'flex',gap:10}}>
             <button onClick={()=>setCardModal(false)} style={{flex:1,padding:'14px',borderRadius:14,border:`1.5px solid ${C.border}`,background:'transparent',color:C.muted,cursor:'pointer',fontWeight:600,fontSize:14}}>Отмена</button>
             {(()=>{
-              const digits=newCard.cardNumber.replace(/s/g,'');
-              const valid=digits.length===16&&newCard.expiry.length===5&&isValidPhone(newCard.linkedPhone);
+              const digits=newCard.cardNumber.replace(/\s/g,'');
+              const valid=digits.length===16&&newCard.expiry.length===5;
               return (
                 <button disabled={!valid||cardLoading}
                   onClick={async()=>{
-                    const d=newCard.cardNumber.replace(/s/g,'');
-                    const payload={last4:d.slice(-4),brand:newCard.brand,expiry:newCard.expiry,holderName:newCard.holderName.trim().toUpperCase(),linkedPhone:newCard.linkedPhone};
+                    const d=newCard.cardNumber.replace(/\s/g,'');
+                    const payload={last4:d.slice(-4),brand:newCard.brand,expiry:newCard.expiry,holderName:newCard.holderName.trim().toUpperCase()};
                     setCardLoading(true);
                     try{const card=await api.post('/api/cards',payload);setCards(p=>[...p,card]);setSelectedCardId(card.id);setCardModal(false);setNewCard({cardNumber:'',brand:'UzCard',expiry:'',holderName:'',linkedPhone:'+998'});}
                     catch(e){toast('❌ '+e.message);}finally{setCardLoading(false);}
