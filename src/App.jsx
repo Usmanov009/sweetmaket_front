@@ -1024,7 +1024,7 @@ function BottomModal({ onClose, title, children, C }) {
 /* ═══════════════════════════════════════════════════════
    PROFILE PAGE
 ═══════════════════════════════════════════════════════ */
-function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, cards, setCards }) {
+function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, cards, setCards, setUser }) {
   const [activeTab, setActiveTab] = useState('orders');
   const [bdays, setBdays] = useState([]);
 
@@ -1035,6 +1035,9 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
   const [bdayModal, setBdayModal] = useState(false);
   const [newBday, setNewBday] = useState({emoji:'🎂',name:'',date:''});
   const [cardModal, setCardModal] = useState(false);
+  const [nameModal, setNameModal] = useState(false);
+  const [nameForm, setNameForm] = useState({firstName:'',lastName:''});
+  const [nameLoading, setNameLoading] = useState(false);
   const [newCard, setNewCard] = useState({cardNumber:'',brand:'UzCard',expiry:'',holderName:'',linkedPhone:'+998'});
   const [cardLoading, setCardLoading] = useState(false);
   const formatCardNum = (v) => v.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
@@ -1164,6 +1167,29 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
         </BottomModal>
       )}
 
+      {/* ═══ NAME MODAL ═══ */}
+      {nameModal&&(
+        <BottomModal C={C} onClose={()=>setNameModal(false)} title="✏️ Ismni o'zgartirish">
+          <input value={nameForm.firstName} onChange={e=>setNameForm(f=>({...f,firstName:e.target.value}))} placeholder="Ism" style={inp}/>
+          <input value={nameForm.lastName}  onChange={e=>setNameForm(f=>({...f,lastName:e.target.value}))}  placeholder="Familiya" style={{...inp,marginBottom:20}}/>
+          <div style={{display:'flex',gap:10}}>
+            <button onClick={()=>setNameModal(false)} style={{flex:1,padding:'14px',borderRadius:14,border:`1.5px solid ${C.border}`,background:'transparent',color:C.muted,cursor:'pointer',fontWeight:600,fontSize:14}}>Bekor</button>
+            <button disabled={!nameForm.firstName.trim()||nameLoading}
+              onClick={async()=>{
+                setNameLoading(true);
+                try{
+                  const res=await api.patch('/api/auth/me',{firstName:nameForm.firstName.trim(),lastName:nameForm.lastName.trim()});
+                  setUser(res.user);
+                  setNameModal(false);
+                }catch{}finally{setNameLoading(false);}
+              }}
+              style={{flex:2,padding:'14px',borderRadius:14,border:'none',background:`linear-gradient(135deg,${C.navy},${C.mid})`,color:'#fff',cursor:(!nameForm.firstName.trim()||nameLoading)?'default':'pointer',fontWeight:700,fontSize:14,opacity:(!nameForm.firstName.trim()||nameLoading)?.45:1}}>
+              {nameLoading?'Saqlanmoqda...':'Saqlash'}
+            </button>
+          </div>
+        </BottomModal>
+      )}
+
       {/* ═══ HERO HEADER ═══ */}
       <div style={{position:'relative',background:'linear-gradient(160deg,#060d1a 0%,#0f2259 45%,#1d4ed8 80%,#3b82f6 100%)',paddingTop:isDesktop?32:64,paddingBottom:80,overflow:'hidden'}}>
         {/* Decorative circles */}
@@ -1186,7 +1212,13 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
           </div>
 
           {/* Name & phone */}
-          <div style={{fontSize:26,fontWeight:900,color:'#fff',letterSpacing:-.6,lineHeight:1.1,marginBottom:6}}>{user?.name||'Гость'}</div>
+          <div style={{display:'inline-flex',alignItems:'center',gap:8,marginBottom:6}}>
+            <div style={{fontSize:26,fontWeight:900,color:'#fff',letterSpacing:-.6,lineHeight:1.1}}>{user?.name||'Гость'}</div>
+            <button onClick={()=>{setNameForm({firstName:user?.firstName||'',lastName:user?.lastName||''});setNameModal(true);}}
+              style={{background:'rgba(255,255,255,.15)',border:'1px solid rgba(255,255,255,.25)',borderRadius:8,width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
           <div style={{fontSize:13,color:'rgba(255,255,255,.6)',marginBottom:20,letterSpacing:.2}}>{user?.phone||'Номер не указан'}</div>
 
           {/* Member badge */}
@@ -1569,7 +1601,7 @@ export default function App() {
     if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} onAddToCart={handleAddToCart} toast={toast} user={user} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} onAddToCart={handleAddToCart} />;
-    if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} cards={cards} setCards={setCards} />;
+    if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} cards={cards} setCards={setCards} setUser={setUser} />;
     return <HomePage toast={toast} onAddToCart={handleAddToCart} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} />;
   };
 

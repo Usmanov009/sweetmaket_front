@@ -128,6 +128,23 @@ router.get('/me', auth, async (req, res) => {
   res.json({ user: rowToUser(rows[0]) });
 });
 
+// PATCH /api/auth/me
+router.patch('/me', auth, async (req, res) => {
+  const { firstName, lastName } = req.body;
+  if (!firstName && !lastName) return res.status(400).json({ error: 'Ism yoki familiya kerak' });
+  const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
+  const fn = firstName !== undefined ? firstName : rows[0].first_name;
+  const ln = lastName  !== undefined ? lastName  : rows[0].last_name;
+  const nm = [fn, ln].filter(Boolean).join(' ');
+  await pool.query(
+    `UPDATE users SET first_name=$1, last_name=$2, name=$3 WHERE id=$4`,
+    [fn, ln, nm, req.user.id]
+  );
+  const updated = (await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id])).rows[0];
+  res.json({ user: rowToUser(updated) });
+});
+
 function rowToUser(r) {
   return {
     id: r.id,
