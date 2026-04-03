@@ -4,7 +4,7 @@ import api from '../api';
 import OtpInput from '../components/OtpInput';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 
-export default function LoginPage({ onLogin, goSignup, C, isDesktop }) {
+export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDesktop }) {
   const [firstName, setFirstName] = useState('');
   const [lastName,  setLastName]  = useState('');
   const [phone,     setPhone]     = useState('+998');
@@ -113,6 +113,10 @@ export default function LoginPage({ onLogin, goSignup, C, isDesktop }) {
           <div style={{ textAlign:'center', marginTop:20, fontSize:14, color:C.muted }}>
             Нет аккаунта?{' '}
             <span onClick={goSignup} style={{ color:C.navy, fontWeight:700, cursor:'pointer' }}>Зарегистрироваться</span>
+          </div>
+          <div style={{ textAlign:'center', marginTop:12, fontSize:13, color:C.muted }}>
+            Sotuvchimisiz?{' '}
+            <span onClick={goSellerLogin} style={{ color:'#059669', fontWeight:700, cursor:'pointer' }}>🏪 Sotuvchi kabineti</span>
           </div>
         </>
       ) : (

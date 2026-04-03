@@ -82,6 +82,18 @@ async function initDB() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sellers (
+      id           TEXT PRIMARY KEY,
+      name         TEXT NOT NULL,
+      shop_name    TEXT NOT NULL,
+      phone        TEXT UNIQUE NOT NULL,
+      password     TEXT NOT NULL,
+      address      TEXT DEFAULT '',
+      description  TEXT DEFAULT '',
+      created_at   TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
   console.log('✅ PostgreSQL jadvallar tayyor');
 }
 

@@ -23,6 +23,7 @@ app.use(async (_req, _res, next) => {
 
 // Public routes
 app.use('/api/auth',     require('./routes/auth'));
+app.use('/api/seller',   require('./routes/seller'));
 app.use('/api/bot',      require('./routes/bot'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/explore',  require('./routes/explore'));

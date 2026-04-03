@@ -18,6 +18,8 @@ import SignupPage from './pages/SignupPage';
 import NotificationsPage from './pages/NotificationsPage';
 import HomePage from './pages/HomePage';
 import CameraPage from './pages/CameraPage';
+import SellerLoginPage from './pages/SellerLoginPage';
+import SellerDashboardPage from './pages/SellerDashboardPage';
 
 
 
@@ -1348,6 +1350,7 @@ export default function App() {
 
   const [page, setPage] = useState('login');
   const [user, setUser] = useState(null);
+  const [seller, setSeller] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [orders, setOrders] = useState([]);
   const [cakeCards, setCakeCards] = useState([]);
@@ -1363,6 +1366,17 @@ export default function App() {
   useEffect(() => {
     api.get('/api/products').then(setCakeCards).catch(() => {});
     api.get('/api/bakeries').then(setBakeries).catch(() => {});
+  }, []);
+
+  // Restore seller session
+  useEffect(() => {
+    const token = localStorage.getItem('sm_seller_token');
+    if (!token) return;
+    const BASE = import.meta.env.VITE_API_URL || '';
+    fetch(BASE + '/api/seller/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(({ seller: s }) => { setSeller(s); setPage('seller'); })
+      .catch(() => localStorage.removeItem('sm_seller_token'));
   }, []);
 
   // Restore session from localStorage on mount, or Telegram auto-login
@@ -1415,6 +1429,15 @@ export default function App() {
     localStorage.removeItem('sm_token');
     setPage('login');
   };
+  const handleSellerLogin = (sellerData) => {
+    setSeller(sellerData);
+    setPage('seller');
+  };
+  const handleSellerLogout = () => {
+    setSeller(null);
+    localStorage.removeItem('sm_seller_token');
+    setPage('seller-login');
+  };
   const handleAddToCart = (item) => {
     setCartItems(prev => {
       const ex = prev.find(i => i.id === item.id);
@@ -1435,7 +1458,9 @@ export default function App() {
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
 
   const renderPage = () => {
-    if (page === 'login') return <LoginPage onLogin={handleLogin} goSignup={() => setPage('signup')} C={C} isDesktop={isDesktop} />;
+    if (page === 'seller-login') return <SellerLoginPage onLogin={handleSellerLogin} goUserLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
+    if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} />;
+    if (page === 'login') return <LoginPage onLogin={handleLogin} goSignup={() => setPage('signup')} goSellerLogin={() => setPage('seller-login')} C={C} isDesktop={isDesktop} />;
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
     if (page === 'cart') return <CartPage toast={toast} cartItems={cartItems} setCartItems={setCartItems} C={C} onAddToOrder={handleAddToOrder} isDesktop={isDesktop} bakeries={bakeries} />;
     if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
@@ -1445,7 +1470,7 @@ export default function App() {
     return <HomePage toast={toast} onAddToCart={handleAddToCart} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} />;
   };
 
-  const showNav = user && page !== 'login' && page !== 'signup';
+  const showNav = user && !['login','signup','seller-login','seller'].includes(page);
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, color:C.text, transition:'background .3s,color .3s', display: showNav && isDesktop ? 'flex' : 'block' }}>
