@@ -7,14 +7,18 @@ const { genId } = require('../utils/db');
 router.get('/posts', async (req, res) => {
   const { q } = req.query;
   let { rows } = await pool.query(
-    `SELECT * FROM explore_posts WHERE public = TRUE ORDER BY likes DESC, created_at DESC`
+    `SELECT ep.*, COALESCE(u.name, ep.user_name, 'Foydalanuvchi') AS resolved_name
+     FROM explore_posts ep
+     LEFT JOIN users u ON u.id = ep.user_id
+     WHERE ep.public = TRUE
+     ORDER BY ep.likes DESC, ep.created_at DESC`
   );
   if (q) {
     const query = q.toLowerCase();
     rows = rows.filter(p =>
       (p.name || '').toLowerCase().includes(query) ||
       (p.description || '').toLowerCase().includes(query) ||
-      (p.user_name || '').toLowerCase().includes(query)
+      (p.resolved_name || '').toLowerCase().includes(query)
     );
   }
   res.json(rows.map(rowToPost));
@@ -65,7 +69,7 @@ function rowToPost(r) {
     source: 'user',
     public: r.public,
     userId: r.user_id,
-    userName: r.user_name,
+    userName: r.resolved_name || r.user_name,
     name: r.name,
     desc: r.description,
     emoji: r.emoji,
