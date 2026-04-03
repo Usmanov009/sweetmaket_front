@@ -47,10 +47,12 @@ router.post('/posts/:id/like', auth, async (req, res) => {
 router.post('/posts', auth, async (req, res) => {
   const { name, desc, emoji, bg, price, tags } = req.body;
   const id = genId();
+  const userRow = (await pool.query('SELECT name FROM users WHERE id = $1', [req.user.id])).rows[0];
+  const userName = userRow?.name || 'Foydalanuvchi';
   const { rows } = await pool.query(
     `INSERT INTO explore_posts (id, user_id, user_name, name, description, emoji, bg, price, tags)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-    [id, req.user.id, req.user.name || 'Foydalanuvchi',
+    [id, req.user.id, userName,
      name || 'Моя выпечка', desc || '', emoji || '🎂',
      bg || '#fce4ec', price || 0, JSON.stringify(Array.isArray(tags) ? tags : [])]
   );
