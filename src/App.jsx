@@ -43,283 +43,123 @@ function Toggle({ on, onToggle, C }) {
 ═══════════════════════════════════════════════════════ */
 function TrashIcon(){ return <Trash2 size={15} strokeWidth={2.5}/>; }
 
-function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, cards, setCards, bakeries, setPage }) {
-  const [payMethod,    setPay]          =useState(0);
-  const [confirmId,    setConfirmId]    =useState(null);
-  const [removing,     setRemoving]     =useState(null);
+function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, bakeries }) {
+  const [confirmId,      setConfirmId]      = useState(null);
+  const [removing,       setRemoving]       = useState(null);
   const [selectedBakery, setSelectedBakery] = useState(null);
-  const [selectedCardId, setSelectedCardId] = useState(null);
-  const [cardModal,    setCardModal]    =useState(false);
-  const [newCard, setNewCard] =useState({cardNumber:'',brand:'UzCard',expiry:'',holderName:'',linkedPhone:'+998'});
-  const [cardLoading, setCardLoading]  =useState(false);
-  const formatCardNum = (v) => v.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
-  const formatExpiry  = (v) => { const d=v.replace(/\D/g,'').slice(0,4); return d.length>2?d.slice(0,2)+'/'+d.slice(2):d; };
-  const inp = {width:'100%',background:C.s2,border:`1.5px solid ${C.border}`,borderRadius:14,padding:'13px 16px',color:C.dark,fontSize:14,outline:'none',marginBottom:10};
 
-  const methods=[{icon:'🏦',label:'Karta',mode:'card'},{icon:'💵',label:'Naqd',mode:'cash'}];
-  const safeIdx = payMethod < methods.length ? payMethod : 0;
-  const subtotal=cartItems.reduce((s,c)=>s+c.price*c.qty,0);
-  const disc10=Math.round(subtotal*0.1);
-  const total=subtotal-disc10;
-  const n=cartItems.length;
-  const itemWord=pluralRu(n,'товар','товара','товаров');
-  const changeQty=(id,delta)=>setCartItems(prev=>prev.map(it=>it.id===id?{...it,qty:Math.max(1,it.qty+delta)}:it));
-  const confirmRemove=(id)=>{setConfirmId(null);setRemoving(id);setTimeout(()=>{setCartItems(prev=>prev.filter(it=>it.id!==id));setRemoving(null);toast('🗑 Товар удалён');},320);};
-  const clearAll=()=>{setCartItems([]);toast('🗑 Корзина очищена');};
-  const handleCheckout=()=>{
-    if(cartItems.length===0) return;
-    if(!selectedBakery){ toast('🏪 Выберите точку самовывоза'); return; }
-    const mode=methods[safeIdx].mode;
-    if(mode==='card'&&cards?.length>0&&!selectedCardId){ toast('💳 Выберите карту для оплаты'); return; }
-    const chosenCard=mode==='card'?(cards||[]).find(c=>c.id===selectedCardId)||(cards||[])[0]||null:null;
-    const cardInfo=chosenCard?{last4:chosenCard.last4,brand:chosenCard.brand,expiry:chosenCard.expiry}:null;
-    onAddToOrder(cartItems,total,selectedBakery,mode,cardInfo);
-    toast('✅ Оплата прошла успешно! +150 баллов');
-    setTimeout(()=>{setCartItems([]);setSelectedCardId(null);},1500);
+  const subtotal = cartItems.reduce((s,c) => s + c.price * c.qty, 0);
+  const disc10   = Math.round(subtotal * 0.1);
+  const total    = subtotal - disc10;
+  const n        = cartItems.length;
+  const itemWord = pluralRu(n, 'товар', 'товара', 'товаров');
+
+  const changeQty = (id, delta) =>
+    setCartItems(prev => prev.map(it => it.id === id ? {...it, qty: Math.max(1, it.qty + delta)} : it));
+
+  const confirmRemove = (id) => {
+    setConfirmId(null);
+    setRemoving(id);
+    setTimeout(() => { setCartItems(prev => prev.filter(it => it.id !== id)); setRemoving(null); toast('🗑 Товар удалён'); }, 320);
   };
 
-  const topPad=isDesktop?32:52;
+  const clearAll = () => { setCartItems([]); toast('🗑 Корзина очищена'); };
 
-  const bakeryBlock=(
-    <div style={{marginBottom:16}}>
-      <div style={{fontSize:13,color:C.muted,fontWeight:600,marginBottom:10}}>🏪 Точка самовывоза</div>
-      <BakeryPickerMap C={C} selected={selectedBakery} onSelect={setSelectedBakery} bakeries={bakeries}/>
-    </div>
-  );
+  const handleCheckout = () => {
+    if (cartItems.length === 0) return;
+    if (!selectedBakery) { toast('🏪 Выберите точку самовывоза'); return; }
+    onAddToOrder(cartItems, total, selectedBakery, 'cash', null);
+    toast('✅ Buyurtma qabul qilindi! +150 ball');
+    setTimeout(() => setCartItems([]), 1500);
+  };
 
+  const topPad = isDesktop ? 32 : 52;
 
-  const itemsList=(
-    <>
-      {cartItems.length>0&&(
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
-          <div style={{fontSize:13,color:C.muted,fontWeight:600}}>🛒 {n} {itemWord}</div>
-          <button onClick={clearAll} style={{padding:'5px 12px',borderRadius:50,border:'1px solid rgba(176,48,48,.3)',background:'rgba(176,48,48,.06)',color:'#b03030',cursor:'pointer',fontSize:11,fontWeight:600}}>Очистить</button>
+  return (
+    <div style={{maxWidth:600, margin:'0 auto', padding:`${topPad}px 16px ${isDesktop?32:100}px`}}>
+
+      {/* Bakery picker */}
+      <div style={{marginBottom:16}}>
+        <div style={{fontSize:13, color:C.muted, fontWeight:600, marginBottom:10}}>🏪 Точка самовывоза</div>
+        <BakeryPickerMap C={C} selected={selectedBakery} onSelect={setSelectedBakery} bakeries={bakeries}/>
+      </div>
+
+      {/* Items */}
+      {n > 0 && (
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
+          <div style={{fontSize:13, color:C.muted, fontWeight:600}}>🛒 {n} {itemWord}</div>
+          <button onClick={clearAll} style={{padding:'5px 12px', borderRadius:50, border:'1px solid rgba(176,48,48,.3)', background:'rgba(176,48,48,.06)', color:'#b03030', cursor:'pointer', fontSize:11, fontWeight:600}}>Очистить</button>
         </div>
       )}
-      {cartItems.length===0&&(
-        <div style={{textAlign:'center',padding:'60px 20px'}}>
-          <div style={{fontSize:72,marginBottom:16,opacity:.4}}>🛒</div>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:700,marginBottom:8,color:C.dark}}>Корзина пуста</div>
-          <div style={{color:C.muted,fontSize:14}}>Добавьте торты из магазина</div>
+      {n === 0 && (
+        <div style={{textAlign:'center', padding:'60px 20px'}}>
+          <div style={{fontSize:72, marginBottom:16, opacity:.4}}>🛒</div>
+          <div style={{fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, marginBottom:8, color:C.dark}}>Корзина пуста</div>
+          <div style={{color:C.muted, fontSize:14}}>Добавьте торты из магазина</div>
         </div>
       )}
-      {cartItems.map(item=>{
-        const isRemoving=removing===item.id, isConfirm=confirmId===item.id;
+      {cartItems.map(item => {
+        const isRemoving = removing === item.id, isConfirm = confirmId === item.id;
         return (
-          <div key={item.id} style={{margin:'0 0 12px',background:isConfirm?'rgba(176,48,48,.04)':C.s1,borderRadius:20,
-            padding:16,border:`1px solid ${isConfirm?'rgba(176,48,48,.3)':C.border}`,
-            opacity:isRemoving?0:1,transform:isRemoving?'translateX(60px) scale(0.95)':'none',transition:'all .32s ease'}}>
-            <div style={{display:'flex',gap:14,alignItems:'center'}}>
-              <div style={{flexShrink:0,borderRadius:16,overflow:'hidden',width:72,height:72}}>
+          <div key={item.id} style={{margin:'0 0 12px', background:isConfirm?'rgba(176,48,48,.04)':C.s1, borderRadius:20,
+            padding:16, border:`1px solid ${isConfirm?'rgba(176,48,48,.3)':C.border}`,
+            opacity:isRemoving?0:1, transform:isRemoving?'translateX(60px) scale(0.95)':'none', transition:'all .32s ease'}}>
+            <div style={{display:'flex', gap:14, alignItems:'center'}}>
+              <div style={{flexShrink:0, borderRadius:16, overflow:'hidden', width:72, height:72}}>
                 <CakeVisual category={item.category} bg={item.bg} height={72}/>
               </div>
               <div style={{flex:1}}>
-                <div style={{fontSize:15,fontWeight:700,marginBottom:4,color:C.dark}}>{item.name}</div>
-                <div style={{fontSize:12,color:C.muted,marginBottom:8}}>{item.detail}</div>
-                <div style={{color:C.navy,fontSize:18,fontWeight:700}}>{sum(item.price*item.qty)}</div>
+                <div style={{fontSize:15, fontWeight:700, marginBottom:4, color:C.dark}}>{item.name}</div>
+                <div style={{fontSize:12, color:C.muted, marginBottom:8}}>{item.detail}</div>
+                <div style={{color:C.navy, fontSize:18, fontWeight:700}}>{sum(item.price * item.qty)}</div>
               </div>
-              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8}}>
-                <button onClick={()=>setConfirmId(item.id)} style={{display:'flex',alignItems:'center',justifyContent:'center',width:30,height:30,borderRadius:8,border:'1px solid rgba(176,48,48,.25)',background:'rgba(176,48,48,.07)',color:'#b03030',cursor:'pointer'}}><TrashIcon/></button>
-                <div style={{display:'flex',gap:6,alignItems:'center'}}>
-                  <button onClick={()=>changeQty(item.id,-1)} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:C.s2,color:C.dark,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700}}>−</button>
-                  <span style={{fontWeight:700,fontSize:14,minWidth:22,textAlign:'center',color:C.dark}}>{item.qty}</span>
-                  <button onClick={()=>changeQty(item.id,1)} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.border}`,background:C.s2,color:C.dark,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700}}>+</button>
+              <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8}}>
+                <button onClick={()=>setConfirmId(item.id)} style={{display:'flex', alignItems:'center', justifyContent:'center', width:30, height:30, borderRadius:8, border:'1px solid rgba(176,48,48,.25)', background:'rgba(176,48,48,.07)', color:'#b03030', cursor:'pointer'}}><TrashIcon/></button>
+                <div style={{display:'flex', gap:6, alignItems:'center'}}>
+                  <button onClick={()=>changeQty(item.id,-1)} style={{width:28, height:28, borderRadius:8, border:`1px solid ${C.border}`, background:C.s2, color:C.dark, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700}}>−</button>
+                  <span style={{fontWeight:700, fontSize:14, minWidth:22, textAlign:'center', color:C.dark}}>{item.qty}</span>
+                  <button onClick={()=>changeQty(item.id,1)} style={{width:28, height:28, borderRadius:8, border:`1px solid ${C.border}`, background:C.s2, color:C.dark, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700}}>+</button>
                 </div>
               </div>
             </div>
-            {isConfirm&&(
-              <div style={{marginTop:10,display:'flex',gap:8,alignItems:'center',justifyContent:'flex-end'}}>
-                <span style={{fontSize:12,color:'#b03030',flex:1}}>Удалить из корзины?</span>
-                <button onClick={()=>setConfirmId(null)} style={{padding:'4px 12px',borderRadius:8,border:`1px solid ${C.border}`,background:C.s2,color:C.dark,cursor:'pointer',fontSize:12}}>Нет</button>
-                <button onClick={()=>{confirmRemove(item.id);}} style={{padding:'4px 12px',borderRadius:8,border:'none',background:'#b03030',color:'#fff',cursor:'pointer',fontSize:12,fontWeight:600}}>Да</button>
+            {isConfirm && (
+              <div style={{marginTop:10, display:'flex', gap:8, alignItems:'center', justifyContent:'flex-end'}}>
+                <span style={{fontSize:12, color:'#b03030', flex:1}}>Удалить из корзины?</span>
+                <button onClick={()=>setConfirmId(null)} style={{padding:'4px 12px', borderRadius:8, border:`1px solid ${C.border}`, background:C.s2, color:C.dark, cursor:'pointer', fontSize:12}}>Нет</button>
+                <button onClick={()=>confirmRemove(item.id)} style={{padding:'4px 12px', borderRadius:8, border:'none', background:'#b03030', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600}}>Да</button>
               </div>
             )}
           </div>
         );
       })}
-    </>
-  );
 
-  const totalBlock=(
-    <div style={{background:C.s1,borderRadius:20,padding:20,border:`1px solid ${C.border}`,marginBottom:16}}>
-      <div style={{fontSize:13,color:C.muted,fontWeight:600,marginBottom:12}}>💳 Итого</div>
-      <div style={{display:'flex',flexDirection:'column',gap:8}}>
-        <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:C.muted}}>
-          <span>Сумма ({pluralRu(n,'товар','товара','товаров')})</span><span>{sum(subtotal)}</span>
+      {/* Summary */}
+      <div style={{background:C.s1, borderRadius:20, padding:20, border:`1px solid ${C.border}`, marginBottom:16}}>
+        <div style={{fontSize:13, color:C.muted, fontWeight:600, marginBottom:12}}>🧾 Итого</div>
+        <div style={{display:'flex', flexDirection:'column', gap:8}}>
+          <div style={{display:'flex', justifyContent:'space-between', fontSize:13, color:C.muted}}>
+            <span>Сумма ({pluralRu(n,'товар','товара','товаров')})</span><span>{sum(subtotal)}</span>
+          </div>
+          <div style={{display:'flex', justifyContent:'space-between', fontSize:13, color:'#1a7a3a'}}>
+            <span>Скидка 10%</span><span>−{sum(disc10)}</span>
+          </div>
+          <div style={{height:1, background:C.border, margin:'4px 0'}}/>
+          <div style={{display:'flex', justifyContent:'space-between', fontSize:17, fontWeight:700, color:C.dark}}>
+            <span>Итого</span><span style={{color:C.navy}}>{sum(total)}</span>
+          </div>
         </div>
-        <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#1a7a3a'}}>
-          <span>Скидка 10%</span><span>−{sum(disc10)}</span>
+        <div style={{marginTop:14, padding:'10px 14px', borderRadius:12, background:'rgba(34,197,94,.08)', border:'1px solid rgba(34,197,94,.2)', fontSize:13, color:'#15803d', fontWeight:600}}>
+          💵 To'lov usuli: Naqd pul (qabul qilishda)
         </div>
-        <div style={{height:1,background:C.border,margin:'4px 0'}}/>
-        <div style={{display:'flex',justifyContent:'space-between',fontSize:17,fontWeight:700,color:C.dark}}>
-          <span>Итого</span><span style={{color:C.navy}}>{sum(total)}</span>
-        </div>
+        <button onClick={handleCheckout} disabled={n === 0}
+          style={{width:'100%', padding:'14px', borderRadius:14, border:'none', marginTop:14,
+            background: n===0 ? C.border : `linear-gradient(135deg,${C.navy},${C.mid})`,
+            color: n===0 ? C.muted : '#fff', cursor: n===0 ? 'default' : 'pointer',
+            fontWeight:700, fontSize:15, letterSpacing:.3}}>
+          {n===0 ? 'Корзина пуста' : 'Оформить заказ →'}
+        </button>
       </div>
-      <div style={{marginTop:14,marginBottom:4,fontSize:13,color:C.muted,fontWeight:600}}>Способ оплаты</div>
-      <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
-        {methods.map((m,i)=>(
-          <button key={i} onClick={()=>setPay(i)}
-            style={{flex:1,padding:'10px 8px',borderRadius:12,border:`1.5px solid ${safeIdx===i?C.navy:C.border}`,
-              background:safeIdx===i?'rgba(29,78,216,.07)':C.s2,color:safeIdx===i?C.navy:C.muted,
-              cursor:'pointer',fontWeight:safeIdx===i?700:500,fontSize:13,display:'flex',
-              alignItems:'center',justifyContent:'center',gap:6,transition:'all .15s'}}>
-            {m.icon} {m.label}
-          </button>
-        ))}
-      </div>
-      {methods[safeIdx].mode==='card'&&(
-        <div style={{marginBottom:14}}>
-          {(cards||[]).length===0 ? (
-            /* ── No cards: prompt to add ── */
-            <div style={{borderRadius:16,border:`1.5px dashed ${C.border}`,padding:'18px 16px',
-              textAlign:'center',background:C.s2}}>
-              <div style={{fontSize:32,marginBottom:8}}>💳</div>
-              <div style={{fontSize:14,fontWeight:700,color:C.dark,marginBottom:4}}>
-                Kartangiz yo'q
-              </div>
-              <div style={{fontSize:12,color:C.muted,marginBottom:14,lineHeight:1.5}}>
-                To'lov uchun UzCard yoki Humo kartangizni qo'shing
-              </div>
-              <button onClick={()=>setCardModal(true)}
-                style={{padding:'10px 24px',borderRadius:12,border:'none',
-                  background:`linear-gradient(135deg,${C.navy},${C.mid})`,
-                  color:'#fff',cursor:'pointer',fontWeight:700,fontSize:13,
-                  boxShadow:`0 4px 14px ${C.navy}44`}}>
-                + Karta qo'shish
-              </button>
-            </div>
-          ) : (
-            /* ── Cards exist: selector ── */
-            <div style={{display:'flex',flexDirection:'column',gap:8}}>
-              {(cards||[]).map(card => {
-                const isUz   = card.brand==='UzCard';
-                const isHumo = card.brand==='Humo';
-                const grad   = isUz   ? 'linear-gradient(135deg,#1d4ed8,#2563eb)'
-                             : isHumo ? 'linear-gradient(135deg,#059669,#10b981)'
-                             :          'linear-gradient(135deg,#374151,#6b7280)';
-                const active = selectedCardId===card.id || (!selectedCardId && card.isDefault);
-                return (
-                  <button key={card.id} onClick={()=>setSelectedCardId(card.id)}
-                    style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',
-                      borderRadius:16,border:`2px solid ${active?C.navy:C.border}`,
-                      background:active?`rgba(37,99,235,.05)`:C.s1,
-                      cursor:'pointer',textAlign:'left',transition:'all .15s',
-                      boxShadow:active?`0 4px 16px ${C.navy}18`:'none'}}>
-                    {/* mini card chip */}
-                    <div style={{width:48,height:32,borderRadius:8,background:grad,flexShrink:0,
-                      display:'flex',alignItems:'center',justifyContent:'center',
-                      fontSize:11,fontWeight:900,color:'rgba(255,255,255,.9)',letterSpacing:.5}}>
-                      {card.brand==='UzCard'?'UZ':card.brand==='Humo'?'HU':'💳'}
-                    </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:14,fontWeight:700,color:active?C.navy:C.dark}}>
-                        {card.brand} •••• {card.last4}
-                      </div>
-                      <div style={{fontSize:11,color:C.muted,marginTop:2}}>
-                        {card.expiry}{card.holderName?` · ${card.holderName}`:''}
-                        {card.isDefault&&<span style={{marginLeft:8,color:C.navy,fontWeight:700}}>✓ Asosiy</span>}
-                      </div>
-                    </div>
-                    <div style={{width:20,height:20,borderRadius:'50%',flexShrink:0,
-                      border:`2px solid ${active?C.navy:C.border}`,
-                      background:active?C.navy:'transparent',
-                      display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}>
-                      {active&&<div style={{width:8,height:8,borderRadius:'50%',background:'#fff'}}/>}
-                    </div>
-                  </button>
-                );
-              })}
-              {/* add another card shortcut */}
-              <button onClick={()=>setCardModal(true)}
-                style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',
-                  borderRadius:14,border:`1.5px dashed ${C.border}`,background:'transparent',
-                  cursor:'pointer',color:C.muted,fontSize:13,fontWeight:600,transition:'all .15s'}}
-                onMouseEnter={e=>e.currentTarget.style.borderColor=C.navy}
-                onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
-                <div style={{width:28,height:28,borderRadius:8,background:C.s2,
-                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>+</div>
-                Boshqa karta qo'shish
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-      {methods[safeIdx].mode==='cash'&&(
-        <div style={{fontSize:12,color:C.muted,padding:'8px 0',marginBottom:6}}>💵 Оплата наличными при получении</div>
-      )}
-      <button onClick={handleCheckout} disabled={cartItems.length===0}
-        style={{width:'100%',padding:'14px',borderRadius:14,border:'none',
-          background:cartItems.length===0?C.border:`linear-gradient(135deg,${C.navy},${C.mid})`,
-          color:cartItems.length===0?C.muted:'#fff',cursor:cartItems.length===0?'default':'pointer',
-          fontWeight:700,fontSize:15,letterSpacing:.3}}>
-        {cartItems.length===0?'Корзина пуста':'Оформить заказ →'}
-      </button>
     </div>
-  );
-
-  return (
-    <>
-      
-      {cardModal&&(
-        <BottomModal C={C} onClose={()=>setCardModal(false)} title="💳 Добавить карту">
-          <div style={{display:'flex',gap:8,marginBottom:16}}>
-            {[
-              {id:'UzCard',label:'🟦 UzCard',grad:'linear-gradient(135deg,#1d4ed8,#2563eb)'},
-              {id:'Humo',  label:'🟩 Humo',  grad:'linear-gradient(135deg,#059669,#10b981)'},
-            ].map(b=>(
-              <button key={b.id} onClick={()=>setNewCard(c=>({...c,brand:b.id}))}
-                style={{flex:1,padding:'12px 6px',borderRadius:14,border:`2px solid ${newCard.brand===b.id?'transparent':C.border}`,
-                  background:newCard.brand===b.id?b.grad:'transparent',color:newCard.brand===b.id?'#fff':C.muted,
-                  cursor:'pointer',fontWeight:700,fontSize:13,transition:'all .15s',
-                  boxShadow:newCard.brand===b.id?'0 4px 14px rgba(0,0,0,.2)':'none'}}>
-                {b.label}
-              </button>
-            ))}
-          </div>
-          <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Номер карты</label>
-            <input value={newCard.cardNumber} onChange={e=>setNewCard(c=>({...c,cardNumber:formatCardNum(e.target.value)}))}
-              placeholder="0000 0000 0000 0000" inputMode="numeric"
-              style={{...inp,fontFamily:'monospace',fontSize:17,letterSpacing:2,marginBottom:0}}/>
-          </div>
-          <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Срок действия</label>
-            <input value={newCard.expiry} onChange={e=>setNewCard(c=>({...c,expiry:formatExpiry(e.target.value)}))}
-              placeholder="ММ/ГГ" inputMode="numeric" style={{...inp,marginBottom:0}}/>
-          </div>
-          <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Имя владельца</label>
-            <input value={newCard.holderName} onChange={e=>setNewCard(c=>({...c,holderName:e.target.value}))}
-              placeholder="AZIZ KARIMOV" style={{...inp,textTransform:'uppercase',marginBottom:0}}/>
-          </div>
-          <div style={{display:'flex',gap:10}}>
-            <button onClick={()=>setCardModal(false)} style={{flex:1,padding:'14px',borderRadius:14,border:`1.5px solid ${C.border}`,background:'transparent',color:C.muted,cursor:'pointer',fontWeight:600,fontSize:14}}>Отмена</button>
-            {(()=>{
-              const digits=newCard.cardNumber.replace(/\s/g,'');
-              const valid=digits.length===16&&newCard.expiry.length===5;
-              return (
-                <button disabled={!valid||cardLoading}
-                  onClick={async()=>{
-                    const d=newCard.cardNumber.replace(/\s/g,'');
-                    const payload={last4:d.slice(-4),brand:newCard.brand,expiry:newCard.expiry,holderName:newCard.holderName.trim().toUpperCase()};
-                    setCardLoading(true);
-                    try{const card=await api.post('/api/cards',payload);setCards(p=>[...p,card]);setSelectedCardId(card.id);setCardModal(false);setNewCard({cardNumber:'',brand:'UzCard',expiry:'',holderName:'',linkedPhone:'+998'});}
-                    catch(e){toast('❌ '+e.message);}finally{setCardLoading(false);}
-                  }}
-                  style={{flex:2,padding:'14px',borderRadius:14,border:'none',background:`linear-gradient(135deg,${C.navy},${C.mid})`,color:'#fff',cursor:(!valid||cardLoading)?'default':'pointer',fontWeight:700,fontSize:14,opacity:(!valid||cardLoading)?.45:1,transition:'opacity .2s'}}>
-                  {cardLoading?'Сохранение...':'💳 Добавить карту'}
-                </button>
-              );
-            })()}
-          </div>
-        </BottomModal>
-      )}
-      <div style={{maxWidth:600,margin:'0 auto',padding:`${topPad}px 16px ${isDesktop?32:100}px`}}>
-        {bakeryBlock}
-        {itemsList}
-        {totalBlock}
-      </div>
-    </>
   );
 }
 
@@ -1597,7 +1437,7 @@ export default function App() {
   const renderPage = () => {
     if (page === 'login') return <LoginPage onLogin={handleLogin} goSignup={() => setPage('signup')} C={C} isDesktop={isDesktop} />;
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
-    if (page === 'cart') return <CartPage toast={toast} cartItems={cartItems} setCartItems={setCartItems} C={C} onAddToOrder={handleAddToOrder} isDesktop={isDesktop} cards={cards} setCards={setCards} bakeries={bakeries} setPage={setPage} />;
+    if (page === 'cart') return <CartPage toast={toast} cartItems={cartItems} setCartItems={setCartItems} C={C} onAddToOrder={handleAddToOrder} isDesktop={isDesktop} bakeries={bakeries} />;
     if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} onAddToCart={handleAddToCart} toast={toast} user={user} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} onAddToCart={handleAddToCart} />;

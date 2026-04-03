@@ -187,15 +187,9 @@ export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCa
           <div>Ничего не найдено</div>
         </div>
       )}
-      {isDesktop ? (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(188px,1fr))', gap:16, padding:'0 20px 4px' }}>
-          {filtered.map(card => <CardItem key={card.id} card={card}/>)}
-        </div>
-      ) : (
-        <div style={{ display:'flex', gap:14, padding:'0 20px 4px', overflowX:'auto', scrollbarWidth:'none' }}>
-          {filtered.map(card => <CardItem key={card.id} card={card} cardWidth={162}/>)}
-        </div>
-      )}
+      <div style={{ display:'grid', gridTemplateColumns: isDesktop ? 'repeat(auto-fill,minmax(188px,1fr))' : 'repeat(2,1fr)', gap:isDesktop?16:12, padding:'0 20px 4px' }}>
+        {filtered.map(card => <CardItem key={card.id} card={card}/>)}
+      </div>
 
       {/* Saved */}
       {cakeCards.some(c=>c.liked) && !search && (
