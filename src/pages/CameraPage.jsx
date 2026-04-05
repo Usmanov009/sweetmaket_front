@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, X, ArrowLeft } from 'lucide-react';
+import { Camera, X, ArrowLeft } from '@phosphor-icons/react';
 
 export default function CameraPage({ onBack, onPhotoTaken, C }) {
   const videoRef = useRef(null);

@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { Search, Bell, Heart, ShoppingCart, X } from 'lucide-react';
+import { MagnifyingGlass, Bell, Heart, ShoppingCart, X } from '@phosphor-icons/react';
 import { sum } from '../utils/format';
 import CakeVisual from '../components/CakeVisual';
 
@@ -114,7 +114,7 @@ export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCa
           {!isDesktop && (
             <div style={{ display:'flex', gap:10, alignItems:'center' }}>
               <button onClick={()=>setSearchOpen(o=>!o)} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
-                <Search size={18}/>
+                <MagnifyingGlass size={18}/>
               </button>
               <button onClick={()=>setPage('notifications')} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
                 <Bell size={18}/>
@@ -129,7 +129,7 @@ export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCa
               <div style={{ position:'relative' }}>
                 <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск тортов..."
                   style={{ background:C.s1, border:`1px solid ${C.border}`, borderRadius:50, padding:'9px 16px 9px 36px', color:C.dark, fontSize:13, width:220 }}/>
-                <Search size={14} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:C.muted }}/>
+                <MagnifyingGlass size={14} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:C.muted }}/>
               </div>
             </div>
           )}
@@ -138,7 +138,7 @@ export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCa
           <div style={{ marginTop:10, position:'relative' }}>
             <input autoFocus value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск тортов..."
               style={{ width:'100%', background:C.s1, border:`1px solid ${C.border}`, borderRadius:50, padding:'10px 16px 10px 38px', color:C.dark, fontSize:14 }}/>
-            <Search size={14} style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:C.muted }}/>
+            <MagnifyingGlass size={14} style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:C.muted }}/>
             {search && <button onClick={()=>setSearch('')} style={{ position:'absolute', right:14, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:C.muted, display:'flex' }}><X size={16}/></button>}
           </div>
         )}
@@ -183,7 +183,7 @@ export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCa
       {/* Grid / Scroll */}
       {filtered.length === 0 && (
         <div style={{ textAlign:'center', padding:'40px', color:C.muted }}>
-          <Search size={40} color={C.border} style={{ marginBottom:8 }}/>
+          <MagnifyingGlass size={40} color={C.border} style={{ marginBottom:8 }}/>
           <div>Ничего не найдено</div>
         </div>
       )}

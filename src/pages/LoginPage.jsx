@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Phone, User, Lock } from 'lucide-react';
+import { Phone, User, Lock } from '@phosphor-icons/react';
 import api from '../api';
 import OtpInput from '../components/OtpInput';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
@@ -29,9 +29,9 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
   };
 
   const handleSend = async () => {
-    if (!firstName.trim()) { setError('Введите ваше имя'); return; }
-    if (!lastName.trim())  { setError('Введите фамилию'); return; }
-    if (!isValidPhone(phone)) { setError('Введите корректный номер (+998 XX XXX XX XX)'); return; }
+    if (!firstName.trim()) { setError('Ismingizni kiriting'); return; }
+    if (!lastName.trim())  { setError('Familiyangizni kiriting'); return; }
+    if (!isValidPhone(phone)) { setError('To\'g\'ri telefon raqam kiriting (+998 XX XXX XX XX)'); return; }
     setError(''); setLoading(true);
     try {
       const data = await api.post('/api/auth/request-otp', { phone });
@@ -42,7 +42,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
   };
 
   const handleVerify = async () => {
-    if (otp.length < 6) { setError('Введите 6-значный код'); return; }
+    if (otp.length < 6) { setError('6 xonali kodni kiriting'); return; }
     setError(''); setLoading(true);
     try {
       const { token, user } = await api.post('/api/auth/verify', { phone, otp, firstName: firstName.trim(), lastName: lastName.trim() });
@@ -71,13 +71,13 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
       {step==='info' ? (
         <>
           <div style={{ fontFamily:"'Playfair Display',serif", fontSize:isDesktop?28:22, fontWeight:900, marginBottom:4, color:C.dark }}>
-            Добро пожаловать 👋
+            🎂 SweetMarket ga xush kelibsiz!
           </div>
-          <div style={{ fontSize:13, color:C.muted, marginBottom:24 }}>Войдите в аккаунт</div>
+          <div style={{ fontSize:13, color:C.muted, marginBottom:24 }}>Eng mazali tortlar bu yerda</div>
 
           {[
-            { label:'Имя', icon:<User size={17}/>, value:firstName, set:setFirstName, placeholder:'Азиз' },
-            { label:'Фамилия', icon:<User size={17}/>, value:lastName, set:setLastName, placeholder:'Каримов' },
+            { label:'Ism', icon:<User size={17}/>, value:firstName, set:setFirstName, placeholder:'Aziz' },
+            { label:'Familiya', icon:<User size={17}/>, value:lastName, set:setLastName, placeholder:'Karimov' },
           ].map(({ label, icon, value, set, placeholder }) => (
             <div key={label} style={{ marginBottom:14 }}>
               <label style={{ fontSize:12, fontWeight:600, color:C.navy, display:'block', marginBottom:6 }}>{label}</label>
@@ -89,7 +89,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
           ))}
 
           <div style={{ marginBottom:18 }}>
-            <label style={{ fontSize:12, fontWeight:600, color:C.navy, display:'block', marginBottom:6 }}>Номер телефона</label>
+            <label style={{ fontSize:12, fontWeight:600, color:C.navy, display:'block', marginBottom:6 }}>Telefon raqam</label>
             <div style={{ position:'relative' }}>
               <span style={{ position:'absolute', left:15, top:'50%', transform:'translateY(-50%)', color:C.muted }}><Phone size={17}/></span>
               <input className="input-focus" type="tel" value={phone}

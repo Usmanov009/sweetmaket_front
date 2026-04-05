@@ -1,9 +1,9 @@
 import { memo } from 'react';
-import { Home, Search, Cake, ShoppingCart, User, LogOut } from 'lucide-react';
+import { House, MagnifyingGlass, Cake, ShoppingCart, User, SignOut } from '@phosphor-icons/react';
 
 const ITEMS = [
-  { id:'home',    Icon: Home,         label:'Главная' },
-  { id:'explore', Icon: Search,       label:'Поиск'   },
+  { id:'home',    Icon: House,         label:'Главная' },
+  { id:'explore', Icon: MagnifyingGlass,       label:'Поиск'   },
   { id:'create',  Icon: Cake,         label:'Создать' },
   { id:'cart',    Icon: ShoppingCart, label:'Корзина' },
   { id:'profile', Icon: User,         label:'Профиль' },
@@ -41,7 +41,7 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, cartCount, C, isDar
                 fontSize: 14, textAlign:'left',
                 transition: 'all .15s', position:'relative',
               }}>
-              <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+              <Icon size={20} weight={active ? "bold" : "regular"} />
               <span>{label}</span>
               {id==='cart' && cartCount>0 && (
                 <span style={{
@@ -90,7 +90,7 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, cartCount, C, isDar
             padding:'9px 14px', borderRadius:12, border:'none', cursor:'pointer',
             background:'transparent', color:'#ef4444', fontWeight:500, fontSize:13, marginTop:4,
           }}>
-          <LogOut size={18} />
+          <SignOut size={18} />
           <span>Выйти</span>
         </button>
       </div>

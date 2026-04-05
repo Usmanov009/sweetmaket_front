@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, CheckCircle } from 'lucide-react';
+import { Bell, CheckCircle } from '@phosphor-icons/react';
 import api from '../api';
 
 export default function NotificationsPage({ onClose, C, isDesktop }) {

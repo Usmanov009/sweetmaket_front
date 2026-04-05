@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Phone, Lock, Store, User } from 'lucide-react';
+import { Phone, Lock, Storefront, User } from '@phosphor-icons/react';
 import api from '../api';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 
@@ -79,8 +79,8 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
         <>
           {[
             { label:'Ism Familiya', icon:<User size={17}/>, value:name, set:setName, placeholder:'Aziz Karimov' },
-            { label:"Do'kon nomi",  icon:<Store size={17}/>, value:shopName, set:setShopName, placeholder:'Aziz Shirinliklari' },
-            { label:'Manzil (ixtiyoriy)', icon:<Store size={17}/>, value:address, set:setAddress, placeholder:'Toshkent, Chilonzor' },
+            { label:"Do'kon nomi",  icon:<Storefront size={17}/>, value:shopName, set:setShopName, placeholder:'Aziz Shirinliklari' },
+            { label:'Manzil (ixtiyoriy)', icon:<Storefront size={17}/>, value:address, set:setAddress, placeholder:'Toshkent, Chilonzor' },
           ].map(({ label, icon, value, set, placeholder }) => (
             <div key={label} style={{ marginBottom:12 }}>
               <label style={{ fontSize:12, fontWeight:600, color:C.navy, display:'block', marginBottom:6 }}>{label}</label>

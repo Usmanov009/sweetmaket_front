@@ -1,9 +1,9 @@
 import { memo } from 'react';
-import { Home, Search, Cake, ShoppingCart, User } from 'lucide-react';
+import { House, MagnifyingGlass, Cake, ShoppingCart, User } from '@phosphor-icons/react';
 
 const ITEMS = [
-  { id:'home',    Icon: Home,         label:'Главная' },
-  { id:'explore', Icon: Search,       label:'Поиск'   },
+  { id:'home',    Icon: House,         label:'Главная' },
+  { id:'explore', Icon: MagnifyingGlass,       label:'Поиск'   },
   { id:'create',  Icon: Cake,         label:'Создать', isCenter: true },
   { id:'cart',    Icon: ShoppingCart, label:'Корзина' },
   { id:'profile', Icon: User,         label:'Профиль' },
@@ -33,7 +33,7 @@ const BottomNav = memo(function BottomNav({ page, setPage, cartCount, C }) {
               boxShadow: `0 6px 20px ${C.navy}50`,
               transition: 'all .2s',
             }}>
-              <Icon size={24} color="#fff" strokeWidth={2} />
+              <Icon size={24} color="#fff" weight="bold" />
             </div>
           </button>
         );
@@ -48,7 +48,7 @@ const BottomNav = memo(function BottomNav({ page, setPage, cartCount, C }) {
               transition: 'color .2s', position:'relative',
               borderRadius: 0,
             }}>
-            <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
+            <Icon size={22} weight={active ? "bold" : "regular"} />
             <span style={{ fontSize: 10, fontWeight: active ? 700 : 500 }}>{label}</span>
             {id === 'cart' && cartCount > 0 && (
               <span style={{

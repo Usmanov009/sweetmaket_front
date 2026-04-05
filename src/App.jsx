@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import {
   Sun, Moon, Bell,
-  Trash2, Plus, Package, CreditCard, Settings,
+  Trash, Plus, Package, CreditCard, Settings,
   Heart, X, Check,
   MapPin, Clock, Star,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import api from './api';
 import { THEMES, injectGlobal } from './constants/themes';
 import { useBreakpoint } from './hooks/useBreakpoint';
@@ -43,7 +43,7 @@ function Toggle({ on, onToggle, C }) {
 /* ═══════════════════════════════════════════════════════
    CART PAGE (fixed pluralization + promo codes)
 ═══════════════════════════════════════════════════════ */
-function TrashIcon(){ return <Trash2 size={15} strokeWidth={2.5}/>; }
+function TrashIcon(){ return <Trash size={15} weight="bold"/>; }
 
 function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, bakeries }) {
   const [confirmId,      setConfirmId]      = useState(null);
