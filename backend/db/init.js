@@ -24,6 +24,7 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS orders (
       id           TEXT PRIMARY KEY,
       user_id      TEXT NOT NULL REFERENCES users(id),
+      seller_id    INTEGER NOT NULL,
       items        JSONB NOT NULL DEFAULT '[]',
       total        NUMERIC NOT NULL,
       bakery       JSONB,

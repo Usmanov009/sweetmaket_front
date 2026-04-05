@@ -31,13 +31,14 @@ export default function ChatModal({ onClose, orderId, userId, sellerId, C, isDes
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
+    // Kim yuborganini aniqlash - bu modalni kim ochgani ga qarab
+    const senderType = sellerId ? 'seller' : 'user'; // Agar sellerId bo'lsa, bu seller ochgan
+
     const messageData = {
-      order_id: orderId,
-      user_id: userId,
-      seller_id: sellerId,
-      message: newMessage.trim(),
-      sender: 'seller', // yoki 'user' - kim yuborganini aniqlash uchun
-      created_at: new Date().toISOString()
+      orderId,
+      senderId: sellerId || userId, // sellerId bo'lsa seller, bo'lmasa user
+      senderType,
+      message: newMessage.trim()
     };
 
     try {
