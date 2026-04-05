@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import {
   Sun, Moon, Bell,
-  Trash, Plus, Package, CreditCard, Settings,
+  Trash, Plus, Package, CreditCard, Gear,
   Heart, X, Check,
   MapPin, Clock, Star,
 } from '@phosphor-icons/react';
@@ -1101,7 +1101,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
             {icon:<Package size={22}/>,label:'Заказы',tab:'orders'},
             {icon:<span style={{fontSize:20}}>🎂</span>,label:'Дни рожд.',tab:'bdays'},
             {icon:<CreditCard size={22}/>,label:'Карты',tab:'cards'},
-            {icon:<Settings size={22}/>,label:'Настройки',tab:'settings'},
+            {icon:<Gear size={22}/>,label:'Настройки',tab:'settings'},
           ].map(a=>(
             <button key={a.tab} onClick={()=>setActiveTab(a.tab)}
               style={{background:activeTab===a.tab?C.navy:C.s1,borderRadius:18,padding:'16px 8px',border:`1px solid ${activeTab===a.tab?C.navy:C.border}`,

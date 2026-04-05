@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, X } from '@phosphor-icons/react';
+import { PaperPlaneRight, X } from '@phosphor-icons/react';
 import api from '../api';
 
 export default function ChatModal({ onClose, orderId, userId, sellerId, C, isDesktop }) {
@@ -156,7 +156,7 @@ export default function ChatModal({ onClose, orderId, userId, sellerId, C, isDes
               justifyContent:'center'
             }}
           >
-            <Send size={18} />
+            <PaperPlaneRight size={18} />
           </button>
         </div>
       </div>
