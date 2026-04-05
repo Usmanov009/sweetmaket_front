@@ -20,9 +20,6 @@ router.get('/', async (req, res) => {
       ORDER BY created_at DESC
     `);
     
-    // Static bakeries bilan birlashtirish (agar kerak bo'lsa)
-    const { bakeries: staticBakeries } = require('../db/static.json');
-    
     // Sellers ma'lumotlarini formatlash
     const sellerBakeries = rows.map(seller => ({
       id: `seller_${seller.id}`,
@@ -36,15 +33,10 @@ router.get('/', async (req, res) => {
       isSeller: true
     }));
     
-    // Ikkala turdagi manzillarni birlashtirish
-    const allBakeries = [...sellerBakeries, ...(staticBakeries || [])];
-    
-    res.json(allBakeries);
+    res.json(sellerBakeries);
   } catch (error) {
     console.error('Bakeries API error:', error);
-    // Xatolik bo'lsa static ma'lumotlarni qaytarish
-    const { bakeries: staticBakeries } = require('../db/static.json');
-    res.json(staticBakeries || []);
+    res.json([]);
   }
 });
 
