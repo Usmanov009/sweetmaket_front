@@ -170,6 +170,10 @@ function BakeryPickerMap({ C, selected, onSelect, bakeries = [] }) {
   const mapRef = useRef(null);
   const leafletMap = useRef(null);
   const markersRef = useRef([]);
+  
+  // Sellers va oddiy bakeries ni ajratish
+  const sellerBakeries = bakeries.filter(b => b.isSeller);
+  const regularBakeries = bakeries.filter(b => !b.isSeller);
 
   useEffect(() => {
     if (leafletMap.current || !bakeries.length) return;
@@ -180,13 +184,22 @@ function BakeryPickerMap({ C, selected, onSelect, bakeries = [] }) {
       if (mapRef.current) delete mapRef.current._leaflet_id;
       const map = L.map(mapRef.current, { zoomControl: true }).setView([41.299, 69.270], 12);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap', maxZoom: 19,
+        attribution: 'OpenStreetMap contributors',
+        maxZoom: 18,
       }).addTo(map);
+      leafletMap.current = map;
 
-      bakeries.forEach(b => {
+      // Clear previous markers
+      markersRef.current.forEach(m => m.remove());
+      markersRef.current = [];
+
+      // Add markers for regular bakeries only (sellers have no coordinates)
+      regularBakeries.forEach(b => {
+        if (!b.lat || !b.lng) return;
         const icon = L.divIcon({
-          html: `<div style="font-size:26px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))">${b.emoji}</div>`,
-          iconSize: [32, 32], iconAnchor: [16, 32], className: '',
+          html: `<div style="background:${C.navy};color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${b.emoji}</div>`,
+          iconSize: [32, 32],
+          className: 'custom-marker',
         });
         const marker = L.marker([b.lat, b.lng], { icon })
           .addTo(map)
@@ -194,46 +207,77 @@ function BakeryPickerMap({ C, selected, onSelect, bakeries = [] }) {
         marker.on('click', () => onSelect(b));
         markersRef.current.push(marker);
       });
-
-      if (!cancelled) leafletMap.current = map;
-      else { map.remove(); }
     });
-    return () => {
-      cancelled = true;
-      if (leafletMap.current) { leafletMap.current.remove(); leafletMap.current = null; markersRef.current = []; }
-    };
-  }, [bakeries]);
+    return () => { cancelled = true; };
+  }, [bakeries, C.navy, onSelect]);
 
   return (
     <div>
+      {/* Sellers section */}
+      {sellerBakeries.length > 0 && (
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:12, fontWeight:600, color:C.navy, marginBottom:8}}>🏪 Qandolatchilar</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {sellerBakeries.map(b => {
+              const active = selected?.id === b.id;
+              return (
+                <div key={b.id} onClick={() => onSelect(b)}
+                  style={{display:'flex',gap:12,alignItems:'center',padding:'12px 14px',borderRadius:14,
+                    border:`1.5px solid ${active ? C.navy : C.border}`,
+                    background: active ? 'rgba(29,78,216,.06)' : C.s1,
+                    cursor:'pointer',transition:'all .15s'}}>
+                  <div style={{fontSize:28,flexShrink:0}}>{b.emoji}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:700,color:active?C.navy:C.dark,marginBottom:2}}>{b.name}</div>
+                    <div style={{fontSize:12,color:C.muted,marginTop:2}}>{b.address}</div>
+                    <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {b.hours} &nbsp;·&nbsp; ⭐ {b.rating}</div>
+                  </div>
+                  <div style={{width:22,height:22,borderRadius:'50%',flexShrink:0,
+                    background:active?C.navy:'transparent',border:`2px solid ${active?C.navy:C.border}`,
+                    display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    {active && <span style={{color:'#fff',fontSize:12,fontWeight:700}}>✓</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={{borderRadius:14,overflow:'hidden',border:`1px solid ${C.border}`,marginBottom:10}}>
         <div ref={mapRef} style={{height:230,width:'100%'}}/>
       </div>
-      <div style={{display:'flex',flexDirection:'column',gap:8}}>
-        {bakeries.map(b => {
-          const active = selected?.id === b.id;
-          return (
-            <div key={b.id} onClick={() => onSelect(b)}
-              style={{display:'flex',gap:12,alignItems:'center',padding:'12px 14px',borderRadius:14,
-                border:`1.5px solid ${active ? C.navy : C.border}`,
-                background: active ? 'rgba(29,78,216,.06)' : C.s1,
-                cursor:'pointer',transition:'all .15s'}}>
-              <div style={{fontSize:28,flexShrink:0}}>{b.emoji}</div>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:13,fontWeight:700,color:C.dark,marginBottom:2}}>{b.name}</div>
-                <div style={{fontSize:11,color:C.muted}}>{b.address}</div>
-                <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {b.hours} · ⭐ {b.rating}</div>
-              </div>
-              <div style={{width:20,height:20,borderRadius:'50%',flexShrink:0,
-                border:`2px solid ${active ? C.navy : C.border}`,
-                background: active ? C.navy : 'transparent',
-                display:'flex',alignItems:'center',justifyContent:'center'}}>
-                {active && <div style={{width:8,height:8,borderRadius:'50%',background:'#fff'}}/>}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      
+      {/* Regular bakeries section */}
+      {regularBakeries.length > 0 && (
+        <div>
+          <div style={{fontSize:12, fontWeight:600, color:C.muted, marginBottom:8}}>📍 Boshqa manzillar</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {regularBakeries.map(b => {
+              const active = selected?.id === b.id;
+              return (
+                <div key={b.id} onClick={() => onSelect(b)}
+                  style={{display:'flex',gap:12,alignItems:'center',padding:'12px 14px',borderRadius:14,
+                    border:`1.5px solid ${active ? C.navy : C.border}`,
+                    background: active ? 'rgba(29,78,216,.06)' : C.s1,
+                    cursor:'pointer',transition:'all .15s'}}>
+                  <div style={{fontSize:28,flexShrink:0}}>{b.emoji}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:700,color:active?C.navy:C.dark,marginBottom:2}}>{b.name}</div>
+                    <div style={{fontSize:12,color:C.muted,marginTop:2}}>{b.address}</div>
+                    <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {b.hours} &nbsp;·&nbsp; ⭐ {b.rating}</div>
+                  </div>
+                  <div style={{width:22,height:22,borderRadius:'50%',flexShrink:0,
+                    background:active?C.navy:'transparent',border:`2px solid ${active?C.navy:C.border}`,
+                    display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    {active && <span style={{color:'#fff',fontSize:12,fontWeight:700}}>✓</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -658,7 +702,38 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], onAddToCart }
             Filial tanlang
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:10}}>
-            {bakeries.map(b => {
+            {/* Sellers first */}
+            {bakeries.filter(b => b.isSeller).map(b => {
+              const active = form.bakery?.id === b.id;
+              return (
+                <div key={b.id} onClick={()=>setF('bakery',b)}
+                  style={{display:'flex',gap:14,alignItems:'center',padding:'14px 16px',borderRadius:18,
+                    border:`2px solid ${active?C.navy:C.border}`,
+                    background: active ? `rgba(37,99,235,.05)` : C.s1,
+                    cursor:'pointer',transition:'all .18s',
+                    boxShadow: active ? `0 4px 16px ${C.navy}18` : 'none'}}>
+                  <div style={{width:46,height:46,borderRadius:14,flexShrink:0,
+                    background: active ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.s2,
+                    display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,
+                    transition:'background .18s'}}>
+                    {b.emoji}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:14,fontWeight:700,color:active?C.navy:C.dark}}>{b.name}</div>
+                    <div style={{fontSize:12,color:C.muted,marginTop:2}}>{b.address}</div>
+                    <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {b.hours} &nbsp;·&nbsp; ⭐ {b.rating}</div>
+                  </div>
+                  <div style={{width:22,height:22,borderRadius:'50%',flexShrink:0,
+                    border:`2.5px solid ${active?C.navy:C.border}`,
+                    background:active?C.navy:'transparent',transition:'all .18s',
+                    display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    {active && <svg width="11" height="11" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                  </div>
+                </div>
+              );
+            })}
+            {/* Regular bakeries */}
+            {bakeries.filter(b => !b.isSeller).map(b => {
               const active = form.bakery?.id === b.id;
               return (
                 <div key={b.id} onClick={()=>setF('bakery',b)}
