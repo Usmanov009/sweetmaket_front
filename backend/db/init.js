@@ -91,6 +91,7 @@ async function initDB() {
       password     TEXT NOT NULL,
       address      TEXT DEFAULT '',
       description  TEXT DEFAULT '',
+      telegram_id  TEXT UNIQUE,
       created_at   TIMESTAMPTZ DEFAULT NOW()
     )
   `);

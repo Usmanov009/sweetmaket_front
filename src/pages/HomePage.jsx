@@ -187,13 +187,13 @@ export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCa
           <div>Ничего не найдено</div>
         </div>
       )}
-      <div style={{ display:'grid', gridTemplateColumns: isDesktop ? 'repeat(auto-fill,minmax(188px,1fr))' : 'repeat(2,1fr)', gap:isDesktop?16:12, padding:'0 20px 4px' }}>
+      <div style={{ display:'grid', gridTemplateColumns: isDesktop ? 'repeat(auto-fill,minmax(188px,1fr))' : 'repeat(2,1fr)', gap:isDesktop?16:12, padding:'0 20px 24px' }}>
         {filtered.map(card => <CardItem key={card.id} card={card}/>)}
       </div>
 
       {/* Saved */}
       {cakeCards.some(c=>c.liked) && !search && (
-        <div style={{ padding:'24px 20px 4px' }}>
+        <div style={{ padding:'24px 20px 24px' }}>
           <div style={{ fontSize:isDesktop?18:16, fontWeight:700, color:C.dark, marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
             <Heart size={18} fill="#ef4444" color="#ef4444"/> Сохранённые
           </div>
@@ -215,7 +215,7 @@ export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCa
           </div>
         </div>
       )}
-      <div style={{ height:24 }}/>
+      <div style={{ height:100 }}/>
     </div>
   );
 }

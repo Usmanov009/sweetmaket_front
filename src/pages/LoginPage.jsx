@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Phone, User, Lock } from '@phosphor-icons/react';
+import { Phone, User, Lock, TelegramLogo } from '@phosphor-icons/react';
 import api from '../api';
 import OtpInput from '../components/OtpInput';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 
-export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDesktop }) {
+export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDesktop, setPage }) {
   const [firstName, setFirstName] = useState('');
   const [lastName,  setLastName]  = useState('');
   const [phone,     setPhone]     = useState('+998');
@@ -108,6 +108,21 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             boxShadow:`0 4px 16px ${C.navy}40`, transition:'all .25s',
           }}>
             {loading ? 'Отправка...' : '📲 Получить SMS код'}
+          </button>
+
+          <div style={{ textAlign:'center', margin:'16px 0', fontSize:14, color:C.muted }}>
+            — yoki —
+          </div>
+
+          <button 
+            onClick={() => setPage('telegram-auth')}
+            style={{
+              width:'100%', padding:14, borderRadius:14, border:`2px solid ${C.border}`, cursor:'pointer',
+              fontWeight:700, fontSize:15, color:C.dark,
+              background:C.s1, transition:'all .25s', display:'flex', alignItems:'center', justifyContent:'center', gap:8
+            }}>
+            <TelegramLogo size={20} />
+            Telegram orqali kirish
           </button>
 
           <div style={{ textAlign:'center', marginTop:20, fontSize:14, color:C.muted }}>

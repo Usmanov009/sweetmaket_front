@@ -88,8 +88,9 @@ router.post('/verify', async (req, res) => {
 
 // POST /api/auth/telegram
 router.post('/telegram', async (req, res) => {
-  const { initData } = req.body;
+  const { initData, userType } = req.body;
   if (!initData) return res.status(400).json({ error: 'initData kerak' });
+  if (!userType || !['user', 'seller'].includes(userType)) return res.status(400).json({ error: 'userType kerak (user yoki seller)' });
   if (!verifyTelegramData(initData)) return res.status(401).json({ error: 'Telegram data yaroqsiz' });
 
   const params  = new URLSearchParams(initData);
@@ -99,26 +100,53 @@ router.post('/telegram', async (req, res) => {
   try { tgUser = JSON.parse(userRaw); } catch { return res.status(400).json({ error: 'User parse xatosi' }); }
 
   const telegramId = String(tgUser.id);
-  let userRow = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])).rows[0];
-  if (!userRow) {
-    const id = genId();
-    const fn = tgUser.first_name || '';
-    const ln = tgUser.last_name  || '';
-    const nm = [fn, ln].filter(Boolean).join(' ') || tgUser.username || 'Foydalanuvchi';
-    await pool.query(
-      `INSERT INTO users (id, telegram_id, phone, first_name, last_name, name, username) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [id, telegramId, '', fn, ln, nm, tgUser.username || '']
-    );
-    await pool.query(
-      `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5),($6,$2,$7,$8,$9)`,
-      [genId(), id, '🎂', 'Onam', '12 Апреля', genId(), '🎉', "Do'stim", '3 Июня']
-    );
-    userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [id])).rows[0];
-  }
+  
+  if (userType === 'seller') {
+    // Check if already registered as user
+    const existingUser = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])).rows[0];
+    if (existingUser) {
+      return res.status(400).json({ error: 'Siz allaqachon foydalanuvchi sifatida ro\'yxatdan o\'tgansiz. Iltimos, boshqa Telegram hisobidan foydalaning.' });
+    }
+    
+    let sellerRow = (await pool.query('SELECT * FROM sellers WHERE telegram_id = $1', [telegramId])).rows[0];
+    if (!sellerRow) {
+      return res.status(400).json({ 
+        error: 'Sotuvchi sifatida ro\'yxatdan o\'tish uchun avval veb-saytdan ro\'yxatdan o\'ting',
+        needRegistration: true 
+      });
+    }
+    
+    const seller = rowToSeller(sellerRow);
+    const token = jwt.sign({ id: seller.id, type: 'seller', phone: seller.phone }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: seller, userType: 'seller' });
+  } else {
+    // Check if already registered as seller
+    const existingSeller = (await pool.query('SELECT * FROM sellers WHERE telegram_id = $1', [telegramId])).rows[0];
+    if (existingSeller) {
+      return res.status(400).json({ error: 'Siz allaqachon sotuvchi sifatida ro\'yxatdan o\'tgansiz. Iltimos, boshqa Telegram hisobidan foydalaning.' });
+    }
+    
+    let userRow = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])).rows[0];
+    if (!userRow) {
+      const id = genId();
+      const fn = tgUser.first_name || '';
+      const ln = tgUser.last_name  || '';
+      const nm = [fn, ln].filter(Boolean).join(' ') || tgUser.username || 'Foydalanuvchi';
+      await pool.query(
+        `INSERT INTO users (id, telegram_id, phone, first_name, last_name, name, username) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [id, telegramId, '', fn, ln, nm, tgUser.username || '']
+      );
+      await pool.query(
+        `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5),($6,$2,$7,$8,$9)`,
+        [genId(), id, '🎂', 'Onam', '12 Апреля', genId(), '🎉', "Do'stim", '3 Июня']
+      );
+      userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [id])).rows[0];
+    }
 
-  const user  = rowToUser(userRow);
-  const token = jwt.sign({ id: user.id, phone: user.phone }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, user });
+    const user = rowToUser(userRow);
+    const token = jwt.sign({ id: user.id, type: 'user', phone: user.phone }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user, userType: 'user' });
+  }
 });
 
 // GET /api/auth/me
@@ -154,6 +182,18 @@ function rowToUser(r) {
     lastName: r.last_name,
     name: r.name,
     username: r.username || undefined,
+    createdAt: r.created_at,
+  };
+}
+
+function rowToSeller(r) {
+  return {
+    id: r.id,
+    phone: r.phone || '',
+    telegramId: r.telegram_id || undefined,
+    name: r.name,
+    shopName: r.shop_name,
+    address: r.address,
     createdAt: r.created_at,
   };
 }
