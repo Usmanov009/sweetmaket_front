@@ -88,15 +88,48 @@ router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
 });
 
 // GET /api/seller/orders
-router.get('/orders', sellerAuth, async (_req, res) => {
-  const { rows } = await pool.query(
-    `SELECT o.*, u.name as user_name, u.phone as user_phone
-     FROM orders o
-     LEFT JOIN users u ON u.id = o.user_id
-     ORDER BY o.created_at DESC
-     LIMIT 100`
-  );
-  res.json(rows);
+router.get('/orders', sellerAuth, async (req, res) => {
+  try {
+    const sellerId = req.seller.id;
+    
+    // Avval o'z buyurtmalari
+    const { rows: myOrders } = await pool.query(
+      `SELECT o.*, u.name as user_name, u.phone as user_phone, s.name as seller_name
+       FROM orders o
+       LEFT JOIN users u ON u.id = o.user_id
+       LEFT JOIN sellers s ON s.id = o.seller_id
+       WHERE o.seller_id = $1
+       ORDER BY o.created_at DESC
+       LIMIT 100`,
+      [sellerId]
+    );
+    
+    // Keyin tasdiqlangan buyurtmalarni qolgan sotuvchilardan olish
+    // Faqat tasdiqlangan va tayyor buyurtmalar, ularning sotuvchisi faol emasligi kerak
+    const { rows: otherOrders } = await pool.query(
+      `SELECT o.*, u.name as user_name, u.phone as user_phone, s.name as seller_name
+       FROM orders o
+       LEFT JOIN users u ON u.id = o.user_id
+       LEFT JOIN sellers s ON s.id = o.seller_id
+       WHERE o.status IN ('confirmed', 'ready') 
+       AND o.seller_id != $1
+       AND o.seller_id IS NOT NULL
+       AND o.seller_id NOT IN (
+         SELECT id FROM sellers WHERE phone IS NOT NULL AND password IS NOT NULL
+       )
+       ORDER BY o.created_at DESC
+       LIMIT 50`,
+      [sellerId]
+    );
+    
+    // Ikkala ro'yxatni birlashtirish
+    const allOrders = [...myOrders, ...otherOrders];
+    
+    res.json(allOrders);
+  } catch(e) {
+    console.error('Seller orders error:', e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 function rowToSeller(r) {

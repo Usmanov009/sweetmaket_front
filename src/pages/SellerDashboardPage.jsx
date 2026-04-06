@@ -32,6 +32,10 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
       .finally(() => setLoading(false));
   }, []);
 
+  // O'z buyurtmalari va boshqalarni ajratish
+  const myOrders = orders.filter(order => order.seller_id === seller?.id);
+  const otherOrders = orders.filter(order => order.seller_id !== seller?.id && ['confirmed', 'ready'].includes(order.status));
+
   const updateStatus = async (orderId, status) => {
     setOrders(prev => prev.map(o => o.id === orderId ? {...o, status} : o));
     try {
@@ -158,17 +162,17 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
 
         <div style={{ padding:'16px 16px 100px' }}>
 
-          {/* Orders tab - Yangi buyurtmalar */}
+          {/* Orders tab - Yangi buyurtmalar (faqat o'zimniki) */}
           {tab==='orders' && (
             loading ? (
               <div style={{ textAlign:'center', padding:'60px 20px', color:C.muted }}>Yuklanmoqda...</div>
-            ) : orders.length === 0 ? (
+            ) : myOrders.length === 0 ? (
               <div style={{ textAlign:'center', padding:'60px 20px' }}>
                 <div style={{ fontSize:60, marginBottom:12, opacity:.3 }}>📦</div>
-                <div style={{ fontWeight:700, color:C.dark, marginBottom:6 }}>Buyurtmalar yo'q</div>
+                <div style={{ fontWeight:700, color:C.dark, marginBottom:6 }}>Yangi buyurtmalar yo'q</div>
                 <div style={{ color:C.muted, fontSize:13 }}>Yangi buyurtmalar bu yerda ko'rinadi</div>
               </div>
-            ) : orders.map(order => (
+            ) : myOrders.map(order => (
               <div key={order.id} style={{ background:C.s1, borderRadius:20, padding:16, marginBottom:12, border:`1px solid ${C.border}` }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
                   <div>
@@ -227,22 +231,27 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
             ))
           )}
 
-          {/* Accepted orders tab */}
+          {/* Accepted orders tab - Boshqa sotuvchilarning tasdiqlangan buyurtmalari */}
           {tab==='accepted' && (
             loading ? (
               <div style={{ textAlign:'center', padding:'60px 20px', color:C.muted }}>Yuklanmoqda...</div>
-            ) : orders.filter(o=>o.status==='confirmed').length === 0 ? (
+            ) : otherOrders.length === 0 ? (
               <div style={{ textAlign:'center', padding:'60px 20px' }}>
                 <div style={{ fontSize:60, marginBottom:12, opacity:.3 }}>✅</div>
                 <div style={{ fontWeight:700, color:C.dark, marginBottom:6 }}>Qabul qilingan buyurtmalar yo'q</div>
-                <div style={{ color:C.muted, fontSize:13 }}>Qabul qilingan buyurtmalar bu yerda ko'rinadi</div>
+                <div style={{ color:C.muted, fontSize:13 }}>Boshqa sotuvchilarning tasdiqlangan buyurtmalari bu yerda ko'rinadi</div>
               </div>
-            ) : orders.filter(o=>o.status==='confirmed').map(order => (
+            ) : otherOrders.map(order => (
               <div key={order.id} style={{ background:C.s1, borderRadius:20, padding:16, marginBottom:12, border:`1px solid ${C.border}` }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
                   <div>
                     <div style={{ fontSize:14, fontWeight:700, color:C.dark }}>{order.user_name || 'Xaridor'}</div>
                     <div style={{ fontSize:12, color:C.muted }}>{order.user_phone || ''}</div>
+                    {order.seller_name && (
+                      <div style={{ fontSize:11, color:C.navy, fontWeight:600, marginTop:2 }}>
+                        🏪 {order.seller_name}
+                      </div>
+                    )}
                   </div>
                   <div style={{ fontSize:12, fontWeight:700, color:STATUS_COLORS[order.status]||'#666',
                     background:`${STATUS_COLORS[order.status]||'#666'}15`, padding:'4px 10px', borderRadius:50 }}>
@@ -266,14 +275,6 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
                     <button onClick={() => handleChat(order)}
                       style={{ padding:'6px 14px', borderRadius:10, border:'none', background:'#8b5cf6', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:700 }}>
                       <ChatCircle size={14} />
-                    </button>
-                    <button onClick={() => handlePhotoCapture(order.id)}
-                      style={{ padding:'6px 14px', borderRadius:10, border:'none', background:'#10b981', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:700 }}>
-                      📸 Rasmga olish
-                    </button>
-                    <button onClick={() => handleOrderReady(order.id)}
-                      style={{ padding:'6px 14px', borderRadius:10, border:'none', background:'#3b82f6', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:700 }}>
-                      Tayyor
                     </button>
                   </div>
                 </div>
