@@ -22,14 +22,22 @@ const STATUS_COLORS = { pending:'#d97706', confirmed:'#2563eb', cancelled:'#dc26
 
 export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) {
   const [orders,  setOrders]  = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab,     setTab]     = useState('orders'); // 'orders' | 'accepted' | 'profile'
+  const [tab,     setTab]     = useState('orders'); // 'orders' | 'accepted' | 'products' | 'profile'
 
   useEffect(() => {
     sellerFetch('GET', '/api/seller/orders')
       .then(data => setOrders(Array.isArray(data) ? data : []))
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch(`${BASE}/api/products`)
+      .then(r => r.json())
+      .then(data => setProducts(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, []);
 
   // O'z buyurtmalari va boshqalarni ajratish
@@ -149,7 +157,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
       {/* Tab bar */}
       <div style={{ maxWidth:700, margin:'0 auto' }}>
         <div style={{ display:'flex', borderBottom:`1px solid ${C.border}`, padding:'0 16px' }}>
-          {[['orders','📦 Yangi buyurtmalar'],['accepted','✅ Qabul qilingan'],['profile','🏪 Profil']].map(([t, label]) => (
+          {[['orders','📦 Yangi buyurtmalar'],['accepted','✅ Qabul qilingan'],['products','🎂 Tortlar'],['profile','🏪 Profil']].map(([t, label]) => (
             <button key={t} onClick={()=>setTab(t)}
               style={{ padding:'14px 18px', border:'none', background:'none', cursor:'pointer', fontSize:14,
                 fontWeight: tab===t ? 700 : 500, color: tab===t ? C.navy : C.muted,
@@ -285,6 +293,31 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
                 </div>
               </div>
             ))
+          )}
+
+          {/* Products tab - Tortlar */}
+          {tab==='products' && (
+            <div>
+              <div style={{ textAlign:'center', padding:'60px 20px' }}>
+                <div style={{ fontSize:60, marginBottom:12, opacity:.3 }}>🎂</div>
+                <div style={{ fontWeight:700, color:C.dark, marginBottom:6 }}>Tortlar ro'yxati</div>
+                <div style={{ color:C.muted, fontSize:13 }}>Barcha tortlar va shirinliklar</div>
+              </div>
+              
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16, padding:'0 16px' }}>
+                {products.map(product => (
+                  <div key={product.id} style={{ background:C.s1, borderRadius:20, padding:16, border:`1px solid ${C.border}` }}>
+                    <div style={{ fontSize:32, marginBottom:12, textAlign:'center' }}>{product.emoji}</div>
+                    <div style={{ fontSize:14, fontWeight:700, color:C.dark, marginBottom:8 }}>{product.name}</div>
+                    <div style={{ fontSize:12, color:C.muted, marginBottom:12, lineHeight:1.4 }}>{product.desc}</div>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <div style={{ fontSize:16, fontWeight:800, color:C.navy }}>{sum(product.price)}</div>
+                      <div style={{ fontSize:12, color:C.muted }}>⭐ {product.rating}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Profile tab */}
