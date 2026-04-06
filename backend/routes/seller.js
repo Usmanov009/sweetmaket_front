@@ -132,6 +132,86 @@ router.get('/orders', sellerAuth, async (req, res) => {
   }
 });
 
+// GET /api/seller/products
+router.get('/products', sellerAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT products FROM sellers WHERE id = $1',
+      [req.seller.id]
+    );
+    const products = rows[0]?.products || [];
+    res.json(products);
+  } catch(e) {
+    console.error('Get seller products error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/seller/products
+router.post('/products', sellerAuth, async (req, res) => {
+  try {
+    const { name, emoji, price, desc, category = 'tort' } = req.body;
+    if (!name || !emoji || !price) {
+      return res.status(400).json({ error: 'Name, emoji va price kerak' });
+    }
+
+    const { rows } = await pool.query(
+      'SELECT products FROM sellers WHERE id = $1',
+      [req.seller.id]
+    );
+    
+    const products = rows[0]?.products || [];
+    const newProduct = {
+      id: Date.now().toString(),
+      name,
+      emoji,
+      price: Number(price),
+      desc: desc || '',
+      category,
+      rating: '0.0',
+      badge: 'NEW',
+      badgeColor: '#1a7a3a',
+      bg: 'linear-gradient(135deg,#ffb3d1,#ffd6e7)',
+      liked: false
+    };
+    
+    products.push(newProduct);
+    
+    await pool.query(
+      'UPDATE sellers SET products = $1 WHERE id = $2',
+      [JSON.stringify(products), req.seller.id]
+    );
+    
+    res.json(newProduct);
+  } catch(e) {
+    console.error('Add seller product error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DELETE /api/seller/products/:id
+router.delete('/products/:id', sellerAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT products FROM sellers WHERE id = $1',
+      [req.seller.id]
+    );
+    
+    const products = rows[0]?.products || [];
+    const filteredProducts = products.filter(p => p.id !== req.params.id);
+    
+    await pool.query(
+      'UPDATE sellers SET products = $1 WHERE id = $2',
+      [JSON.stringify(filteredProducts), req.seller.id]
+    );
+    
+    res.json({ ok: true });
+  } catch(e) {
+    console.error('Delete seller product error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 function rowToSeller(r) {
   return {
     id: r.id,

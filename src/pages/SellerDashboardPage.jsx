@@ -34,8 +34,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
   }, []);
 
   useEffect(() => {
-    fetch(`${BASE}/api/products`)
-      .then(r => r.json())
+    sellerFetch('GET', '/api/seller/products')
       .then(data => setProducts(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
@@ -67,6 +66,42 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
         }
       }
     } catch {}
+  };
+
+  const addProduct = async () => {
+    const name = prompt('Tort nomi:');
+    if (!name) return;
+    
+    const emoji = prompt('Emoji (masalan: 🎂):');
+    if (!emoji) return;
+    
+    const price = prompt('Narx (so\'m):');
+    if (!price || isNaN(price)) return;
+    
+    const desc = prompt('Tavsif (ixtiyoriy):') || '';
+    
+    try {
+      const newProduct = await sellerFetch('POST', '/api/seller/products', {
+        name,
+        emoji,
+        price: Number(price),
+        desc
+      });
+      setProducts(prev => [...prev, newProduct]);
+    } catch (error) {
+      alert('Tort qo\'shishda xatolik: ' + error.message);
+    }
+  };
+
+  const deleteProduct = async (productId) => {
+    if (!confirm('Bu tortni o\'chirishni tasdiqlaysizmi?')) return;
+    
+    try {
+      await sellerFetch('DELETE', `/api/seller/products/${productId}`);
+      setProducts(prev => prev.filter(p => p.id !== productId));
+    } catch (error) {
+      alert('Tortni o\'chirishda xatolik: ' + error.message);
+    }
   };
 
   const [showCamera, setShowCamera] = useState(false);
@@ -298,15 +333,23 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
           {/* Products tab - Tortlar */}
           {tab==='products' && (
             <div>
-              <div style={{ textAlign:'center', padding:'60px 20px' }}>
+              <div style={{ textAlign:'center', padding:'40px 20px' }}>
                 <div style={{ fontSize:60, marginBottom:12, opacity:.3 }}>🎂</div>
-                <div style={{ fontWeight:700, color:C.dark, marginBottom:6 }}>Tortlar ro'yxati</div>
-                <div style={{ color:C.muted, fontSize:13 }}>Barcha tortlar va shirinliklar</div>
+                <div style={{ fontWeight:700, color:C.dark, marginBottom:6 }}>Mening tortlarim</div>
+                <div style={{ color:C.muted, fontSize:13 }}>O'z tortlaringizni qo'shing va boshqaring</div>
+                <button onClick={addProduct}
+                  style={{ marginTop:16, padding:'12px 24px', borderRadius:12, border:'none', background:C.navy, color:'#fff', cursor:'pointer', fontWeight:600, fontSize:14 }}>
+                  ➕ Yangi tort qo'shish
+                </button>
               </div>
               
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16, padding:'0 16px' }}>
                 {products.map(product => (
-                  <div key={product.id} style={{ background:C.s1, borderRadius:20, padding:16, border:`1px solid ${C.border}` }}>
+                  <div key={product.id} style={{ background:C.s1, borderRadius:20, padding:16, border:`1px solid ${C.border}`, position:'relative' }}>
+                    <button onClick={() => deleteProduct(product.id)}
+                      style={{ position:'absolute', top:8, right:8, width:24, height:24, borderRadius:'50%', border:'none', background:'rgba(220,38,38,.1)', color:'#dc2626', cursor:'pointer', fontSize:12, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      ✕
+                    </button>
                     <div style={{ fontSize:32, marginBottom:12, textAlign:'center' }}>{product.emoji}</div>
                     <div style={{ fontSize:14, fontWeight:700, color:C.dark, marginBottom:8 }}>{product.name}</div>
                     <div style={{ fontSize:12, color:C.muted, marginBottom:12, lineHeight:1.4 }}>{product.desc}</div>

@@ -93,6 +93,7 @@ async function initDB() {
       address      TEXT DEFAULT '',
       description  TEXT DEFAULT '',
       telegram_id  TEXT UNIQUE,
+      products     JSONB DEFAULT '[]',
       created_at   TIMESTAMPTZ DEFAULT NOW()
     )
   `);
