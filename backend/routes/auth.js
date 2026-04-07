@@ -2,7 +2,7 @@ const router = require('express').Router();
 const jwt    = require('jsonwebtoken');
 const crypto = require('crypto');
 const auth   = require('../middleware/auth');
-const pool   = require('../db/pool');
+const { getDB } = require('../db/mongo');
 const { genId } = require('../utils/db');
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
@@ -28,14 +28,22 @@ router.post('/request-otp', async (req, res) => {
   const { phone } = req.body;
   if (!phone) return res.status(400).json({ error: 'Telefon raqami kerak' });
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  await pool.query(
-    `INSERT INTO otps (phone, otp, created_at) VALUES ($1, $2, $3)
-     ON CONFLICT (phone) DO UPDATE SET otp = $2, created_at = $3`,
-    [phone, otp, Date.now()]
-  );
-  console.log(`📱 OTP [${phone}]: ${otp}`);
-  res.json({ message: 'OTP yuborildi', devOtp: otp });
+  try {
+    const db = getDB();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    await db.collection('otps').updateOne(
+      { phone },
+      { $set: { phone, otp, created_at: Date.now() } },
+      { upsert: true }
+    );
+    
+    console.log(`📱 OTP [${phone}]: ${otp}`);
+    res.json({ message: 'OTP yuborildi', devOtp: otp });
+  } catch (error) {
+    console.error('OTP request error:', error);
+    res.status(500).json({ error: 'Xatolik yuz berdi' });
+  }
 });
 
 // POST /api/auth/verify
@@ -43,159 +51,189 @@ router.post('/verify', async (req, res) => {
   const { phone, otp, firstName, lastName } = req.body;
   if (!phone || !otp) return res.status(400).json({ error: 'Telefon va OTP kerak' });
 
-  const { rows } = await pool.query('SELECT * FROM otps WHERE phone = $1', [phone]);
-  const record = rows[0];
-  if (!record) return res.status(400).json({ error: "OTP noto'g'ri" });
-  if (record.otp !== otp) return res.status(400).json({ error: "OTP noto'g'ri" });
-  if (Date.now() - Number(record.created_at) > 5 * 60 * 1000) {
-    await pool.query('DELETE FROM otps WHERE phone = $1', [phone]);
-    return res.status(400).json({ error: "OTP muddati o'tgan" });
-  }
-  await pool.query('DELETE FROM otps WHERE phone = $1', [phone]);
-
-  let userRow = (await pool.query('SELECT * FROM users WHERE phone = $1', [phone])).rows[0];
-  if (!userRow) {
-    const id = genId();
-    const fn = firstName || '';
-    const ln = lastName  || '';
-    const nm = [fn, ln].filter(Boolean).join(' ');
-    await pool.query(
-      `INSERT INTO users (id, phone, first_name, last_name, name) VALUES ($1,$2,$3,$4,$5)`,
-      [id, phone, fn, ln, nm]
-    );
-    // Default tug'ilgan kunlar
-    await pool.query(
-      `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5),($6,$2,$7,$8,$9)`,
-      [genId(), id, '🎂', 'Onam', '12 Апреля', genId(), '🎉', "Do'stim", '3 Июня']
-    );
-    userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [id])).rows[0];
-  } else {
-    if (firstName || lastName) {
-      const fn = firstName || userRow.first_name;
-      const ln = lastName  || userRow.last_name;
-      await pool.query(
-        `UPDATE users SET first_name=$1, last_name=$2, name=$3 WHERE id=$4`,
-        [fn, ln, [fn, ln].filter(Boolean).join(' '), userRow.id]
-      );
-      userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [userRow.id])).rows[0];
+  try {
+    const db = getDB();
+    
+    // OTP ni tekshirish
+    const otpRecord = await db.collection('otps').findOne({ phone });
+    if (!otpRecord) return res.status(400).json({ error: "OTP noto'g'ri" });
+    if (otpRecord.otp !== otp) return res.status(400).json({ error: "OTP noto'g'ri" });
+    if (Date.now() - Number(otpRecord.created_at) > 5 * 60 * 1000) {
+      await db.collection('otps').deleteOne({ phone });
+      return res.status(400).json({ error: "OTP muddati o'tgan" });
     }
-  }
+    await db.collection('otps').deleteOne({ phone });
 
-  const user = rowToUser(userRow);
-  const token = jwt.sign({ id: user.id, phone: user.phone }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, user });
+    // User ni topish yoki yaratish
+    let user = await db.collection('users').findOne({ phone });
+    if (!user) {
+      const id = genId();
+      const fn = firstName || '';
+      const ln = lastName  || '';
+      const nm = [fn, ln].filter(Boolean).join(' ');
+      
+      user = {
+        id,
+        phone,
+        first_name: fn,
+        last_name: ln,
+        name: nm,
+        created_at: new Date()
+      };
+      
+      await db.collection('users').insertOne(user);
+      
+      // Default tug'ilgan kunlar
+      const birthdays = [
+        {
+          id: genId(),
+          user_id: id,
+          emoji: '🎂',
+          name: 'Onam',
+          date: '12 Апреля'
+        },
+        {
+          id: genId(),
+          user_id: id,
+          emoji: '🎉',
+          name: "Do'stim",
+          date: '3 Июня'
+        }
+      ];
+      
+      await db.collection('birthdays').insertMany(birthdays);
+    } else {
+      // Update user info if provided
+      if (firstName || lastName) {
+        const fn = firstName || user.first_name;
+        const ln = lastName || user.last_name;
+        const nm = [fn, ln].filter(Boolean).join(' ');
+        
+        await db.collection('users').updateOne(
+          { phone },
+          { $set: { first_name: fn, last_name: ln, name: nm } }
+        );
+        
+        user.first_name = fn;
+        user.last_name = ln;
+        user.name = nm;
+      }
+    }
+
+    const token = jwt.sign({ id: user.id, phone: user.phone }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user });
+  } catch (error) {
+    console.error('Verify error:', error);
+    res.status(500).json({ error: 'Xatolik yuz berdi' });
+  }
 });
 
 // POST /api/auth/telegram
 router.post('/telegram', async (req, res) => {
   const { initData, userType } = req.body;
-  if (!initData) return res.status(400).json({ error: 'initData kerak' });
-  if (!userType || !['user', 'seller'].includes(userType)) return res.status(400).json({ error: 'userType kerak (user yoki seller)' });
-  if (!verifyTelegramData(initData)) return res.status(401).json({ error: 'Telegram data yaroqsiz' });
+  if (!initData) return res.status(400).json({ error: 'Telegram ma\'lumotlari kerak' });
+  if (!userType || !['user', 'seller'].includes(userType)) {
+    return res.status(400).json({ error: 'User type kerak (user yoki seller)' });
+  }
 
-  const params  = new URLSearchParams(initData);
-  const userRaw = params.get('user');
-  if (!userRaw) return res.status(400).json({ error: 'User topilmadi' });
-  let tgUser;
-  try { tgUser = JSON.parse(userRaw); } catch { return res.status(400).json({ error: 'User parse xatosi' }); }
-
-  const telegramId = String(tgUser.id);
-  
-  if (userType === 'seller') {
-    // Check if already registered as user
-    const existingUser = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])).rows[0];
-    if (existingUser) {
-      return res.status(400).json({ error: 'Siz allaqachon foydalanuvchi sifatida ro\'yxatdan o\'tgansiz. Iltimos, boshqa Telegram hisobidan foydalaning.' });
-    }
-    
-    let sellerRow = (await pool.query('SELECT * FROM sellers WHERE telegram_id = $1', [telegramId])).rows[0];
-    if (!sellerRow) {
-      return res.status(400).json({ 
-        error: 'Sotuvchi sifatida ro\'yxatdan o\'tish uchun avval veb-saytdan ro\'yxatdan o\'ting',
-        needRegistration: true 
-      });
-    }
-    
-    const seller = rowToSeller(sellerRow);
-    const token = jwt.sign({ id: seller.id, type: 'seller', phone: seller.phone }, JWT_SECRET, { expiresIn: '30d' });
-    res.json({ token, user: seller, userType: 'seller' });
-  } else {
-    // Check if already registered as seller
-    const existingSeller = (await pool.query('SELECT * FROM sellers WHERE telegram_id = $1', [telegramId])).rows[0];
-    if (existingSeller) {
-      return res.status(400).json({ error: 'Siz allaqachon sotuvchi sifatida ro\'yxatdan o\'tgansiz. Iltimos, boshqa Telegram hisobidan foydalaning.' });
-    }
-    
-    let userRow = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])).rows[0];
-    if (!userRow) {
-      const id = genId();
-      const fn = tgUser.first_name || '';
-      const ln = tgUser.last_name  || '';
-      const nm = [fn, ln].filter(Boolean).join(' ') || tgUser.username || 'Foydalanuvchi';
-      await pool.query(
-        `INSERT INTO users (id, telegram_id, phone, first_name, last_name, name, username) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-        [id, telegramId, '', fn, ln, nm, tgUser.username || '']
-      );
-      await pool.query(
-        `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5),($6,$2,$7,$8,$9)`,
-        [genId(), id, '🎂', 'Onam', '12 Апреля', genId(), '🎉', "Do'stim", '3 Июня']
-      );
-      userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [id])).rows[0];
+  try {
+    if (!verifyTelegramData(initData)) {
+      return res.status(400).json({ error: 'Telegram ma\'lumotlari noto\'g\'ri' });
     }
 
-    const user = rowToUser(userRow);
-    const token = jwt.sign({ id: user.id, type: 'user', phone: user.phone }, JWT_SECRET, { expiresIn: '30d' });
-    res.json({ token, user, userType: 'user' });
+    const params = new URLSearchParams(initData);
+    const telegramId = params.get('user');
+    const firstName = params.get('first_name') || '';
+    const lastName = params.get('last_name') || '';
+    const username = params.get('username') || '';
+
+    const db = getDB();
+
+    if (userType === 'user') {
+      // User login
+      let user = await db.collection('users').findOne({ telegram_id: telegramId });
+      
+      if (!user) {
+        // Tekshirish - user boshqa type da ro'yxatdan o'tganmi
+        const existingSeller = await db.collection('sellers').findOne({ telegram_id: telegramId });
+        if (existingSeller) {
+          return res.status(400).json({ error: 'Bu Telegram akkaunti allaqachon sotuvchi sifatida ro\'yxatdan o\'tgan' });
+        }
+
+        // Yangi user yaratish
+        const id = genId();
+        const nm = [firstName, lastName].filter(Boolean).join(' ');
+        
+        user = {
+          id,
+          telegram_id: telegramId,
+          first_name: firstName,
+          last_name: lastName,
+          name: nm,
+          username,
+          created_at: new Date()
+        };
+        
+        await db.collection('users').insertOne(user);
+        
+        // Default tug'ilgan kunlar
+        const birthdays = [
+          {
+            id: genId(),
+            user_id: id,
+            emoji: '🎂',
+            name: 'Onam',
+            date: '12 Апреля'
+          },
+          {
+            id: genId(),
+            user_id: id,
+            emoji: '🎉',
+            name: "Do'stim",
+            date: '3 Июня'
+          }
+        ];
+        
+        await db.collection('birthdays').insertMany(birthdays);
+      }
+
+      const token = jwt.sign({ id: user.id, phone: user.phone || telegramId }, JWT_SECRET, { expiresIn: '30d' });
+      res.json({ token, user });
+
+    } else {
+      // Seller login
+      let seller = await db.collection('sellers').findOne({ telegram_id: telegramId });
+      
+      if (!seller) {
+        // Tekshirish - seller boshqa type da ro'yxatdan o'tganmi
+        const existingUser = await db.collection('users').findOne({ telegram_id: telegramId });
+        if (existingUser) {
+          return res.status(400).json({ error: 'Bu Telegram akkaunti allaqachon foydalanuvchi sifatida ro\'yxatdan o\'tgan' });
+        }
+
+        return res.status(404).json({ error: 'Sotuvchi topilmadi. Avval veb-saytdan ro\'yxatdan o\'ting' });
+      }
+
+      const token = jwt.sign({ id: seller.id, phone: seller.phone, role: 'seller' }, JWT_SECRET, { expiresIn: '30d' });
+      res.json({ token, seller });
+    }
+  } catch (error) {
+    console.error('Telegram auth error:', error);
+    res.status(500).json({ error: 'Xatolik yuz berdi' });
   }
 });
 
 // GET /api/auth/me
 router.get('/me', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
-  if (!rows[0]) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
-  res.json({ user: rowToUser(rows[0]) });
+  try {
+    const db = getDB();
+    const user = await db.collection('users').findOne({ id: req.user.id });
+    if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
+    res.json({ user });
+  } catch (error) {
+    console.error('Get me error:', error);
+    res.status(500).json({ error: 'Xatolik yuz berdi' });
+  }
 });
-
-// PATCH /api/auth/me
-router.patch('/me', auth, async (req, res) => {
-  const { firstName, lastName } = req.body;
-  if (!firstName && !lastName) return res.status(400).json({ error: 'Ism yoki familiya kerak' });
-  const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
-  if (!rows[0]) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
-  const fn = firstName !== undefined ? firstName : rows[0].first_name;
-  const ln = lastName  !== undefined ? lastName  : rows[0].last_name;
-  const nm = [fn, ln].filter(Boolean).join(' ');
-  await pool.query(
-    `UPDATE users SET first_name=$1, last_name=$2, name=$3 WHERE id=$4`,
-    [fn, ln, nm, req.user.id]
-  );
-  const updated = (await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id])).rows[0];
-  res.json({ user: rowToUser(updated) });
-});
-
-function rowToUser(r) {
-  return {
-    id: r.id,
-    phone: r.phone || '',
-    telegramId: r.telegram_id || undefined,
-    firstName: r.first_name,
-    lastName: r.last_name,
-    name: r.name,
-    username: r.username || undefined,
-    createdAt: r.created_at,
-  };
-}
-
-function rowToSeller(r) {
-  return {
-    id: r.id,
-    phone: r.phone || '',
-    telegramId: r.telegram_id || undefined,
-    name: r.name,
-    shopName: r.shop_name,
-    address: r.address,
-    createdAt: r.created_at,
-  };
-}
 
 module.exports = router;

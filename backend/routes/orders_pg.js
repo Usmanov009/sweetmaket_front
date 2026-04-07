@@ -1,16 +1,15 @@
 const router = require('express').Router();
-const { getDB } = require('../db/mongo');
+const pool   = require('../db/pool');
 const { genId } = require('../utils/db');
 
 // GET /api/orders
 router.get('/', async (req, res, next) => {
   try {
-    const db = getDB();
-    const orders = await db.collection('orders')
-      .find({ user_id: req.user.id })
-      .sort({ created_at: -1 })
-      .toArray();
-    res.json(orders.map(rowToOrder));
+    const { rows } = await pool.query(
+      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.user.id]
+    );
+    res.json(rows.map(rowToOrder));
   } catch (e) { next(e); }
 });
 
@@ -28,23 +27,18 @@ router.post('/', async (req, res, next) => {
     }
 
     const id = genId();
-    const newOrder = {
-      id,
-      user_id: req.user.id,
-      seller_id: sellerId,
-      items: items,
-      total: Number(total),
-      bakery: bakery || null,
-      payment_mode: paymentMode || 'cash',
-      card_info: cardInfo || null,
-      status: 'pending',
-      created_at: new Date()
-    };
-
-    await db.collection('orders').insertOne(newOrder);
-    res.status(201).json(rowToOrder(newOrder));
+    const { rows } = await pool.query(
+      `INSERT INTO orders (id, user_id, seller_id, items, total, bakery, payment_mode, card_info, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending') RETURNING *`,
+      [id, req.user.id, sellerId, JSON.stringify(items), total,
+       bakery ? JSON.stringify(bakery) : null,
+       paymentMode || 'cash',
+       cardInfo ? JSON.stringify(cardInfo) : null]
+    );
+    res.status(201).json(rowToOrder(rows[0]));
   } catch (e) { next(e); }
 });
+
 
 function rowToOrder(r) {
   return {

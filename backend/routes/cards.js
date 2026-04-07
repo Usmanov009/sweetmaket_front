@@ -1,15 +1,16 @@
 const router = require('express').Router();
-const pool   = require('../db/pool');
+const { getDB } = require('../db/mongo');
 const { genId } = require('../utils/db');
 
 // GET /api/cards
 router.get('/', async (req, res, next) => {
   try {
-    const { rows } = await pool.query(
-      'SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at ASC',
-      [req.user.id]
-    );
-    res.json(rows.map(rowToCard));
+    const db = getDB();
+    const cards = await db.collection('cards')
+      .find({ user_id: req.user.id })
+      .sort({ created_at: 1 })
+      .toArray();
+    res.json(cards.map(rowToCard));
   } catch (e) { next(e); }
 });
 
@@ -19,46 +20,70 @@ router.post('/', async (req, res, next) => {
     const { last4, brand, expiry, holderName } = req.body;
     if (!last4) return res.status(400).json({ error: "Karta ma'lumotlari kerak" });
 
-    const { rows: existing } = await pool.query(
-      'SELECT id FROM cards WHERE user_id = $1', [req.user.id]
-    );
+    const db = getDB();
+    const existing = await db.collection('cards')
+      .find({ user_id: req.user.id })
+      .toArray();
+    
     const isDefault = existing.length === 0;
     const id = genId();
-    const { rows } = await pool.query(
-      `INSERT INTO cards (id, user_id, last4, brand, expiry, holder_name, is_default)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      [id, req.user.id, last4, brand || 'Visa', expiry || '', holderName || '', isDefault]
-    );
-    res.status(201).json(rowToCard(rows[0]));
+    
+    const newCard = {
+      id,
+      user_id: req.user.id,
+      last4,
+      brand: brand || 'Visa',
+      expiry: expiry || '',
+      holder_name: holderName || '',
+      is_default: isDefault,
+      created_at: new Date()
+    };
+
+    await db.collection('cards').insertOne(newCard);
+    res.status(201).json(rowToCard(newCard));
   } catch (e) { next(e); }
 });
 
 // PATCH /api/cards/:id/default
 router.patch('/:id/default', async (req, res, next) => {
   try {
-    const { rows: target } = await pool.query(
-      'SELECT id FROM cards WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]
-    );
-    if (!target[0]) return res.status(404).json({ error: 'Karta topilmadi' });
+    const db = getDB();
+    const target = await db.collection('cards').findOne({
+      id: req.params.id,
+      user_id: req.user.id
+    });
+    
+    if (!target) return res.status(404).json({ error: 'Karta topilmadi' });
 
-    await pool.query('UPDATE cards SET is_default = FALSE WHERE user_id = $1', [req.user.id]);
-    await pool.query('UPDATE cards SET is_default = TRUE  WHERE id = $1',      [req.params.id]);
-
-    const { rows } = await pool.query(
-      'SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at ASC', [req.user.id]
+    await db.collection('cards').updateMany(
+      { user_id: req.user.id },
+      { $set: { is_default: false } }
     );
-    res.json(rows.map(rowToCard));
+    
+    await db.collection('cards').updateOne(
+      { id: req.params.id },
+      { $set: { is_default: true } }
+    );
+
+    const cards = await db.collection('cards')
+      .find({ user_id: req.user.id })
+      .sort({ created_at: 1 })
+      .toArray();
+    
+    res.json(cards.map(rowToCard));
   } catch (e) { next(e); }
 });
 
 // DELETE /api/cards/:id
 router.delete('/:id', async (req, res, next) => {
   try {
-    const { rows } = await pool.query(
-      'DELETE FROM cards WHERE id = $1 AND user_id = $2 RETURNING id',
-      [req.params.id, req.user.id]
-    );
-    if (!rows[0]) return res.status(404).json({ error: 'Karta topilmadi' });
+    const db = getDB();
+    const result = await db.collection('cards').deleteOne({
+      id: req.params.id,
+      user_id: req.user.id
+    });
+    
+    if (result.deletedCount === 0) return res.status(404).json({ error: 'Karta topilmadi' });
     res.json({ message: "Karta o'chirildi" });
   } catch (e) { next(e); }
 });

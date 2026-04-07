@@ -1,49 +1,65 @@
 const router = require('express').Router();
 const auth   = require('../middleware/auth');
-const pool   = require('../db/pool');
+const { getDB } = require('../db/mongo');
 const { genId } = require('../utils/db');
 
 // GET /api/explore/posts
 router.get('/posts', async (req, res) => {
   const { q } = req.query;
-  let { rows } = await pool.query(
-    `SELECT ep.*, COALESCE(u.name, ep.user_name, 'Foydalanuvchi') AS resolved_name
-     FROM explore_posts ep
-     LEFT JOIN users u ON u.id = ep.user_id
-     WHERE ep.public = TRUE
-     ORDER BY ep.likes DESC, ep.created_at DESC`
-  );
+  const db = getDB();
+  
+  let posts = await db.collection('explore_posts')
+    .find({ public: true })
+    .sort({ likes: -1, created_at: -1 })
+    .toArray();
+  
+  // User name larni qo'shish
+  const users = await db.collection('users').find({}).toArray();
+  const userMap = {};
+  users.forEach(user => {
+    userMap[user.id] = user.name || 'Foydalanuvchi';
+  });
+  
+  posts = posts.map(post => ({
+    ...post,
+    resolved_name: userMap[post.user_id] || post.user_name || 'Foydalanuvchi'
+  }));
+  
   if (q) {
     const query = q.toLowerCase();
-    rows = rows.filter(p =>
+    posts = posts.filter(p =>
       (p.name || '').toLowerCase().includes(query) ||
       (p.description || '').toLowerCase().includes(query) ||
       (p.resolved_name || '').toLowerCase().includes(query)
     );
   }
-  res.json(rows.map(rowToPost));
+  
+  res.json(posts.map(rowToPost));
 });
 
 // POST /api/explore/posts/:id/like
 router.post('/posts/:id/like', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM explore_posts WHERE id = $1', [req.params.id]);
-  const post = rows[0];
+  const db = getDB();
+  const post = await db.collection('explore_posts').findOne({ id: req.params.id });
   if (!post) return res.status(404).json({ error: 'Topilmadi' });
 
   const likedBy = post.liked_by || [];
   const idx = likedBy.indexOf(req.user.id);
   let newLikes, newLikedBy;
+  
   if (idx === -1) {
     newLikedBy = [...likedBy, req.user.id];
-    newLikes   = (post.likes || 0) + 1;
+    newLikes = (post.likes || 0) + 1;
   } else {
     newLikedBy = likedBy.filter(id => id !== req.user.id);
-    newLikes   = Math.max(0, (post.likes || 0) - 1);
+    newLikes = Math.max(0, (post.likes || 0) - 1);
   }
-  await pool.query(
-    'UPDATE explore_posts SET likes = $1, liked_by = $2 WHERE id = $3',
-    [newLikes, JSON.stringify(newLikedBy), req.params.id]
+  
+  await db.collection('explore_posts').updateOne(
+    { id: req.params.id },
+    { $set: { likes: newLikes, liked_by: newLikedBy } }
   );
+  
   res.json({ likes: newLikes, liked: idx === -1 });
 });
 
@@ -51,16 +67,29 @@ router.post('/posts/:id/like', auth, async (req, res) => {
 router.post('/posts', auth, async (req, res) => {
   const { name, desc, emoji, bg, price, tags } = req.body;
   const id = genId();
-  const userRow = (await pool.query('SELECT name FROM users WHERE id = $1', [req.user.id])).rows[0];
-  const userName = userRow?.name || 'Foydalanuvchi';
-  const { rows } = await pool.query(
-    `INSERT INTO explore_posts (id, user_id, user_name, name, description, emoji, bg, price, tags)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-    [id, req.user.id, userName,
-     name || 'Моя выпечка', desc || '', emoji || '🎂',
-     bg || '#fce4ec', price || 0, JSON.stringify(Array.isArray(tags) ? tags : [])]
-  );
-  res.json(rowToPost(rows[0]));
+  const db = getDB();
+  
+  const user = await db.collection('users').findOne({ id: req.user.id });
+  const userName = user?.name || 'Foydalanuvchi';
+  
+  const newPost = {
+    id,
+    user_id: req.user.id,
+    user_name: userName,
+    name: name || 'Моя выпечка',
+    description: desc || '',
+    emoji: emoji || '🎂',
+    bg: bg || '#fce4ec',
+    price: Number(price) || 0,
+    tags: Array.isArray(tags) ? tags : [],
+    public: true,
+    likes: 0,
+    liked_by: [],
+    created_at: new Date()
+  };
+  
+  await db.collection('explore_posts').insertOne(newPost);
+  res.json(rowToPost(newPost));
 });
 
 function rowToPost(r) {

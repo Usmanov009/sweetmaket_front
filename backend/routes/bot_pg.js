@@ -1,6 +1,6 @@
 const router  = require('express').Router();
 const https   = require('https');
-const { getDB } = require('../db/mongo');
+const pool    = require('../db/pool');
 const { genId } = require('../utils/db');
 
 const BOT_TOKEN   = process.env.BOT_TOKEN  || '';
@@ -71,63 +71,35 @@ router.post('/webhook', async (req, res) => {
 
     // Find or create user
     let isNew = false;
-    let user = null;
-
-    const db = getDB();
+    let userRow = null;
 
     if (telegramId) {
-      user = await db.collection('users').findOne({ telegram_id: telegramId });
+      userRow = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]).catch(()=>({rows:[]}))).rows[0];
     }
-    if (!user) {
-      user = await db.collection('users').findOne({ phone: rawPhone });
+    if (!userRow) {
+      userRow = (await pool.query('SELECT * FROM users WHERE phone = $1', [rawPhone]).catch(()=>({rows:[]}))).rows[0];
     }
 
-    if (!user) {
+    if (!userRow) {
       isNew = true;
       const id = genId();
       const fn = firstName;
       const ln = lastName;
       const nm = name;
-      
-      user = {
-        id,
-        telegram_id: telegramId || null,
-        phone: rawPhone,
-        first_name: fn,
-        last_name: ln,
-        name: nm,
-        created_at: new Date()
-      };
-      
-      await db.collection('users').insertOne(user);
-      
-      // Default tug'ilgan kunlar
-      const birthdays = [
-        {
-          id: genId(),
-          user_id: id,
-          emoji: '🎂',
-          name: 'Onam',
-          date: '12 Апреля'
-        },
-        {
-          id: genId(),
-          user_id: id,
-          emoji: '🎉',
-          name: "Do'stim",
-          date: '3 Июня'
-        }
-      ];
-      
-      await db.collection('birthdays').insertMany(birthdays);
-    } else if (telegramId && !user.telegram_id) {
-      await db.collection('users').updateOne(
-        { id: user.id },
-        { $set: { telegram_id: telegramId } }
-      );
+      await pool.query(
+        `INSERT INTO users (id, telegram_id, phone, first_name, last_name, name) VALUES ($1,$2,$3,$4,$5,$6)`,
+        [id, telegramId || null, rawPhone, fn, ln, nm]
+      ).catch(() => {});
+      await pool.query(
+        `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5),($6,$2,$7,$8,$9)`,
+        [genId(), id, '🎂', 'Onam', '12 Апреля', genId(), '🎉', "Do'stim", '3 Июня']
+      ).catch(() => {});
+      userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [id]).catch(()=>({rows:[]}))).rows[0];
+    } else if (telegramId && !userRow.telegram_id) {
+      await pool.query('UPDATE users SET telegram_id=$1 WHERE id=$2', [telegramId, userRow.id]).catch(() => {});
     }
 
-    const displayName = user?.name || name;
+    const displayName = userRow?.name || name;
     const actionText  = isNew
       ? "Siz yangi foydalanuvchisiz.\nQuyidagi tugmani bosib ro'yxatdan o'ting:"
       : "Siz allaqachon ro'yxatdan o'tgansiz.\nQuyidagi tugmani bosib kirishingiz mumkin:";

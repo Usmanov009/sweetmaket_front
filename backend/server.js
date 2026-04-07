@@ -3,7 +3,7 @@ const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
 const auth    = require('./middleware/auth');
-const initDB  = require('./db/init');
+const { connectDB } = require('./db/mongo');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -16,7 +16,7 @@ app.use(express.json());
 let dbReady = false;
 app.use(async (_req, _res, next) => {
   if (!dbReady) {
-    try { await initDB(); dbReady = true; } catch {}
+    try { await connectDB(); dbReady = true; } catch {}
   }
   next();
 });
