@@ -1,15 +1,14 @@
 import { memo } from 'react';
-import { House, MagnifyingGlass, Cake, ShoppingCart, User } from '@phosphor-icons/react';
+import { House, MagnifyingGlass, Cake, User } from '@phosphor-icons/react';
 
 const ITEMS = [
   { id:'home',    Icon: House,         label:'Главная' },
   { id:'explore', Icon: MagnifyingGlass,       label:'Поиск'   },
   { id:'create',  Icon: Cake,         label:'Создать', isCenter: true },
-  { id:'cart',    Icon: ShoppingCart, label:'Корзина' },
   { id:'profile', Icon: User,         label:'Профиль' },
 ];
 
-const BottomNav = memo(function BottomNav({ page, setPage, cartCount, C }) {
+const BottomNav = memo(function BottomNav({ page, setPage, C }) {
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
@@ -50,15 +49,6 @@ const BottomNav = memo(function BottomNav({ page, setPage, cartCount, C }) {
             }}>
             <Icon size={22} weight={active ? "bold" : "regular"} />
             <span style={{ fontSize: 10, fontWeight: active ? 700 : 500 }}>{label}</span>
-            {id === 'cart' && cartCount > 0 && (
-              <span style={{
-                position:'absolute', top:8, right:'22%',
-                background: C.navy, color:'#fff',
-                fontSize: 9, fontWeight: 700,
-                minWidth: 16, height: 16, borderRadius: 50,
-                display:'flex', alignItems:'center', justifyContent:'center',
-              }}>{cartCount}</span>
-            )}
             {active && (
               <div style={{
                 position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)',

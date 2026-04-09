@@ -18,7 +18,6 @@ import SignupPage from './pages/SignupPage';
 import TelegramAuthPage from './pages/TelegramAuthPage';
 import NotificationsPage from './pages/NotificationsPage';
 import HomePage from './pages/HomePage';
-import CameraPage from './pages/CameraPage';
 import SellerLoginPage from './pages/SellerLoginPage';
 import SellerDashboardPage from './pages/SellerDashboardPage';
 
@@ -42,42 +41,6 @@ function Toggle({ on, onToggle, C }) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   CART PAGE (fixed pluralization + promo codes)
-═══════════════════════════════════════════════════════ */
-function TrashIcon(){ return <Trash size={15} weight="bold"/>; }
-
-function CartPage({ toast, cartItems, setCartItems, C, onAddToOrder, isDesktop, bakeries }) {
-  const [confirmId,      setConfirmId]      = useState(null);
-  const [removing,       setRemoving]       = useState(null);
-  const [selectedBakery, setSelectedBakery] = useState(null);
-
-  const subtotal = cartItems.reduce((s,c) => s + c.price * c.qty, 0);
-  const disc10   = Math.round(subtotal * 0.1);
-  const total    = subtotal - disc10;
-  const n        = cartItems.length;
-  const itemWord = pluralRu(n, 'товар', 'товара', 'товаров');
-
-  const changeQty = (id, delta) =>
-    setCartItems(prev => prev.map(it => it.id === id ? {...it, qty: Math.max(1, it.qty + delta)} : it));
-
-  const confirmRemove = (id) => {
-    setConfirmId(null);
-    setRemoving(id);
-    setTimeout(() => { setCartItems(prev => prev.filter(it => it.id !== id)); setRemoving(null); toast('🗑 Товар удалён'); }, 320);
-  };
-
-  const clearAll = () => { setCartItems([]); toast('🗑 Корзина очищена'); };
-
-  const handleCheckout = () => {
-    if (cartItems.length === 0) return;
-    if (!selectedBakery) { toast('🏪 Выберите точку самовывоза'); return; }
-    onAddToOrder(cartItems, total, selectedBakery, 'cash', null);
-    toast('✅ Buyurtma qabul qilindi! +150 ball');
-    setTimeout(() => setCartItems([]), 1500);
-  };
-
-  const topPad = isDesktop ? 32 : 52;
-
   return (
     <div style={{maxWidth:600, margin:'0 auto', padding:`${topPad}px 16px ${isDesktop?32:100}px`}}>
 
@@ -1364,14 +1327,12 @@ export default function App() {
   const C = isDark ? THEMES.dark : THEMES.light;
 
   const [page, setPage] = useState('login');
+  const [orders, setOrders] = useState([]);
+  const [cards, setCards] = useState([]);
+  const [cakeCards, setCakeCards] = useState([]);
   const [user, setUser] = useState(null);
   const [seller, setSeller] = useState(null);
-  const [cartItems, setCartItems] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [cakeCards, setCakeCards] = useState([]);
-  const [bakeries, setBakeries] = useState([]);
-  const [cards, setCards] = useState([]);
-  const [showNotifs, setShowNotifs] = useState(false);
+
   const [toastMsg, setToastMsg] = useState('');
   const [toastId, setToastId] = useState(0);
 
@@ -1488,8 +1449,7 @@ export default function App() {
     if (page === 'login') return <LoginPage onLogin={handleLogin} goSignup={() => setPage('signup')} goSellerLogin={() => setPage('seller-login')} C={C} isDesktop={isDesktop} setPage={setPage} />;
     if (page === 'telegram-auth') return <TelegramAuthPage onBack={() => setPage('login')} onAuthSuccess={handleTelegramAuth} C={C} isDesktop={isDesktop} />;
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
-    if (page === 'cart') return <CartPage toast={toast} cartItems={cartItems} setCartItems={setCartItems} C={C} onAddToOrder={handleAddToOrder} isDesktop={isDesktop} bakeries={bakeries} />;
-    if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
+        if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} onAddToCart={handleAddToCart} toast={toast} user={user} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} onAddToCart={handleAddToCart} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} cards={cards} setCards={setCards} setUser={setUser} />;

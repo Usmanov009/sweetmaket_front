@@ -5,11 +5,10 @@ const ITEMS = [
   { id:'home',    Icon: House,         label:'Главная' },
   { id:'explore', Icon: MagnifyingGlass,       label:'Поиск'   },
   { id:'create',  Icon: Cake,         label:'Создать' },
-  { id:'cart',    Icon: ShoppingCart, label:'Корзина' },
   { id:'profile', Icon: User,         label:'Профиль' },
 ];
 
-const SidebarNav = memo(function SidebarNav({ page, setPage, cartCount, C, isDark, user, onLogout }) {
+const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, user, onLogout }) {
   const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'SM';
   return (
     <aside style={{
@@ -43,20 +42,7 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, cartCount, C, isDar
               }}>
               <Icon size={20} weight={active ? "bold" : "regular"} />
               <span>{label}</span>
-              {id==='cart' && cartCount>0 && (
-                <span style={{
-                  marginLeft:'auto', background:C.navy, color:'#fff',
-                  fontSize:10, fontWeight:700, minWidth:20, height:20,
-                  borderRadius:50, display:'flex', alignItems:'center', justifyContent:'center',
-                }}>{cartCount}</span>
-              )}
-              {active && (
-                <div style={{
-                  position:'absolute', left:0, top:'50%', transform:'translateY(-50%)',
-                  width:3, height:18, background:C.navy, borderRadius:'0 3px 3px 0',
-                }}/>
-              )}
-            </button>
+                          </button>
           );
         })}
       </nav>
