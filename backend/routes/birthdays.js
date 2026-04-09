@@ -1,15 +1,14 @@
 const router = require('express').Router();
-const { getDB } = require('../db/mongo');
+const pool   = require('../db/pool');
 const { genId } = require('../utils/db');
 
 // GET /api/birthdays
 router.get('/', async (req, res, next) => {
   try {
-    const db = getDB();
-    const birthdays = await db.collection('birthdays')
-      .find({ user_id: req.user.id })
-      .toArray();
-    res.json(birthdays.map(rowToBday));
+    const { rows } = await pool.query(
+      'SELECT * FROM birthdays WHERE user_id = $1', [req.user.id]
+    );
+    res.json(rows.map(rowToBday));
   } catch (e) { next(e); }
 });
 
@@ -20,43 +19,28 @@ router.post('/', async (req, res, next) => {
     if (!name || !date) return res.status(400).json({ error: 'Ism va sana kerak' });
 
     const id = genId();
-    const newBirthday = {
-      id,
-      user_id: req.user.id,
-      emoji: emoji || '🎂',
-      name,
-      date,
-      created_at: new Date()
-    };
-
-    const db = getDB();
-    await db.collection('birthdays').insertOne(newBirthday);
-    res.status(201).json(rowToBday(newBirthday));
+    const { rows } = await pool.query(
+      `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [id, req.user.id, emoji || '🎂', name, date]
+    );
+    res.status(201).json(rowToBday(rows[0]));
   } catch (e) { next(e); }
 });
 
 // DELETE /api/birthdays/:id
 router.delete('/:id', async (req, res, next) => {
   try {
-    const db = getDB();
-    const result = await db.collection('birthdays').deleteOne({
-      id: req.params.id,
-      user_id: req.user.id
-    });
-    
-    if (result.deletedCount === 0) return res.status(404).json({ error: 'Topilmadi' });
+    const { rows } = await pool.query(
+      'DELETE FROM birthdays WHERE id = $1 AND user_id = $2 RETURNING id',
+      [req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Topilmadi' });
     res.json({ message: "O'chirildi" });
   } catch (e) { next(e); }
 });
 
 function rowToBday(r) {
-  return { 
-    id: r.id, 
-    userId: r.user_id, 
-    emoji: r.emoji, 
-    name: r.name, 
-    date: r.date 
-  };
+  return { id: r.id, userId: r.user_id, emoji: r.emoji, name: r.name, date: r.date };
 }
 
 module.exports = router;

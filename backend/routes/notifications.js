@@ -1,49 +1,39 @@
 const router = require('express').Router();
-const { getDB } = require('../db/mongo');
+const pool   = require('../db/pool');
 
 // GET /api/notifications
 router.get('/', async (req, res, next) => {
   try {
-    const db = getDB();
-    const notifications = await db.collection('notifications')
-      .find({ user_id: req.user.id })
-      .sort({ created_at: -1 })
-      .toArray();
-    res.json(notifications.map(rowToNotif));
+    const { rows } = await pool.query(
+      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.user.id]
+    );
+    res.json(rows.map(rowToNotif));
   } catch (e) { next(e); }
 });
 
 // PATCH /api/notifications/read-all
 router.patch('/read-all', async (req, res, next) => {
   try {
-    const db = getDB();
-    await db.collection('notifications').updateMany(
-      { user_id: req.user.id },
-      { $set: { read: true } }
+    await pool.query('UPDATE notifications SET read = TRUE WHERE user_id = $1', [req.user.id]);
+    const { rows } = await pool.query(
+      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]
     );
-    
-    const notifications = await db.collection('notifications')
-      .find({ user_id: req.user.id })
-      .sort({ created_at: -1 })
-      .toArray();
-    res.json(notifications.map(rowToNotif));
+    res.json(rows.map(rowToNotif));
   } catch (e) { next(e); }
 });
 
 // PATCH /api/notifications/:id/read
 router.patch('/:id/read', async (req, res, next) => {
   try {
-    const db = getDB();
-    await db.collection('notifications').updateOne(
-      { id: req.params.id, user_id: req.user.id },
-      { $set: { read: true } }
+    await pool.query(
+      'UPDATE notifications SET read = TRUE WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
     );
-    
-    const notifications = await db.collection('notifications')
-      .find({ user_id: req.user.id })
-      .sort({ created_at: -1 })
-      .toArray();
-    res.json(notifications.map(rowToNotif));
+    const { rows } = await pool.query(
+      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]
+    );
+    res.json(rows.map(rowToNotif));
   } catch (e) { next(e); }
 });
 

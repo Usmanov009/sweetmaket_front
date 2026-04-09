@@ -1,18 +1,18 @@
 const router = require('express').Router();
-const { getDB } = require('../db/mongo');
+const pool = require('../db/pool');
 
 // GET /api/chat/:orderId - chat tarixini olish
 router.get('/:orderId', async (req, res) => {
   try {
     const { orderId } = req.params;
-    const db = getDB();
+    const { rows } = await pool.query(`
+      SELECT id, sender_id, sender_type, message, created_at
+      FROM chat_messages 
+      WHERE order_id = $1::INTEGER 
+      ORDER BY created_at ASC
+    `, [orderId]);
     
-    const messages = await db.collection('chat_messages')
-      .find({ order_id: parseInt(orderId) })
-      .sort({ created_at: 1 })
-      .toArray();
-    
-    res.json(messages);
+    res.json(rows);
   } catch (error) {
     console.error('Chat history error:', error);
     res.status(500).json({ error: 'Chat tarixini olishda xatolik' });
@@ -28,45 +28,32 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Barcha maydonlar to\'ldirilishi shart' });
     }
     
-    const db = getDB();
-    const newMessage = {
-      order_id: parseInt(orderId),
-      sender_id: senderId,
-      sender_type: senderType,
-      message: message,
-      created_at: new Date()
-    };
-    
-    await db.collection('chat_messages').insertOne(newMessage);
+    const { rows } = await pool.query(`
+      INSERT INTO chat_messages (order_id, sender_id, sender_type, message)
+      VALUES ($1::INTEGER, $2, $3, $4)
+      RETURNING id, sender_id, sender_type, message, created_at
+    `, [orderId, senderId, senderType, message]);
     
     // Notification yuborish (agar kerak bo'lsa)
-    const order = await db.collection('orders').findOne({ id: orderId });
-    
-    if (senderType === 'seller' && order) {
+    if (senderType === 'seller') {
       // User ga notification yuborish
-      await db.collection('notifications').insertOne({
-        id: Date.now().toString(),
-        user_id: order.user_id,
-        title: 'Yangi xabar',
-        message: message,
-        type: 'chat_message',
-        order_id: orderId,
-        created_at: new Date()
-      });
-    } else if (senderType === 'user' && order) {
+      await pool.query(`
+        INSERT INTO notifications (user_id, title, message, type, order_id)
+        SELECT user_id, $1, $2, $3, $4
+        FROM orders 
+        WHERE id = $5
+      `, ['Yangi xabar', message, 'chat_message', orderId, orderId]);
+    } else if (senderType === 'user') {
       // Seller ga notification yuborish
-      await db.collection('notifications').insertOne({
-        id: Date.now().toString(),
-        user_id: order.seller_id,
-        title: 'Yangi xabar',
-        message: message,
-        type: 'chat_message',
-        order_id: orderId,
-        created_at: new Date()
-      });
+      await pool.query(`
+        INSERT INTO notifications (user_id, title, message, type, order_id)
+        SELECT seller_id, $1, $2, $3, $4
+        FROM orders 
+        WHERE id = $5
+      `, ['Yangi xabar', message, 'chat_message', orderId, orderId]);
     }
     
-    res.json(newMessage);
+    res.json(rows[0]);
   } catch (error) {
     console.error('Send message error:', error);
     res.status(500).json({ error: 'Xabar yuborishda xatolik' });

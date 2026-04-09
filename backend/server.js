@@ -3,7 +3,7 @@ const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
 const auth    = require('./middleware/auth');
-const { connectDB } = require('./db/mongo');
+const initDB  = require('./db/init');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -16,7 +16,14 @@ app.use(express.json());
 let dbReady = false;
 app.use(async (_req, _res, next) => {
   if (!dbReady) {
-    try { await connectDB(); dbReady = true; } catch {}
+    try { 
+      await initDB(); 
+      dbReady = true; 
+      console.log('Database initialized successfully');
+    } catch (error) {
+      console.error('Database initialization failed:', error);
+      // Don't set dbReady = true, so it will retry on next request
+    }
   }
   next();
 });

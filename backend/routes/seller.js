@@ -1,7 +1,7 @@
 const router  = require('express').Router();
 const jwt     = require('jsonwebtoken');
 const crypto  = require('crypto');
-const { getDB } = require('../db/mongo');
+const pool    = require('../db/pool');
 const { genId } = require('../utils/db');
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
@@ -29,51 +29,24 @@ function sellerAuth(req, res, next) {
 router.post('/register', async (req, res) => {
   try {
     const { name, shopName, phone, password, address, description } = req.body;
-    if (!name || !shopName || !phone || !password) {
-      return res.status(400).json({ error: 'Barcha maydonlar to\'ldirilishi shart' });
-    }
+    if (!name || !shopName || !phone || !password)
+      return res.status(400).json({ error: 'Ism, do\'kon nomi, telefon va parol kerak' });
 
-    const db = getDB();
-    
-    // Telefon raqam takrorlanishini tekshirish
-    const existingSeller = await db.collection('sellers').findOne({ phone });
-    if (existingSeller) {
-      return res.status(400).json({ error: 'Bu telefon raqami allaqachon ro\'yxatdan o\'tgan' });
-    }
+    const existing = (await pool.query('SELECT id FROM sellers WHERE phone=$1', [phone])).rows[0];
+    if (existing) return res.status(400).json({ error: 'Bu telefon raqam allaqachon ro\'yxatdan o\'tgan' });
 
     const id = genId();
-    const hashedPassword = hashPassword(password);
-    
-    const newSeller = {
-      id,
-      name,
-      shop_name: shopName,
-      phone,
-      password: hashedPassword,
-      address: address || '',
-      description: description || '',
-      products: [],
-      created_at: new Date()
-    };
-
-    await db.collection('sellers').insertOne(newSeller);
-    
-    const token = jwt.sign({ id, phone, role: 'seller' }, JWT_SECRET, { expiresIn: '30d' });
-    
-    const sellerResponse = {
-      id,
-      name,
-      shopName,
-      phone,
-      address,
-      description,
-      createdAt: newSeller.created_at
-    };
-
-    res.status(201).json({ token, seller: sellerResponse });
-  } catch (error) {
-    console.error('Seller registration error:', error);
-    res.status(500).json({ error: 'Ro\'yxatdan o\'tishda xatolik' });
+    const hash = hashPassword(password);
+    await pool.query(
+      `INSERT INTO sellers (id, name, shop_name, phone, password, address, description)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [id, name, shopName, phone, hash, address||'', description||'']
+    );
+    const row = (await pool.query('SELECT * FROM sellers WHERE id=$1', [id])).rows[0];
+    const token = jwt.sign({ id: row.id, phone: row.phone, role: 'seller' }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, seller: rowToSeller(row) });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
@@ -81,57 +54,36 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
-    if (!phone || !password) {
-      return res.status(400).json({ error: 'Telefon va parol kerak' });
-    }
+    if (!phone || !password) return res.status(400).json({ error: 'Telefon va parol kerak' });
 
-    const db = getDB();
-    const seller = await db.collection('sellers').findOne({ phone });
-    
-    if (!seller || seller.password !== hashPassword(password)) {
-      return res.status(401).json({ error: 'Telefon yoki parol noto\'g\'ri' });
-    }
+    const row = (await pool.query('SELECT * FROM sellers WHERE phone=$1', [phone])).rows[0];
+    if (!row) return res.status(400).json({ error: 'Sotuvchi topilmadi' });
+    if (row.password !== hashPassword(password)) return res.status(400).json({ error: 'Parol noto\'g\'ri' });
 
-    const token = jwt.sign({ id: seller.id, phone: seller.phone, role: 'seller' }, JWT_SECRET, { expiresIn: '30d' });
-    
-    const sellerResponse = {
-      id: seller.id,
-      name: seller.name,
-      shopName: seller.shop_name,
-      phone: seller.phone,
-      address: seller.address,
-      description: seller.description,
-      createdAt: seller.created_at
-    };
-
-    res.json({ token, seller: sellerResponse });
-  } catch (error) {
-    console.error('Seller login error:', error);
-    res.status(500).json({ error: 'Login xatolik' });
+    const token = jwt.sign({ id: row.id, phone: row.phone, role: 'seller' }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, seller: rowToSeller(row) });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
 // GET /api/seller/me
 router.get('/me', sellerAuth, async (req, res) => {
+  const row = (await pool.query('SELECT * FROM sellers WHERE id=$1', [req.seller.id])).rows[0];
+  if (!row) return res.status(404).json({ error: 'Topilmadi' });
+  res.json({ seller: rowToSeller(row) });
+});
+
+// PATCH /api/seller/orders/:id/status
+router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
   try {
-    const db = getDB();
-    const seller = await db.collection('sellers').findOne({ id: req.seller.id });
-    if (!seller) return res.status(404).json({ error: 'Sotuvchi topilmadi' });
-    
-    const sellerResponse = {
-      id: seller.id,
-      name: seller.name,
-      shopName: seller.shop_name,
-      phone: seller.phone,
-      address: seller.address,
-      description: seller.description,
-      createdAt: seller.created_at
-    };
-    
-    res.json({ seller: sellerResponse });
-  } catch (error) {
-    console.error('Get seller me error:', error);
-    res.status(500).json({ error: 'Xatolik yuz berdi' });
+    const { status } = req.body;
+    const allowed = ['pending','confirmed','delivered','cancelled'];
+    if (!allowed.includes(status)) return res.status(400).json({ error: "Noto'g'ri status" });
+    await pool.query('UPDATE orders SET status=$1 WHERE id=$2', [status, req.params.id]);
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
@@ -139,17 +91,36 @@ router.get('/me', sellerAuth, async (req, res) => {
 router.get('/orders', sellerAuth, async (req, res) => {
   try {
     const sellerId = req.seller.id;
-    const db = getDB();
     
     // Avval o'z buyurtmalari
-    const myOrders = await db.collection('orders').find({ seller_id: sellerId }).toArray();
+    const { rows: myOrders } = await pool.query(
+      `SELECT o.*, u.name as user_name, u.phone as user_phone, s.name as seller_name
+       FROM orders o
+       LEFT JOIN users u ON u.id = o.user_id
+       LEFT JOIN sellers s ON s.id = o.seller_id
+       WHERE o.seller_id = $1
+       ORDER BY o.created_at DESC
+       LIMIT 100`,
+      [sellerId]
+    );
     
     // Keyin tasdiqlangan buyurtmalarni qolgan sotuvchilardan olish
-    const otherOrders = await db.collection('orders').find({
-      status: { $in: ['confirmed', 'ready'] },
-      seller_id: { $ne: sellerId, $exists: true },
-      seller_id: { $nin: await getActiveSellerIds(db) }
-    }).toArray();
+    // Faqat tasdiqlangan va tayyor buyurtmalar, ularning sotuvchisi faol emasligi kerak
+    const { rows: otherOrders } = await pool.query(
+      `SELECT o.*, u.name as user_name, u.phone as user_phone, s.name as seller_name
+       FROM orders o
+       LEFT JOIN users u ON u.id = o.user_id
+       LEFT JOIN sellers s ON s.id = o.seller_id
+       WHERE o.status IN ('confirmed', 'ready') 
+       AND o.seller_id != $1
+       AND o.seller_id IS NOT NULL
+       AND o.seller_id NOT IN (
+         SELECT id FROM sellers WHERE phone IS NOT NULL AND password IS NOT NULL
+       )
+       ORDER BY o.created_at DESC
+       LIMIT 50`,
+      [sellerId]
+    );
     
     // Ikkala ro'yxatni birlashtirish
     const allOrders = [...myOrders, ...otherOrders];
@@ -161,20 +132,14 @@ router.get('/orders', sellerAuth, async (req, res) => {
   }
 });
 
-async function getActiveSellerIds(db) {
-  const activeSellers = await db.collection('sellers').find({
-    phone: { $exists: true, $ne: null },
-    password: { $exists: true, $ne: null }
-  }).project({ id: 1 }).toArray();
-  return activeSellers.map(s => s.id);
-}
-
 // GET /api/seller/products
 router.get('/products', sellerAuth, async (req, res) => {
   try {
-    const db = getDB();
-    const seller = await db.collection('sellers').findOne({ id: req.seller.id });
-    const products = seller?.products || [];
+    const { rows } = await pool.query(
+      'SELECT products FROM sellers WHERE id = $1',
+      [req.seller.id]
+    );
+    const products = rows[0]?.products || [];
     res.json(products);
   } catch(e) {
     console.error('Get seller products error:', e);
@@ -190,10 +155,12 @@ router.post('/products', sellerAuth, async (req, res) => {
       return res.status(400).json({ error: 'Name, emoji va price kerak' });
     }
 
-    const db = getDB();
-    const seller = await db.collection('sellers').findOne({ id: req.seller.id });
+    const { rows } = await pool.query(
+      'SELECT products FROM sellers WHERE id = $1',
+      [req.seller.id]
+    );
     
-    const products = seller?.products || [];
+    const products = rows[0]?.products || [];
     const newProduct = {
       id: Date.now().toString(),
       name,
@@ -210,9 +177,9 @@ router.post('/products', sellerAuth, async (req, res) => {
     
     products.push(newProduct);
     
-    await db.collection('sellers').updateOne(
-      { id: req.seller.id },
-      { $set: { products } }
+    await pool.query(
+      'UPDATE sellers SET products = $1 WHERE id = $2',
+      [JSON.stringify(products), req.seller.id]
     );
     
     res.json(newProduct);
@@ -225,15 +192,17 @@ router.post('/products', sellerAuth, async (req, res) => {
 // DELETE /api/seller/products/:id
 router.delete('/products/:id', sellerAuth, async (req, res) => {
   try {
-    const db = getDB();
-    const seller = await db.collection('sellers').findOne({ id: req.seller.id });
+    const { rows } = await pool.query(
+      'SELECT products FROM sellers WHERE id = $1',
+      [req.seller.id]
+    );
     
-    const products = seller?.products || [];
+    const products = rows[0]?.products || [];
     const filteredProducts = products.filter(p => p.id !== req.params.id);
     
-    await db.collection('sellers').updateOne(
-      { id: req.seller.id },
-      { $set: { products: filteredProducts } }
+    await pool.query(
+      'UPDATE sellers SET products = $1 WHERE id = $2',
+      [JSON.stringify(filteredProducts), req.seller.id]
     );
     
     res.json({ ok: true });
@@ -243,27 +212,16 @@ router.delete('/products/:id', sellerAuth, async (req, res) => {
   }
 });
 
-// PATCH /api/seller/orders/:orderId/status
-router.patch('/orders/:orderId/status', sellerAuth, async (req, res) => {
-  try {
-    const { status } = req.body;
-    const orderId = req.params.orderId;
-    
-    const db = getDB();
-    const result = await db.collection('orders').updateOne(
-      { id: orderId },
-      { $set: { status } }
-    );
-    
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Buyurtma topilmadi' });
-    }
-    
-    res.json({ ok: true });
-  } catch(e) {
-    console.error('Update order status error:', e);
-    res.status(500).json({ error: e.message });
-  }
-});
+function rowToSeller(r) {
+  return {
+    id: r.id,
+    name: r.name,
+    shopName: r.shop_name,
+    phone: r.phone,
+    address: r.address,
+    description: r.description,
+    createdAt: r.created_at,
+  };
+}
 
 module.exports = router;
