@@ -50,81 +50,8 @@ function Toggle({ on, onToggle, C }) {
         <BakeryPickerMap C={C} selected={selectedBakery} onSelect={setSelectedBakery} bakeries={bakeries}/>
       </div>
 
-      {/* Items */}
-      {n > 0 && (
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
-          <div style={{fontSize:13, color:C.muted, fontWeight:600}}>🛒 {n} {itemWord}</div>
-          <button onClick={clearAll} style={{padding:'5px 12px', borderRadius:50, border:'1px solid rgba(176,48,48,.3)', background:'rgba(176,48,48,.06)', color:'#b03030', cursor:'pointer', fontSize:11, fontWeight:600}}>Очистить</button>
-        </div>
-      )}
-      {n === 0 && (
-        <div style={{textAlign:'center', padding:'60px 20px'}}>
-          <div style={{fontSize:72, marginBottom:16, opacity:.4}}>🛒</div>
-          <div style={{fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, marginBottom:8, color:C.dark}}>Корзина пуста</div>
-          <div style={{color:C.muted, fontSize:14}}>Добавьте торты из магазина</div>
-        </div>
-      )}
-      {cartItems.map(item => {
-        const isRemoving = removing === item.id, isConfirm = confirmId === item.id;
-        return (
-          <div key={item.id} style={{margin:'0 0 12px', background:isConfirm?'rgba(176,48,48,.04)':C.s1, borderRadius:20,
-            padding:16, border:`1px solid ${isConfirm?'rgba(176,48,48,.3)':C.border}`,
-            opacity:isRemoving?0:1, transform:isRemoving?'translateX(60px) scale(0.95)':'none', transition:'all .32s ease'}}>
-            <div style={{display:'flex', gap:14, alignItems:'center'}}>
-              <div style={{flexShrink:0, borderRadius:16, overflow:'hidden', width:72, height:72}}>
-                <CakeVisual category={item.category} bg={item.bg} height={72}/>
-              </div>
-              <div style={{flex:1}}>
-                <div style={{fontSize:15, fontWeight:700, marginBottom:4, color:C.dark}}>{item.name}</div>
-                <div style={{fontSize:12, color:C.muted, marginBottom:8}}>{item.detail}</div>
-                <div style={{color:C.navy, fontSize:18, fontWeight:700}}>{sum(item.price * item.qty)}</div>
-              </div>
-              <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8}}>
-                <button onClick={()=>setConfirmId(item.id)} style={{display:'flex', alignItems:'center', justifyContent:'center', width:30, height:30, borderRadius:8, border:'1px solid rgba(176,48,48,.25)', background:'rgba(176,48,48,.07)', color:'#b03030', cursor:'pointer'}}><TrashIcon/></button>
-                <div style={{display:'flex', gap:6, alignItems:'center'}}>
-                  <button onClick={()=>changeQty(item.id,-1)} style={{width:28, height:28, borderRadius:8, border:`1px solid ${C.border}`, background:C.s2, color:C.dark, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700}}>−</button>
-                  <span style={{fontWeight:700, fontSize:14, minWidth:22, textAlign:'center', color:C.dark}}>{item.qty}</span>
-                  <button onClick={()=>changeQty(item.id,1)} style={{width:28, height:28, borderRadius:8, border:`1px solid ${C.border}`, background:C.s2, color:C.dark, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700}}>+</button>
-                </div>
-              </div>
-            </div>
-            {isConfirm && (
-              <div style={{marginTop:10, display:'flex', gap:8, alignItems:'center', justifyContent:'flex-end'}}>
-                <span style={{fontSize:12, color:'#b03030', flex:1}}>Удалить из корзины?</span>
-                <button onClick={()=>setConfirmId(null)} style={{padding:'4px 12px', borderRadius:8, border:`1px solid ${C.border}`, background:C.s2, color:C.dark, cursor:'pointer', fontSize:12}}>Нет</button>
-                <button onClick={()=>confirmRemove(item.id)} style={{padding:'4px 12px', borderRadius:8, border:'none', background:'#b03030', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600}}>Да</button>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
       {/* Summary */}
-      <div style={{background:C.s1, borderRadius:20, padding:20, border:`1px solid ${C.border}`, marginBottom:16}}>
-        <div style={{fontSize:13, color:C.muted, fontWeight:600, marginBottom:12}}>🧾 Итого</div>
-        <div style={{display:'flex', flexDirection:'column', gap:8}}>
-          <div style={{display:'flex', justifyContent:'space-between', fontSize:13, color:C.muted}}>
-            <span>Сумма ({pluralRu(n,'товар','товара','товаров')})</span><span>{sum(subtotal)}</span>
-          </div>
-          <div style={{display:'flex', justifyContent:'space-between', fontSize:13, color:'#1a7a3a'}}>
-            <span>Скидка 10%</span><span>−{sum(disc10)}</span>
-          </div>
-          <div style={{height:1, background:C.border, margin:'4px 0'}}/>
-          <div style={{display:'flex', justifyContent:'space-between', fontSize:17, fontWeight:700, color:C.dark}}>
-            <span>Итого</span><span style={{color:C.navy}}>{sum(total)}</span>
-          </div>
-        </div>
-        <div style={{marginTop:14, padding:'10px 14px', borderRadius:12, background:'rgba(34,197,94,.08)', border:'1px solid rgba(34,197,94,.2)', fontSize:13, color:'#15803d', fontWeight:600}}>
-          💵 To'lov usuli: Naqd pul (qabul qilishda)
-        </div>
-        <button onClick={handleCheckout} disabled={n === 0}
-          style={{width:'100%', padding:'14px', borderRadius:14, border:'none', marginTop:14,
-            background: n===0 ? C.border : `linear-gradient(135deg,${C.navy},${C.mid})`,
-            color: n===0 ? C.muted : '#fff', cursor: n===0 ? 'default' : 'pointer',
-            fontWeight:700, fontSize:15, letterSpacing:.3}}>
-          {n===0 ? 'Корзина пуста' : 'Оформить заказ →'}
-        </button>
-      </div>
+            </div>
     </div>
   );
 }
