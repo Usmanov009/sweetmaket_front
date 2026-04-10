@@ -942,6 +942,10 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
 
           {/* Name & phone */}
           <div style={{display:'inline-flex',alignItems:'center',gap:8,marginBottom:6}}>
+            <button onClick={()=>setPage('home')} 
+              style={{background:'rgba(255,255,255,.15)',border:'1px solid rgba(255,255,255,.25)',borderRadius:8,width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,marginRight:8}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-9 9v2h9m-9-9v-2h9"/></svg>
+            </button>
             <div style={{fontSize:26,fontWeight:900,color:'#fff',letterSpacing:-.6,lineHeight:1.1}}>{user?.name||'Гость'}</div>
             <button onClick={()=>{setNameForm({firstName:user?.firstName||'',lastName:user?.lastName||''});setNameModal(true);}}
               style={{background:'rgba(255,255,255,.2)',border:'1px solid rgba(255,255,255,.3)',borderRadius:8,width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
