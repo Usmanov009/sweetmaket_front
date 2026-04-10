@@ -1252,6 +1252,7 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const [cards, setCards] = useState([]);
   const [cakeCards, setCakeCards] = useState([]);
+  const [bakeries, setBakeries] = useState([]);
   const [user, setUser] = useState(null);
   const [seller, setSeller] = useState(null);
 
