@@ -110,10 +110,7 @@ export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setP
               <button onClick={()=>setSearchOpen(o=>!o)} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
                 <MagnifyingGlass size={18}/>
               </button>
-              <button onClick={()=>setPage('notifications')} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
-                <Bell size={18}/>
-              </button>
-              <div onClick={()=>setPage('profile')} style={{ width:40, height:40, borderRadius:'50%', background:`linear-gradient(135deg,${C.navy},${C.mid})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color:'#fff', cursor:'pointer', flexShrink:0 }}>
+                            <div onClick={()=>setPage('profile')} style={{ width:40, height:40, borderRadius:'50%', background:`linear-gradient(135deg,${C.navy},${C.mid})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color:'#fff', cursor:'pointer', flexShrink:0 }}>
                 {initials}
               </div>
             </div>

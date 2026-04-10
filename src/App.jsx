@@ -1390,14 +1390,7 @@ export default function App() {
       <div style={{ flex:1, minWidth:0 }}>
         {/* Top bar */}
         <div style={{ display:'flex', justifyContent:'flex-end', padding:'14px 20px 0', gap:8, alignItems:'center' }}>
-          {showNav && (
-            <button onClick={() => setShowNotifs(true)}
-              className="icon-btn"
-              style={{ width:38, height:38, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'none', cursor:'pointer', color:C.dark, transition:'all .2s' }}>
-              <Bell size={20}/>
-            </button>
-          )}
-          <button onClick={() => setIsDark(d => !d)}
+                    <button onClick={() => setIsDark(d => !d)}
             className="icon-btn"
             style={{ width:38, height:38, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'none', cursor:'pointer', color:C.dark, transition:'all .2s' }}>
             {isDark ? <Sun size={20}/> : <Moon size={20}/>}
