@@ -1257,6 +1257,7 @@ export default function App() {
 
   const [toastMsg, setToastMsg] = useState('');
   const [toastId, setToastId] = useState(0);
+  const [showNotifs, setShowNotifs] = useState(false);
 
   useEffect(() => { injectGlobal(C); }, [C]);
 
@@ -1382,7 +1383,7 @@ export default function App() {
       )}
 
       {showNav && isDesktop && (
-        <SidebarNav page={page} setPage={setPage} cartCount={cartCount} C={C} isDark={isDark} user={user} onLogout={handleLogout}/>
+        <SidebarNav page={page} setPage={setPage} C={C} isDark={isDark} user={user} onLogout={handleLogout}/>
       )}
 
       <div style={{ flex:1, minWidth:0 }}>
@@ -1405,7 +1406,7 @@ export default function App() {
       </div>
 
       {showNav && !isDesktop && (
-        <BottomNav page={page} setPage={setPage} cartCount={cartCount} C={C}/>
+        <BottomNav page={page} setPage={setPage} C={C}/>
       )}
     </div>
   );
