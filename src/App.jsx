@@ -40,22 +40,6 @@ function Toggle({ on, onToggle, C }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════
-  return (
-    <div style={{maxWidth:600, margin:'0 auto', padding:`${topPad}px 16px ${isDesktop?32:100}px`}}>
-
-      {/* Bakery picker */}
-      <div style={{marginBottom:16}}>
-        <div style={{fontSize:13, color:C.muted, fontWeight:600, marginBottom:10}}>🏪 Точка самовывоза</div>
-        <BakeryPickerMap C={C} selected={selectedBakery} onSelect={setSelectedBakery} bakeries={bakeries}/>
-      </div>
-
-      {/* Summary */}
-            </div>
-    </div>
-  );
-}
-
 function BakeryPickerMap({ C, selected, onSelect, bakeries = [] }) {
   const mapRef = useRef(null);
   const leafletMap = useRef(null);
@@ -938,31 +922,31 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
       )}
 
       {/* ═══ HERO HEADER ═══ */}
-      <div style={{position:'relative',background:'linear-gradient(160deg,#060d1a 0%,#0f2259 45%,#1d4ed8 80%,#3b82f6 100%)',paddingTop:isDesktop?32:64,paddingBottom:80,overflow:'hidden'}}>
+      <div style={{position:'relative',background:'linear-gradient(160deg,#667eea 0%,#764ba2 100%)',paddingTop:isDesktop?32:64,paddingBottom:80,overflow:'hidden'}}>
         {/* Decorative circles */}
-        <div style={{position:'absolute',top:-60,right:-60,width:240,height:240,borderRadius:'50%',background:'rgba(255,255,255,.04)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',bottom:-80,left:-40,width:200,height:200,borderRadius:'50%',background:'rgba(59,130,246,.15)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',top:40,left:'50%',transform:'translateX(-50%)',width:320,height:320,borderRadius:'50%',background:'rgba(29,78,216,.08)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:-60,right:-60,width:240,height:240,borderRadius:'50%',background:'rgba(255,255,255,.1)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',bottom:-80,left:-40,width:200,height:200,borderRadius:'50%',background:'rgba(255,255,255,.08)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:40,left:'50%',transform:'translateX(-50%)',width:320,height:320,borderRadius:'50%',background:'rgba(255,255,255,.05)',pointerEvents:'none'}}/>
 
         <div style={{maxWidth:600,margin:'0 auto',padding:'0 24px',textAlign:'center',position:'relative'}}>
           {/* Avatar */}
           <div style={{position:'relative',display:'inline-block',marginBottom:16}}>
-            <div style={{width:96,height:96,borderRadius:'50%',background:'linear-gradient(135deg,#fff 0%,#e0e7ff 100%)',
+            <div style={{width:96,height:96,borderRadius:'50%',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',
               display:'flex',alignItems:'center',justifyContent:'center',fontSize:34,fontWeight:900,
-              color:'#1d4ed8',border:'4px solid rgba(255,255,255,.3)',
-              boxShadow:'0 0 0 8px rgba(255,255,255,.08),0 12px 32px rgba(0,0,0,.3)',
+              color:'#fff',border:'4px solid rgba(255,255,255,.3)',
+              boxShadow:'0 0 8px rgba(255,255,255,.08),0 12px 32px rgba(0,0,0,.3)',
               letterSpacing:-1}}>
               {initials}
             </div>
-            {/* Online dot */}
-            <div style={{position:'absolute',bottom:4,right:4,width:20,height:20,borderRadius:'50%',background:'#22c55e',border:'3px solid #0f2259',boxShadow:'0 2px 8px rgba(34,197,94,.5)'}}/>
+            {/* Online status */}
+            <div style={{position:'absolute',bottom:4,right:4,width:20,height:20,borderRadius:'50%',background:'#4ade80',border:'3px solid #22c55e',boxShadow:'0 2px 8px rgba(34,197,94,.5)'}}/>
           </div>
 
           {/* Name & phone */}
           <div style={{display:'inline-flex',alignItems:'center',gap:8,marginBottom:6}}>
             <div style={{fontSize:26,fontWeight:900,color:'#fff',letterSpacing:-.6,lineHeight:1.1}}>{user?.name||'Гость'}</div>
             <button onClick={()=>{setNameForm({firstName:user?.firstName||'',lastName:user?.lastName||''});setNameModal(true);}}
-              style={{background:'rgba(255,255,255,.15)',border:'1px solid rgba(255,255,255,.25)',borderRadius:8,width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
+              style={{background:'rgba(255,255,255,.2)',border:'1px solid rgba(255,255,255,.3)',borderRadius:8,width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
           </div>
@@ -977,22 +961,35 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
         </div>
       </div>
 
-      {/* ═══ STATS STRIP (overlaps hero) ═══ */}
-      <div style={{maxWidth:600,margin:'-44px auto 0',padding:'0 16px',position:'relative',zIndex:10}}>
+      {/* ═══ NOTICE SECTION ═══ */}
+      <div style={{maxWidth:600,margin:'-24px auto 16px',padding:'0 16px'}}>
+        <div style={{background:isDark?'#1e293b':'#f0f9ff',borderRadius:12,padding:16,border:`1px solid ${isDark?'#374151':'#e5e7eb'}`,boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{width:12,height:12,borderRadius:'50%',background:isDark?'#fbbf24':'#f59e0b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,color:'#fff',fontWeight:600}}>💡</div>
+            <div>
+              <div style={{fontSize:14,fontWeight:600,color:isDark?'#f0f9ff':'#1e293b',marginBottom:4}}>У вас {orders.length} активных заказов</div>
+              <div style={{fontSize:12,color:isDark?'#a0aec0':'#64748b'}}>Следите за статусом доставки в разделе «Заказы»</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ STATS STRIP ═══ */}
+      <div style={{maxWidth:600,margin:'0 auto 16px',padding:'0 16px'}}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
           {[
-            {icon:<Package size={18} color="#2563eb"/>,val:orders.length,label:'Заказов',color:'#2563eb'},
-            {icon:<Star size={18} color="#7c3aed"/>,val:(orders.length*150).toLocaleString(),label:'Баллов',color:'#7c3aed'},
-            {icon:<CreditCard size={18} color="#0891b2"/>,val:orders.length>0?sum(totalSpent):'0 сум',label:'Потрачено',color:'#0891b2'},
+            {icon:<Package size={18} color="#2563eb"/>,val:orders.length,label:'Заказы',color:'#2563eb'},
+            {icon:<Star size={18} color="#7c3aed"/>,val:(orders.length*150).toLocaleString(),label:'Баллы',color:'#7c3aed'},
+            {icon:<CreditCard size={18} color="#0891b2"/>,val:cards.length,label:'Карты',color:'#0891b2'},
           ].map(s=>(
-            <div key={s.label} style={{background:C.s1,borderRadius:20,padding:'18px 10px',textAlign:'center',
-              border:`1px solid ${C.border}`,boxShadow:`0 4px 24px rgba(0,0,0,${isDark?.12:.08})`}}>
+            <div key={s.label} style={{background:isDark?'#1e293b':'#f0f9ff',borderRadius:16,padding:20,textAlign:'center',
+              border:`1px solid ${isDark?'#374151':'#e5e7eb'}`,boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}}>
               <div style={{width:36,height:36,borderRadius:12,background:`${s.color}15`,margin:'0 auto 10px',
                 display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>
                 {s.icon}
               </div>
-              <div style={{fontSize:s.label==='Потрачено'?10:18,fontWeight:900,color:C.dark,lineHeight:1.1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.val}</div>
-              <div style={{fontSize:10,color:C.muted,marginTop:4,fontWeight:500}}>{s.label}</div>
+              <div style={{fontSize:18,fontWeight:900,color:isDark?'#f0f9ff':'#1e293b',lineHeight:1.1}}>{s.val}</div>
+              <div style={{fontSize:12,color:isDark?'#a0aec0':'#64748b',marginTop:4,fontWeight:500}}>{s.label}</div>
             </div>
           ))}
         </div>
