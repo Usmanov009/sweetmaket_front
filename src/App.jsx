@@ -995,14 +995,15 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
 
       {/* ═══ QUICK ACTIONS ═══ */}
       <div style={{maxWidth:600,margin:'16px auto 0',padding:'0 16px'}}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:10}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',gap:10}}>
           {[
             {icon:<Package size={22}/>,label:'Заказы',tab:'orders'},
             {icon:<span style={{fontSize:20}}>🎂</span>,label:'Дни рожд.',tab:'bdays'},
             {icon:<CreditCard size={22}/>,label:'Карты',tab:'cards'},
-            {icon:<Gear size={22}/>,label:'Настройки',tab:'settings'},
+            {icon:<Bell size={22}/>,label:'Уведомления',tab:'notifications'},
+            {icon:isDark ? <Sun size={22}/> : <Moon size={22}/>,label:'Тема',tab:'theme'},
           ].map(a=>(
-            <button key={a.tab} onClick={()=>setActiveTab(a.tab)}
+            <button key={a.tab} onClick={()=>a.tab==='theme'?setIsDark(d=>!d):a.tab==='notifications'?setShowNotifs(true):setActiveTab(a.tab)}
               style={{background:activeTab===a.tab?C.navy:C.s1,borderRadius:18,padding:'16px 8px',border:`1px solid ${activeTab===a.tab?C.navy:C.border}`,
                 cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:7,
                 boxShadow:activeTab===a.tab?`0 6px 20px ${C.navy}44`:`0 2px 8px rgba(0,0,0,${isDark?.06:.03})`,
