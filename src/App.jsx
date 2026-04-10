@@ -128,7 +128,7 @@ function BakeryPickerMap({ C, selected, onSelect, bakeries = [] }) {
 /* ═══════════════════════════════════════════════════════
    EXPLORE PAGE
 ═══════════════════════════════════════════════════════ */
-function ExplorePage({ C, isDesktop, onAddToCart, toast, user }) {
+function ExplorePage({ C, isDesktop, toast, user }) {
   const [search,   setSearch]   = useState('');
   const [likedIds, setLikedIds] = useState([]);
   const [allPosts, setAllPosts] = useState([]);
@@ -251,9 +251,8 @@ function ExplorePage({ C, isDesktop, onAddToCart, toast, user }) {
                 </span>
               </div>
 
-              {/* image — tap to add to cart */}
+              {/* image — tap to view details */}
               <div style={{position:'relative',cursor:'pointer'}} onClick={()=>{
-                onAddToCart?.({id:'explore_'+card.id+'_'+Date.now(),emoji:card.emoji||'🎂',category:card.tags?.[0]||'tort',bg:card.bg||'#fce4ec',name:card.name,detail:card.desc||card.userName||'',price:card.price||89000,qty:1});
                 toast?.('🛒 Savatchaga qo\'shildi!');
               }}>
                 <CakeVisual category={card.tags?.[0]} bg={card.bg||'#fce4ec'} height={220}/>
@@ -331,7 +330,7 @@ const CREATE_STEPS = [
   {key:'decoration', question:'Как украсить?',          hint:'Выберите стиль декора'},
 ];
 
-function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], onAddToCart }) {
+function CreatePage({ C, isDesktop, toast, setPage, bakeries = [] }) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({type:null,size:null,flavor:null,decoration:null,bakery:null,note:''});
   const [publishing, setPublishing] = useState(false);
@@ -350,7 +349,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], onAddToCart }
   const handleOrder = () => {
     const name   = [form.type?.label, form.flavor?.label].filter(Boolean).join(' · ') || 'Buyurtma tort';
     const detail = [form.size?.label, form.decoration?.label, form.bakery?.name].filter(Boolean).join(' · ');
-    onAddToCart?.({ id:'custom_'+Date.now(), emoji:form.type?.emoji||'🎂', category:form.type?.category||'tort', bg:form.type?.color||'#fce4ec', name, detail, price:totalPrice, qty:1 });
     toast('🛒 Buyurtma savatchaga qo\'shildi!');
     setStep(5);
   };
@@ -1348,15 +1346,7 @@ export default function App() {
     localStorage.removeItem('sm_seller_token');
     setPage('seller-login');
   };
-  const handleAddToCart = (item) => {
-    setCartItems(prev => {
-      const ex = prev.find(i => i.id === item.id);
-      if (ex) return prev.map(i => i.id === item.id ? {...i, qty: i.qty + 1} : i);
-      return [...prev, {...item, qty: 1}];
-    });
-    toast(`🛒 ${item.name} добавлен`);
-  };
-  const handleAddToOrder = async (items, total, bakery, paymentMode = 'cash', cardInfo = null) => {
+    const handleAddToOrder = async (items, total, bakery, paymentMode = 'cash', cardInfo = null) => {
     try {
       const order = await api.post('/api/orders', { items, total, bakery, paymentMode, cardInfo });
       setOrders(prev => [...prev, order]);
@@ -1365,8 +1355,7 @@ export default function App() {
     }
   };
 
-  const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
-
+  
   const renderPage = () => {
     if (page === 'seller-login') return <SellerLoginPage onLogin={handleSellerLogin} goUserLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
     if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} />;
@@ -1374,10 +1363,10 @@ export default function App() {
     if (page === 'telegram-auth') return <TelegramAuthPage onBack={() => setPage('login')} onAuthSuccess={handleTelegramAuth} C={C} isDesktop={isDesktop} />;
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
-    if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} onAddToCart={handleAddToCart} toast={toast} user={user} />;
-    if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} onAddToCart={handleAddToCart} />;
+    if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} />;
+    if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} cards={cards} setCards={setCards} setUser={setUser} />;
-    return <HomePage toast={toast} onAddToCart={handleAddToCart} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} />;
+    return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} />;
   };
 
   const showNav = user && !['login','signup','seller-login','seller','telegram-auth'].includes(page);

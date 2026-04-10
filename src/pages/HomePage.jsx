@@ -3,11 +3,10 @@ import { MagnifyingGlass, Bell, Heart, ShoppingCart, X } from '@phosphor-icons/r
 import { sum } from '../utils/format';
 import CakeVisual from '../components/CakeVisual';
 
-function ProductDetailModal({ card, onClose, onAddToCart, toast, C }) {
+function ProductDetailModal({ card, onClose, toast, C }) {
   const [qty, setQty] = useState(1);
   if (!card) return null;
   const handleAdd = () => {
-    onAddToCart({ id:card.id, emoji:card.emoji, category:card.category, bg:card.bg, name:card.name, detail:'Круглый · 4 порции · Сливочный', price:card.price, qty });
     toast(`${card.emoji} ${qty} шт. добавлено!`);
     onClose();
   };
@@ -53,7 +52,7 @@ function ProductDetailModal({ card, onClose, onAddToCart, toast, C }) {
   );
 }
 
-export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCakeCards, setPage, isDesktop }) {
+export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setPage, isDesktop }) {
   const chips    = ['Всё','Торты','Кексы'];
   const chipKeys = ['all','tort','keks'];
   const [activeChip,  setActiveChip]  = useState(0);
@@ -89,18 +88,13 @@ export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCa
           <div style={{ color:C.navy, fontWeight:700, fontSize:13 }}>{sum(card.price)}</div>
           <div style={{ color:C.muted, fontSize:11 }}>⭐ {card.rating}</div>
         </div>
-        <button
-          onClick={e=>{ e.stopPropagation(); onAddToCart({ id:card.id, emoji:card.emoji, category:card.category, bg:card.bg, name:card.name, detail:'Круглый · 4 порции · Сливочный', price:card.price }); toast(`${card.emoji} Добавлено!`); }}
-          style={{ width:'100%', padding:'8px 0', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.navy},${C.mid})`, color:'#fff', cursor:'pointer', fontSize:11, fontWeight:700 }}>
-          + Добавить
-        </button>
-      </div>
+              </div>
     </div>
   ));
 
   return (
     <div className="fade-in" style={{ color:C.dark }}>
-      {detailCard && <ProductDetailModal card={detailCard} onClose={()=>setDetailCard(null)} onAddToCart={onAddToCart} toast={toast} C={C}/>}
+      {detailCard && <ProductDetailModal card={detailCard} onClose={()=>setDetailCard(null)} toast={toast} C={C}/>}
 
       {/* Header */}
       <div style={{ padding:`${topPad}px 20px 14px` }}>
@@ -165,11 +159,7 @@ export default function HomePage({ toast, onAddToCart, user, C, cakeCards, setCa
           <div style={{ color:'rgba(255,255,255,.9)', fontSize:isDesktop?28:24, fontWeight:700, marginBottom:16 }}>
             79 000 сум <s style={{ color:'rgba(255,255,255,.4)', fontSize:14, fontWeight:400, marginLeft:8 }}>120 000 сум</s>
           </div>
-          <button onClick={()=>{ onAddToCart({id:99,emoji:'🎂',category:'tort',bg:'linear-gradient(135deg,#011023,#052558)',name:'Шоколадная Фантазия',detail:'Специальный · 6 порций · Шоколадный',price:79000}); toast('🎂 Добавлено!'); }}
-            style={{ display:'inline-flex', alignItems:'center', gap:8, background:'#fff', color:C.navy, padding:'12px 22px', borderRadius:50, border:'none', cursor:'pointer', fontWeight:700, fontSize:14, boxShadow:'0 4px 16px rgba(0,0,0,.2)' }}>
-            <ShoppingCart size={16}/> Заказать
-          </button>
-        </div>
+                  </div>
       )}
 
       {/* Products heading */}
