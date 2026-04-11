@@ -3,11 +3,12 @@ import { MagnifyingGlass, Bell, Heart, ShoppingCart, X } from '@phosphor-icons/r
 import { sum } from '../utils/format';
 import CakeVisual from '../components/CakeVisual';
 
-function ProductDetailModal({ card, onClose, toast, C }) {
+function ProductDetailModal({ card, onClose, toast, C, addToCart }) {
   const [qty, setQty] = useState(1);
   if (!card) return null;
   const handleAdd = () => {
-    toast(`${card.emoji} ${qty} шт. добавлено!`);
+    addToCart(card, qty);
+    toast(`${card.emoji || ''} Savatga qo'shildi!`);
     onClose();
   };
   return (
@@ -52,7 +53,7 @@ function ProductDetailModal({ card, onClose, toast, C }) {
   );
 }
 
-export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setPage, isDesktop }) {
+export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setPage, isDesktop, addToCart }) {
   const chips    = ['Всё','Торты','Кексы'];
   const chipKeys = ['all','tort','keks'];
   const [activeChip,  setActiveChip]  = useState(0);
@@ -94,7 +95,7 @@ export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setP
 
   return (
     <div className="fade-in" style={{ color:C.dark }}>
-      {detailCard && <ProductDetailModal card={detailCard} onClose={()=>setDetailCard(null)} toast={toast} C={C}/>}
+      {detailCard && <ProductDetailModal card={detailCard} onClose={()=>setDetailCard(null)} toast={toast} C={C} addToCart={addToCart}/>}
 
       {/* Header */}
       <div style={{ padding:`${topPad}px 20px 14px` }}>

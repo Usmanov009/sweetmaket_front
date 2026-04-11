@@ -1,14 +1,15 @@
 import { memo } from 'react';
-import { House, MagnifyingGlass, Cake, User } from '@phosphor-icons/react';
+import { House, MagnifyingGlass, Cake, ShoppingCart, User } from '@phosphor-icons/react';
 
 const ITEMS = [
-  { id:'home',    Icon: House,         label:'Главная' },
-  { id:'explore', Icon: MagnifyingGlass,       label:'Поиск'   },
-  { id:'create',  Icon: Cake,         label:'Создать', isCenter: true },
-  { id:'profile', Icon: User,         label:'Профиль' },
+  { id:'home',    Icon: House,            label:'Bosh' },
+  { id:'explore', Icon: MagnifyingGlass,  label:'Qidiruv' },
+  { id:'create',  Icon: Cake,             label:'Yaratish', isCenter: true },
+  { id:'cart',    Icon: ShoppingCart,     label:'Savatcha' },
+  { id:'profile', Icon: User,             label:'Profil' },
 ];
 
-const BottomNav = memo(function BottomNav({ page, setPage, C }) {
+const BottomNav = memo(function BottomNav({ page, setPage, C, cartCount = 0 }) {
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
@@ -36,6 +37,9 @@ const BottomNav = memo(function BottomNav({ page, setPage, C }) {
             </div>
           </button>
         );
+
+        const showBadge = id === 'cart' && cartCount > 0;
+
         return (
           <button key={id} onClick={() => setPage(id)}
             className="nav-item"
@@ -47,7 +51,21 @@ const BottomNav = memo(function BottomNav({ page, setPage, C }) {
               transition: 'color .2s', position:'relative',
               borderRadius: 0,
             }}>
-            <Icon size={22} weight={active ? "bold" : "regular"} />
+            <div style={{ position: 'relative' }}>
+              <Icon size={22} weight={active ? "bold" : "regular"} />
+              {showBadge && (
+                <div style={{
+                  position: 'absolute', top: -6, right: -8,
+                  minWidth: 16, height: 16, borderRadius: 8,
+                  background: '#ef4444', color: '#fff',
+                  fontSize: 9, fontWeight: 800,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0 4px',
+                }}>
+                  {cartCount > 99 ? '99+' : cartCount}
+                </div>
+              )}
+            </div>
             <span style={{ fontSize: 10, fontWeight: active ? 700 : 500 }}>{label}</span>
             {active && (
               <div style={{

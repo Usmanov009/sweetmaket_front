@@ -2,13 +2,14 @@ import { memo } from 'react';
 import { House, MagnifyingGlass, Cake, ShoppingCart, User, SignOut } from '@phosphor-icons/react';
 
 const ITEMS = [
-  { id:'home',    Icon: House,         label:'Главная' },
-  { id:'explore', Icon: MagnifyingGlass,       label:'Поиск'   },
-  { id:'create',  Icon: Cake,         label:'Создать' },
-  { id:'profile', Icon: User,         label:'Профиль' },
+  { id:'home',    Icon: House,            label:'Bosh sahifa' },
+  { id:'explore', Icon: MagnifyingGlass,  label:'Qidiruv'     },
+  { id:'create',  Icon: Cake,             label:'Yaratish'    },
+  { id:'cart',    Icon: ShoppingCart,     label:'Savatcha'    },
+  { id:'profile', Icon: User,             label:'Profil'      },
 ];
 
-const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, user, onLogout }) {
+const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, user, onLogout, cartCount = 0 }) {
   const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'SM';
   return (
     <aside style={{
@@ -40,7 +41,21 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, user, on
                 fontSize: 14, textAlign:'left',
                 transition: 'all .15s', position:'relative',
               }}>
-              <Icon size={20} weight={active ? "bold" : "regular"} />
+              <div style={{ position:'relative' }}>
+                <Icon size={20} weight={active ? "bold" : "regular"} />
+                {id === 'cart' && cartCount > 0 && (
+                  <div style={{
+                    position:'absolute', top:-6, right:-8,
+                    minWidth:16, height:16, borderRadius:8,
+                    background:'#ef4444', color:'#fff',
+                    fontSize:9, fontWeight:800,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    padding:'0 4px',
+                  }}>
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </div>
+                )}
+              </div>
               <span>{label}</span>
                           </button>
           );

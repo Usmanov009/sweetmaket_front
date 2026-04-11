@@ -21,6 +21,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import HomePage from './pages/HomePage';
 import SellerLoginPage from './pages/SellerLoginPage';
 import SellerDashboardPage from './pages/SellerDashboardPage';
+import CartPage from './pages/CartPage';
 
 
 
@@ -1034,6 +1035,7 @@ export default function App() {
   const [page, setPage] = useState('login');
   const [orders, setOrders] = useState([]);
   const [cards, setCards] = useState([]);
+  const [cart, setCart] = useState([]);
   const [cakeCards, setCakeCards] = useState([]);
   const [bakeries, setBakeries] = useState([]);
   const [user, setUser] = useState(null);
@@ -1140,7 +1142,28 @@ export default function App() {
     }
   };
 
-  
+
+  const addToCart = (product, qty = 1) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.productId === product.id);
+      if (existing) return prev.map(i => i.productId === product.id ? { ...i, qty: i.qty + qty } : i);
+      return [...prev, {
+        id: Date.now() + Math.random(),
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        qty,
+        emoji: product.emoji,
+        category: product.category,
+        bg: product.bg,
+        image: product.image,
+      }];
+    });
+  };
+  const updateCartQty = (id, qty) => setCart(prev => prev.map(i => i.id === id ? { ...i, qty } : i));
+  const removeFromCart = (id) => setCart(prev => prev.filter(i => i.id !== id));
+  const clearCart = () => setCart([]);
+
   const renderPage = () => {
     if (page === 'seller-login') return <SellerLoginPage onLogin={handleSellerLogin} goUserLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
     if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} />;
@@ -1150,8 +1173,9 @@ export default function App() {
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} />;
+    if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={handleAddToOrder} toast={toast} setPage={setPage} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} />;
-    return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} />;
+    return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} />;
   };
 
   const showNav = user && !['login','signup','seller-login','seller','telegram-auth'].includes(page);
@@ -1167,7 +1191,7 @@ export default function App() {
       )}
 
       {showNav && isDesktop && (
-        <SidebarNav page={page} setPage={setPage} C={C} isDark={isDark} user={user} onLogout={handleLogout}/>
+        <SidebarNav page={page} setPage={setPage} C={C} isDark={isDark} user={user} onLogout={handleLogout} cartCount={cart.reduce((s,i)=>s+i.qty,0)}/>
       )}
 
       <div style={{ flex:1, minWidth:0 }}>
@@ -1183,7 +1207,7 @@ export default function App() {
       </div>
 
       {showNav && !isDesktop && (
-        <BottomNav page={page} setPage={setPage} C={C}/>
+        <BottomNav page={page} setPage={setPage} C={C} cartCount={cart.reduce((s,i)=>s+i.qty,0)}/>
       )}
     </div>
   );
