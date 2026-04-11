@@ -1195,7 +1195,9 @@ export default function App() {
       )}
 
       <div style={{ flex:1, minWidth:0 }}>
-        {renderPage()}
+        <div key={page}>
+          {renderPage()}
+        </div>
       </div>
 
       {showNav && !isDesktop && (
