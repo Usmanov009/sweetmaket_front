@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { MagnifyingGlass, Bell, Heart, ShoppingCart, X } from '@phosphor-icons/react';
+import { MagnifyingGlass, Bell, Heart, ShoppingCart, X, Sun, Moon } from '@phosphor-icons/react';
 import { sum } from '../utils/format';
 import CakeVisual from '../components/CakeVisual';
 
@@ -53,7 +53,7 @@ function ProductDetailModal({ card, onClose, toast, C, addToCart }) {
   );
 }
 
-export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setPage, isDesktop, addToCart }) {
+export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setPage, isDesktop, addToCart, isDark, setIsDark }) {
   const chips    = ['Всё','Торты','Кексы'];
   const chipKeys = ['all','tort','keks'];
   const [activeChip,  setActiveChip]  = useState(0);
@@ -107,11 +107,14 @@ export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setP
             <div style={{ color:C.muted, fontSize:13, marginTop:2 }}>Добрый день, {firstName}! 🎉</div>
           </div>
           {!isDesktop && (
-            <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <button onClick={()=>setSearchOpen(o=>!o)} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
                 <MagnifyingGlass size={18}/>
               </button>
-                            <div onClick={()=>setPage('profile')} style={{ width:40, height:40, borderRadius:'50%', background:`linear-gradient(135deg,${C.navy},${C.mid})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color:'#fff', cursor:'pointer', flexShrink:0 }}>
+              <button onClick={()=>setIsDark(d=>!d)} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
+                {isDark ? <Sun size={18}/> : <Moon size={18}/>}
+              </button>
+              <div onClick={()=>setPage('profile')} style={{ width:40, height:40, borderRadius:'50%', background:`linear-gradient(135deg,${C.navy},${C.mid})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color:'#fff', cursor:'pointer', flexShrink:0 }}>
                 {initials}
               </div>
             </div>
@@ -123,6 +126,9 @@ export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setP
                   style={{ background:C.s1, border:`1px solid ${C.border}`, borderRadius:50, padding:'9px 16px 9px 36px', color:C.dark, fontSize:13, width:220 }}/>
                 <MagnifyingGlass size={14} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:C.muted }}/>
               </div>
+              <button onClick={()=>setIsDark(d=>!d)} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
+                {isDark ? <Sun size={18}/> : <Moon size={18}/>}
+              </button>
             </div>
           )}
         </div>

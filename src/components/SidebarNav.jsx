@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { House, MagnifyingGlass, Cake, ShoppingCart, User, SignOut } from '@phosphor-icons/react';
+import { House, MagnifyingGlass, Cake, ShoppingCart, User, SignOut, Sun, Moon } from '@phosphor-icons/react';
 
 const ITEMS = [
   { id:'home',    Icon: House,            label:'Bosh sahifa' },
@@ -9,7 +9,7 @@ const ITEMS = [
   { id:'profile', Icon: User,             label:'Profil'      },
 ];
 
-const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, user, onLogout, cartCount = 0 }) {
+const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, setIsDark = ()=>{}, user, onLogout, cartCount = 0 }) {
   const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'SM';
   return (
     <aside style={{
@@ -84,15 +84,25 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, user, on
             <div style={{ fontSize:11, color:C.navy, fontWeight:500 }}>🥇 Gold</div>
           </div>
         </div>
+        <button onClick={() => setIsDark(d => !d)}
+          className="nav-item"
+          style={{
+            width:'100%', display:'flex', alignItems:'center', gap:10,
+            padding:'9px 14px', borderRadius:12, border:'none', cursor:'pointer',
+            background:'transparent', color: C.muted, fontWeight:500, fontSize:13, marginTop:4,
+          }}>
+          {isDark ? <Sun size={18}/> : <Moon size={18}/>}
+          <span>{isDark ? 'Kunduzgi rejim' : 'Tungi rejim'}</span>
+        </button>
         <button onClick={onLogout}
           className="nav-item"
           style={{
             width:'100%', display:'flex', alignItems:'center', gap:10,
             padding:'9px 14px', borderRadius:12, border:'none', cursor:'pointer',
-            background:'transparent', color:'#ef4444', fontWeight:500, fontSize:13, marginTop:4,
+            background:'transparent', color:'#ef4444', fontWeight:500, fontSize:13, marginTop:2,
           }}>
           <SignOut size={18} />
-          <span>Выйти</span>
+          <span>Chiqish</span>
         </button>
       </div>
     </aside>

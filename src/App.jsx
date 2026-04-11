@@ -1175,7 +1175,7 @@ export default function App() {
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} />;
     if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={handleAddToOrder} toast={toast} setPage={setPage} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} />;
-    return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} />;
+    return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;
   };
 
   const showNav = user && !['login','signup','seller-login','seller','telegram-auth'].includes(page);
@@ -1191,18 +1191,10 @@ export default function App() {
       )}
 
       {showNav && isDesktop && (
-        <SidebarNav page={page} setPage={setPage} C={C} isDark={isDark} user={user} onLogout={handleLogout} cartCount={cart.reduce((s,i)=>s+i.qty,0)}/>
+        <SidebarNav page={page} setPage={setPage} C={C} isDark={isDark} setIsDark={setIsDark} user={user} onLogout={handleLogout} cartCount={cart.reduce((s,i)=>s+i.qty,0)}/>
       )}
 
       <div style={{ flex:1, minWidth:0 }}>
-        {/* Top bar */}
-        <div style={{ display:'flex', justifyContent:'flex-end', padding:'14px 20px 0', gap:8, alignItems:'center' }}>
-                    <button onClick={() => setIsDark(d => !d)}
-            className="icon-btn"
-            style={{ width:38, height:38, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'none', cursor:'pointer', color:C.dark, transition:'all .2s' }}>
-            {isDark ? <Sun size={20}/> : <Moon size={20}/>}
-          </button>
-        </div>
         {renderPage()}
       </div>
 
