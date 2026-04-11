@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import {
   Sun, Moon, Bell,
-  Trash, Plus, Package, CreditCard, Gear,
+  Trash, Plus, Package, Gear, SignOut,
   Heart, X, Check,
-  MapPin, Clock, Star,
+  MapPin, Clock, Star, TrendUp,
+  PencilSimple, House, Gift, UserCircle, Phone,
 } from '@phosphor-icons/react';
 import api from './api';
 import { THEMES, injectGlobal } from './constants/themes';
@@ -753,354 +754,217 @@ function BottomModal({ onClose, title, children, C }) {
 /* ═══════════════════════════════════════════════════════
    PROFILE PAGE
 ═══════════════════════════════════════════════════════ */
-function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, cards, setCards, setUser }) {
+function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, setUser, setPage }) {
   const [activeTab, setActiveTab] = useState('orders');
-  const [bdays, setBdays] = useState([]);
+  const [bdays,     setBdays]     = useState([]);
+  const [bdayModal, setBdayModal] = useState(false);
+  const [newBday,   setNewBday]   = useState({ emoji: '🎂', name: '', date: '' });
+  const [nameModal,   setNameModal]   = useState(false);
+  const [nameForm,    setNameForm]    = useState({ firstName: '', lastName: '' });
+  const [nameLoading, setNameLoading] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
     api.get('/api/birthdays').then(setBdays).catch(() => {});
   }, [user?.id]);
-  const [bdayModal, setBdayModal] = useState(false);
-  const [newBday, setNewBday] = useState({emoji:'🎂',name:'',date:''});
-  const [cardModal, setCardModal] = useState(false);
-  const [nameModal, setNameModal] = useState(false);
-  const [nameForm, setNameForm] = useState({firstName:'',lastName:''});
-  const [nameLoading, setNameLoading] = useState(false);
-  const [newCard, setNewCard] = useState({cardNumber:'',brand:'UzCard',expiry:'',holderName:'',linkedPhone:'+998'});
-  const [cardLoading, setCardLoading] = useState(false);
-  const formatCardNum = (v) => v.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
-  const formatExpiry = (v) => { const d=v.replace(/\D/g,'').slice(0,4); return d.length>2?d.slice(0,2)+'/'+d.slice(2):d; };
-  const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'SM';
-  const totalSpent = orders.reduce((s,o)=>s+o.total,0);
+
+  const initials   = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'SM';
+  const totalSpent = orders.reduce((s, o) => s + o.total, 0);
 
 
-  /* ── input style for modals */
-  const inp = {width:'100%',background:C.s2,border:`1.5px solid ${C.border}`,borderRadius:14,
-    padding:'13px 16px',color:C.dark,fontSize:14,outline:'none',marginBottom:10};
+  const inp = {
+    width: '100%', background: C.s2, border: `1.5px solid ${C.border}`,
+    borderRadius: 12, padding: '13px 16px', color: C.dark, fontSize: 14,
+    outline: 'none', marginBottom: 10,
+  };
+
+  const TABS = [
+    { id: 'orders',   icon: <Package size={20} />, label: "Buyurtmalar" },
+    { id: 'bdays',    icon: <Gift size={20} />,    label: "Tug'ilgan kun" },
+    { id: 'settings', icon: <Gear size={20} />,    label: "Sozlamalar" },
+  ];
 
   return (
-    <div style={{minHeight:'100vh',background:C.bg}}>
 
-      {/* ═══ BIRTHDAY MODAL ═══ */}
-      {bdayModal&&(
-        <BottomModal C={C} onClose={()=>setBdayModal(false)} title="🎉 День рождения">
-          <div style={{display:'flex',gap:8,marginBottom:16}}>
-            {['🎂','🎉','🎈','🎁','🌸','⭐'].map(e=>(
-              <button key={e} onClick={()=>setNewBday(b=>({...b,emoji:e}))}
-                style={{flex:1,fontSize:22,border:`2px solid ${newBday.emoji===e?C.navy:C.border}`,borderRadius:14,
-                  padding:'8px 4px',background:newBday.emoji===e?C.s2:'transparent',cursor:'pointer',transition:'all .15s'}}>
+      {/* Birthday Modal */}
+      {bdayModal && (
+        <BottomModal C={C} onClose={() => setBdayModal(false)} title="Tug'ilgan kun qo'shish">
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            {['🎂','🎉','🎈','🎁','🌸','⭐'].map(e => (
+              <button key={e} onClick={() => setNewBday(b => ({ ...b, emoji: e }))}
+                style={{ flex:1, fontSize:22, border:'2px solid '+(newBday.emoji===e?C.navy:C.border), borderRadius:12, padding:'8px 4px', background:newBday.emoji===e?C.s2:'transparent', cursor:'pointer' }}>
                 {e}
               </button>
             ))}
           </div>
-          <input value={newBday.name} onChange={e=>setNewBday(b=>({...b,name:e.target.value}))} placeholder="Имя" style={inp}/>
-          <input value={newBday.date} onChange={e=>setNewBday(b=>({...b,date:e.target.value}))} placeholder="Дата (напр. 12 Мая)" style={{...inp,marginBottom:20}}/>
-          <div style={{display:'flex',gap:10}}>
-            <button onClick={()=>setBdayModal(false)} style={{flex:1,padding:'14px',borderRadius:14,border:`1.5px solid ${C.border}`,background:'transparent',color:C.muted,cursor:'pointer',fontWeight:600,fontSize:14}}>Отмена</button>
-            <button onClick={async()=>{if(newBday.name&&newBday.date){try{const b=await api.post('/api/birthdays',newBday);setBdays(p=>[...p,b]);}catch{}setBdayModal(false);setNewBday({emoji:'🎂',name:'',date:''});}}}
-              disabled={!newBday.name||!newBday.date}
-              style={{flex:2,padding:'14px',borderRadius:14,border:'none',background:`linear-gradient(135deg,${C.navy},${C.mid})`,color:'#fff',cursor:'pointer',fontWeight:700,fontSize:14,opacity:(!newBday.name||!newBday.date)?.45:1}}>
-              Добавить
+          <input value={newBday.name} onChange={e => setNewBday(b => ({ ...b, name: e.target.value }))} placeholder="Ism" style={inp} />
+          <input value={newBday.date} onChange={e => setNewBday(b => ({ ...b, date: e.target.value }))} placeholder="Sana (mas. 12 May)" style={{ ...inp, marginBottom: 20 }} />
+          <div style={{ display:'flex', gap:10 }}>
+            <button onClick={() => setBdayModal(false)} style={{ flex:1, padding:14, borderRadius:12, border:'1.5px solid '+C.border, background:'none', color:C.muted, cursor:'pointer', fontWeight:600 }}>Bekor</button>
+            <button disabled={!newBday.name||!newBday.date}
+              onClick={async () => { if(newBday.name&&newBday.date){ try{ const b=await api.post('/api/birthdays',newBday); setBdays(p=>[...p,b]); }catch{} setBdayModal(false); setNewBday({emoji:'🎂',name:'',date:''}); } }}
+              style={{ flex:2, padding:14, borderRadius:12, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontWeight:700, opacity:(!newBday.name||!newBday.date)?.45:1 }}>
+              Qo'shish
             </button>
           </div>
         </BottomModal>
       )}
 
-      {/* ═══ CARD MODAL ═══ */}
-      {cardModal&&(
-        <BottomModal C={C} onClose={()=>setCardModal(false)} title="💳 Добавить карту">
-          {/* Brand selector — only UzCard / Humo */}
-          <div style={{display:'flex',gap:8,marginBottom:16}}>
-            {[
-              {id:'UzCard', label:'🟦 UzCard', grad:'linear-gradient(135deg,#1d4ed8,#2563eb)'},
-              {id:'Humo',   label:'🟩 Humo',   grad:'linear-gradient(135deg,#059669,#10b981)'},
-            ].map(b=>(
-              <button key={b.id} onClick={()=>setNewCard(c=>({...c,brand:b.id}))}
-                style={{flex:1,padding:'12px 6px',borderRadius:14,border:`2px solid ${newCard.brand===b.id?'transparent':C.border}`,
-                  background:newCard.brand===b.id?b.grad:'transparent',color:newCard.brand===b.id?'#fff':C.muted,
-                  cursor:'pointer',fontWeight:700,fontSize:13,transition:'all .15s',boxShadow:newCard.brand===b.id?`0 4px 14px rgba(0,0,0,.2)`:'none'}}>
-                {b.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Full card number */}
-          <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Номер карты</label>
-            <input
-              value={newCard.cardNumber}
-              onChange={e=>setNewCard(c=>({...c,cardNumber:formatCardNum(e.target.value)}))}
-              placeholder="0000 0000 0000 0000"
-              inputMode="numeric"
-              style={{...inp,fontFamily:'monospace',fontSize:17,letterSpacing:2,marginBottom:0}}
-            />
-          </div>
-
-          {/* Expiry */}
-          <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Срок действия</label>
-            <input
-              value={newCard.expiry}
-              onChange={e=>setNewCard(c=>({...c,expiry:formatExpiry(e.target.value)}))}
-              placeholder="ММ/ГГ"
-              inputMode="numeric"
-              style={{...inp,marginBottom:0}}
-            />
-          </div>
-
-          {/* Holder name */}
-          <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Имя владельца</label>
-            <input
-              value={newCard.holderName}
-              onChange={e=>setNewCard(c=>({...c,holderName:e.target.value}))}
-              placeholder="AZIZ KARIMOV"
-              style={{...inp,textTransform:'uppercase',marginBottom:0}}
-            />
-          </div>
-
-          {/* Linked phone */}
-          <div style={{marginBottom:20}}>
-            <label style={{fontSize:12,fontWeight:600,color:C.navy,display:'block',marginBottom:6}}>Телефон, привязанный к карте</label>
-            <input
-              value={newCard.linkedPhone}
-              onChange={e=>setNewCard(c=>({...c,linkedPhone:formatPhone(e.target.value)}))}
-              onKeyDown={e=>{if(['Backspace','Delete'].includes(e.key)&&rawDigits(newCard.linkedPhone).length<=3)e.preventDefault();}}
-              placeholder="+998 90 123 45 67"
-              inputMode="tel"
-              style={{...inp,marginBottom:0}}
-            />
-          </div>
-
-          <div style={{display:'flex',gap:10}}>
-            <button onClick={()=>setCardModal(false)} style={{flex:1,padding:'14px',borderRadius:14,border:`1.5px solid ${C.border}`,background:'transparent',color:C.muted,cursor:'pointer',fontWeight:600,fontSize:14}}>Отмена</button>
-            {(()=>{
-              const digits = newCard.cardNumber.replace(/\s/g,'');
-              const valid = digits.length===16 && newCard.expiry.length===5 && isValidPhone(newCard.linkedPhone);
-              return (
-                <button disabled={!valid||cardLoading}
-                  onClick={async()=>{
-                    const digits16 = newCard.cardNumber.replace(/\s/g,'');
-                    const payload = { last4:digits16.slice(-4), brand:newCard.brand, expiry:newCard.expiry, holderName:newCard.holderName.trim().toUpperCase(), linkedPhone:newCard.linkedPhone };
-                    setCardLoading(true);
-                    try { const card=await api.post('/api/cards',payload); setCards(p=>[...p,card]); setCardModal(false); setNewCard({cardNumber:'',brand:'UzCard',expiry:'',holderName:'',linkedPhone:'+998'}); }
-                    catch(e){} finally{setCardLoading(false);}
-                  }}
-                  style={{flex:2,padding:'14px',borderRadius:14,border:'none',background:`linear-gradient(135deg,${C.navy},${C.mid})`,color:'#fff',cursor:(!valid||cardLoading)?'default':'pointer',fontWeight:700,fontSize:14,opacity:(!valid||cardLoading)?.45:1,transition:'opacity .2s'}}>
-                  {cardLoading?'Сохранение...':'💳 Добавить карту'}
-                </button>
-              );
-            })()}
-          </div>
-        </BottomModal>
-      )}
-
-      {/* ═══ NAME MODAL ═══ */}
-      {nameModal&&(
-        <BottomModal C={C} onClose={()=>setNameModal(false)} title="✏️ Ismni o'zgartirish">
-          <input value={nameForm.firstName} onChange={e=>setNameForm(f=>({...f,firstName:e.target.value}))} placeholder="Ism" style={inp}/>
-          <input value={nameForm.lastName}  onChange={e=>setNameForm(f=>({...f,lastName:e.target.value}))}  placeholder="Familiya" style={{...inp,marginBottom:20}}/>
-          <div style={{display:'flex',gap:10}}>
-            <button onClick={()=>setNameModal(false)} style={{flex:1,padding:'14px',borderRadius:14,border:`1.5px solid ${C.border}`,background:'transparent',color:C.muted,cursor:'pointer',fontWeight:600,fontSize:14}}>Bekor</button>
+      {/* Name Modal */}
+      {nameModal && (
+        <BottomModal C={C} onClose={() => setNameModal(false)} title="Ismni o'zgartirish">
+          <input value={nameForm.firstName} onChange={e => setNameForm(f => ({ ...f, firstName: e.target.value }))} placeholder="Ism" style={inp} />
+          <input value={nameForm.lastName} onChange={e => setNameForm(f => ({ ...f, lastName: e.target.value }))} placeholder="Familiya" style={{ ...inp, marginBottom: 20 }} />
+          <div style={{ display:'flex', gap:10 }}>
+            <button onClick={() => setNameModal(false)} style={{ flex:1, padding:14, borderRadius:12, border:'1.5px solid '+C.border, background:'none', color:C.muted, cursor:'pointer', fontWeight:600 }}>Bekor</button>
             <button disabled={!nameForm.firstName.trim()||nameLoading}
-              onClick={async()=>{
-                setNameLoading(true);
-                try{
-                  const res=await api.patch('/api/auth/me',{firstName:nameForm.firstName.trim(),lastName:nameForm.lastName.trim()});
-                  setUser(res.user);
-                  setNameModal(false);
-                }catch{}finally{setNameLoading(false);}
-              }}
-              style={{flex:2,padding:'14px',borderRadius:14,border:'none',background:`linear-gradient(135deg,${C.navy},${C.mid})`,color:'#fff',cursor:(!nameForm.firstName.trim()||nameLoading)?'default':'pointer',fontWeight:700,fontSize:14,opacity:(!nameForm.firstName.trim()||nameLoading)?.45:1}}>
-              {nameLoading?'Saqlanmoqda...':'Saqlash'}
+              onClick={async () => { setNameLoading(true); try{ const res=await api.patch('/api/auth/me',{firstName:nameForm.firstName.trim(),lastName:nameForm.lastName.trim()}); setUser(res.user); setNameModal(false); }catch{}finally{ setNameLoading(false); } }}
+              style={{ flex:2, padding:14, borderRadius:12, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontWeight:700, opacity:(!nameForm.firstName.trim()||nameLoading)?.45:1 }}>
+              {nameLoading ? 'Saqlanmoqda...' : 'Saqlash'}
             </button>
           </div>
         </BottomModal>
       )}
 
-      {/* ═══ HERO HEADER ═══ */}
-      <div style={{position:'relative',background:'linear-gradient(160deg,#667eea 0%,#764ba2 100%)',paddingTop:isDesktop?32:64,paddingBottom:80,overflow:'hidden'}}>
-        {/* Decorative circles */}
-        <div style={{position:'absolute',top:-60,right:-60,width:240,height:240,borderRadius:'50%',background:'rgba(255,255,255,.1)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',bottom:-80,left:-40,width:200,height:200,borderRadius:'50%',background:'rgba(255,255,255,.08)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',top:40,left:'50%',transform:'translateX(-50%)',width:320,height:320,borderRadius:'50%',background:'rgba(255,255,255,.05)',pointerEvents:'none'}}/>
-
-        <div style={{maxWidth:600,margin:'0 auto',padding:'0 24px',textAlign:'center',position:'relative'}}>
-          {/* Avatar */}
-          <div style={{position:'relative',display:'inline-block',marginBottom:16}}>
-            <div style={{width:96,height:96,borderRadius:'50%',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',
-              display:'flex',alignItems:'center',justifyContent:'center',fontSize:34,fontWeight:900,
-              color:'#fff',border:'4px solid rgba(255,255,255,.3)',
-              boxShadow:'0 0 8px rgba(255,255,255,.08),0 12px 32px rgba(0,0,0,.3)',
-              letterSpacing:-1}}>
+      {/* HERO */}
+      <div style={{ background:'linear-gradient(145deg,#1e1b4b 0%,#4f46e5 58%,#7c3aed 100%)', paddingTop:isDesktop?40:68, paddingBottom:88, position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', width:360, height:360, borderRadius:'50%', background:'rgba(255,255,255,.04)', top:-120, right:-100 }} />
+        <div style={{ position:'absolute', width:220, height:220, borderRadius:'50%', background:'rgba(255,255,255,.05)', bottom:-70, left:-60 }} />
+        <div style={{ maxWidth:600, margin:'0 auto', padding:'0 24px', position:'relative' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:32 }}>
+            <button onClick={() => setPage('home')} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:10, padding:'8px 14px', color:'#fff', cursor:'pointer', fontSize:13, fontWeight:600 }}>
+              <House size={16} /> Bosh sahifa
+            </button>
+            <button onClick={() => { setNameForm({firstName:user?.firstName||'',lastName:user?.lastName||''}); setNameModal(true); }}
+              style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:10, padding:'8px 14px', color:'#fff', cursor:'pointer', fontSize:13, fontWeight:600 }}>
+              <PencilSimple size={16} /> Tahrirlash
+            </button>
+          </div>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ width:104, height:104, borderRadius:'50%', background:'linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.08))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, fontWeight:900, color:'#fff', border:'3px solid rgba(255,255,255,.28)', boxShadow:'0 16px 48px rgba(0,0,0,.28)', margin:'0 auto 18px', letterSpacing:-1 }}>
               {initials}
             </div>
-            {/* Online status */}
-            <div style={{position:'absolute',bottom:4,right:4,width:20,height:20,borderRadius:'50%',background:'#4ade80',border:'3px solid #22c55e',boxShadow:'0 2px 8px rgba(34,197,94,.5)'}}/>
-          </div>
-
-          {/* Name & phone */}
-          <div style={{display:'inline-flex',alignItems:'center',gap:8,marginBottom:6}}>
-            <button onClick={()=>setPage('home')} 
-              style={{background:'rgba(255,255,255,.15)',border:'1px solid rgba(255,255,255,.25)',borderRadius:8,width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,marginRight:8}}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9 9 0 0 1 0v2h9m-9-9v-2h9"/></svg>
-            </button>
-            <div style={{fontSize:26,fontWeight:900,color:'#fff',letterSpacing:-.6,lineHeight:1.1}}>{user?.name||'Гость'}</div>
-            <button onClick={()=>{setNameForm({firstName:user?.firstName||'',lastName:user?.lastName||''});setNameModal(true);}}
-              style={{background:'rgba(255,255,255,.2)',border:'1px solid rgba(255,255,255,.3)',borderRadius:8,width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-          </div>
-          <div style={{fontSize:13,color:'rgba(255,255,255,.6)',marginBottom:20,letterSpacing:.2}}>{user?.phone||'Номер не указан'}</div>
-
-          {/* Member badge */}
-          <div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(255,255,255,.12)',backdropFilter:'blur(12px)',
-            border:'1px solid rgba(255,255,255,.2)',borderRadius:50,padding:'6px 18px',marginBottom:0}}>
-            <span style={{fontSize:14}}>🥇</span>
-            <span style={{fontSize:12,fontWeight:700,color:'#fff',letterSpacing:.5}}>Gold Member</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══ NOTICE SECTION ═══ */}
-      <div style={{maxWidth:600,margin:'-24px auto 16px',padding:'0 16px'}}>
-        <div style={{background:isDark?'#1e293b':'#f0f9ff',borderRadius:12,padding:16,border:`1px solid ${isDark?'#374151':'#e5e7eb'}`,boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}}>
-          <div style={{display:'flex',alignItems:'center',gap:12}}>
-            <div style={{width:12,height:12,borderRadius:'50%',background:isDark?'#fbbf24':'#f59e0b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,color:'#fff',fontWeight:600}}>💡</div>
-            <div>
-              <div style={{fontSize:14,fontWeight:600,color:isDark?'#f0f9ff':'#1e293b',marginBottom:4}}>У вас {orders.length} активных заказов</div>
-              <div style={{fontSize:12,color:isDark?'#a0aec0':'#64748b'}}>Следите за статусом доставки в разделе «Заказы»</div>
+            <div style={{ fontSize:26, fontWeight:900, color:'#fff', marginBottom:6 }}>{user?.name||'Foydalanuvchi'}</div>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,.6)', marginBottom:18, display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
+              <Phone size={13} /> {user?.phone||''}
+            </div>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(255,255,255,.12)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,.2)', borderRadius:50, padding:'7px 20px' }}>
+              <Star size={15} color="#fbbf24" weight="fill" />
+              <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>Gold Member</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ═══ STATS STRIP ═══ */}
-      <div style={{maxWidth:600,margin:'0 auto 16px',padding:'0 16px'}}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+      {/* STATS */}
+      <div style={{ maxWidth:600, margin:'-30px auto 0', padding:'0 16px' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
           {[
-            {icon:<Package size={18} color="#2563eb"/>,val:orders.length,label:'Заказы',color:'#2563eb'},
-            {icon:<Star size={18} color="#7c3aed"/>,val:(orders.length*150).toLocaleString(),label:'Баллы',color:'#7c3aed'},
-            {icon:<CreditCard size={18} color="#0891b2"/>,val:cards.length,label:'Карты',color:'#0891b2'},
-          ].map(s=>(
-            <div key={s.label} style={{background:isDark?'#1e293b':'#f0f9ff',borderRadius:16,padding:20,textAlign:'center',
-              border:`1px solid ${isDark?'#374151':'#e5e7eb'}`,boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}}>
-              <div style={{width:36,height:36,borderRadius:12,background:`${s.color}15`,margin:'0 auto 10px',
-                display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>
+            { icon:<Package size={20} weight="duotone"/>,  color:'#4f46e5', val:orders.length, label:'Buyurtmalar' },
+            { icon:<Star size={20} weight="duotone"/>,     color:'#f59e0b', val:(orders.length*150).toLocaleString(), label:'Ballar' },
+            { icon:<TrendUp size={20} weight="duotone"/>,  color:'#059669', val:sum(totalSpent), label:'Sarflangan', small:totalSpent>999999 },
+          ].map(s => (
+            <div key={s.label} style={{ background:C.s1, borderRadius:18, padding:'18px 10px', textAlign:'center', border:'1px solid '+C.border, boxShadow:'0 4px 20px rgba(0,0,0,.07)' }}>
+              <div style={{ width:40, height:40, borderRadius:12, background:s.color+'15', margin:'0 auto 10px', display:'flex', alignItems:'center', justifyContent:'center', color:s.color }}>
                 {s.icon}
               </div>
-              <div style={{fontSize:18,fontWeight:900,color:isDark?'#f0f9ff':'#1e293b',lineHeight:1.1}}>{s.val}</div>
-              <div style={{fontSize:12,color:isDark?'#a0aec0':'#64748b',marginTop:4,fontWeight:500}}>{s.label}</div>
+              <div style={{ fontSize:s.small?10:18, fontWeight:900, color:C.dark, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.val}</div>
+              <div style={{ fontSize:11, color:C.muted, marginTop:4, fontWeight:500 }}>{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ═══ QUICK ACTIONS ═══ */}
-      <div style={{maxWidth:600,margin:'16px auto 0',padding:'0 16px'}}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',gap:10}}>
-          {[
-            {icon:<Package size={22}/>,label:'Заказы',tab:'orders'},
-            {icon:<span style={{fontSize:20}}>🎂</span>,label:'Дни рожд.',tab:'bdays'},
-            {icon:<CreditCard size={22}/>,label:'Карты',tab:'cards'},
-            {icon:<Bell size={22}/>,label:'Уведомления',tab:'notifications'},
-            {icon:isDark ? <Sun size={22}/> : <Moon size={22}/>,label:'Тема',tab:'theme'},
-          ].map(a=>(
-            <button key={a.tab} onClick={()=>a.tab==='theme'?setIsDark(d=>!d):a.tab==='notifications'?setShowNotifs(true):setActiveTab(a.tab)}
-              style={{background:activeTab===a.tab?C.navy:C.s1,borderRadius:18,padding:'16px 8px',border:`1px solid ${activeTab===a.tab?C.navy:C.border}`,
-                cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:7,
-                boxShadow:activeTab===a.tab?`0 6px 20px ${C.navy}44`:`0 2px 8px rgba(0,0,0,${isDark?.06:.03})`,
-                transition:'all .2s'}}>
-              <span style={{fontSize:22}}>{a.icon}</span>
-              <span style={{fontSize:10,fontWeight:700,color:activeTab===a.tab?'#fff':C.muted,lineHeight:1,textAlign:'center'}}>{a.label}</span>
+      {/* TABS */}
+      <div style={{ maxWidth:600, margin:'20px auto 0', padding:'0 16px' }}>
+        <div style={{ display:'flex', background:C.s2, borderRadius:16, padding:4, gap:4 }}>
+          {TABS.map(({ id, icon, label }) => (
+            <button key={id} onClick={() => setActiveTab(id)} style={{ flex:1, padding:'12px 8px', borderRadius:12, border:'none', cursor:'pointer', background:activeTab===id?C.s1:'transparent', color:activeTab===id?'#4f46e5':C.muted, fontWeight:activeTab===id?700:500, fontSize:11, display:'flex', flexDirection:'column', alignItems:'center', gap:5, transition:'all .2s', boxShadow:activeTab===id?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
+              {icon}
+              {label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ═══ TAB CONTENT ═══ */}
-      <div style={{maxWidth:600,margin:'20px auto 0',padding:`0 16px ${isDesktop?48:108}px`}}>
+      {/* CONTENT */}
+      <div style={{ maxWidth:600, margin:'16px auto 0', padding:'0 16px '+(isDesktop?48:108)+'px' }}>
 
-        {/* ── ORDERS */}
-        {activeTab==='orders'&&(
-          <div>
-            <div style={{fontSize:16,fontWeight:800,color:C.dark,marginBottom:14,letterSpacing:-.3}}>История заказов</div>
-            {orders.length===0?(
-              <div style={{textAlign:'center',padding:'64px 0',color:C.muted}}>
-                <div style={{fontSize:64,marginBottom:16,opacity:.2}}>📦</div>
-                <div style={{fontSize:18,fontWeight:700,color:C.dark,marginBottom:8}}>Заказов пока нет</div>
-                <div style={{fontSize:14}}>Сделайте первый заказ!</div>
-              </div>
-            ):(
-              orders.slice().reverse().map((order,i)=>(
-                <div key={i} style={{background:C.s1,borderRadius:22,marginBottom:12,overflow:'hidden',
-                  border:`1px solid ${C.border}`,boxShadow:`0 2px 16px rgba(0,0,0,${isDark?.07:.03})`}}>
-                  {/* Order header stripe */}
-                  <div style={{background:`linear-gradient(90deg,${C.navy}12,transparent)`,padding:'14px 18px',
-                    borderBottom:`1px solid ${C.border}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <div style={{display:'flex',alignItems:'center',gap:10}}>
-                      <div style={{width:34,height:34,borderRadius:10,background:`linear-gradient(135deg,${C.navy},${C.mid})`,
-                        display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,color:'#fff',flexShrink:0}}>📦</div>
-                      <div>
-                        <div style={{fontSize:13,fontWeight:800,color:C.dark}}>Заказ #{orders.length-i}</div>
-                        <div style={{fontSize:11,color:C.muted}}>{order.date}</div>
-                      </div>
-                    </div>
-                    <span style={{fontSize:11,color:'#16a34a',fontWeight:700,background:'rgba(22,163,74,.12)',padding:'5px 13px',borderRadius:50,border:'1px solid rgba(22,163,74,.2)'}}>✅ Доставлен</span>
+        {activeTab==='orders' && (
+          orders.length===0 ? (
+            <div style={{ textAlign:'center', padding:'64px 0', color:C.muted }}>
+              <Package size={60} weight="duotone" style={{ opacity:.25, marginBottom:16 }} />
+              <div style={{ fontSize:18, fontWeight:700, color:C.dark, marginBottom:8 }}>Buyurtmalar yo'q</div>
+              <div style={{ fontSize:14 }}>Birinchi buyurtmangizni bering!</div>
+            </div>
+          ) : orders.slice().reverse().map((order,i) => (
+            <div key={i} style={{ background:C.s1, borderRadius:20, marginBottom:12, border:'1px solid '+C.border, overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,.04)' }}>
+              <div style={{ padding:'13px 18px', borderBottom:'1px solid '+C.border, display:'flex', justifyContent:'space-between', alignItems:'center', background:C.navy+'08' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', flexShrink:0 }}>
+                    <Package size={16} />
                   </div>
-                  <div style={{padding:'14px 18px'}}>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:14}}>
-                      {order.items.map(it=>(
-                        <span key={it.id} style={{fontSize:11,color:C.muted,background:C.s2,padding:'5px 12px',borderRadius:50,border:`1px solid ${C.border}`}}>
-                          {it.emoji} {it.name} ×{it.qty}
-                        </span>
-                      ))}
-                    </div>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                      <span style={{fontSize:12,color:C.muted,fontWeight:500}}>Итого</span>
-                      <span style={{fontSize:20,fontWeight:900,color:C.navy,letterSpacing:-.5}}>{sum(order.total)}</span>
-                    </div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:800, color:C.dark }}>Buyurtma #{orders.length-i}</div>
+                    <div style={{ fontSize:11, color:C.muted }}>{order.date}</div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+                <span style={{ fontSize:11, color:'#16a34a', fontWeight:700, background:'rgba(22,163,74,.1)', padding:'5px 13px', borderRadius:50, display:'flex', alignItems:'center', gap:4 }}>
+                  <Check size={11} weight="bold" /> Yetkazildi
+                </span>
+              </div>
+              <div style={{ padding:'14px 18px' }}>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:14 }}>
+                  {order.items.map(it => (
+                    <span key={it.id} style={{ fontSize:11, color:C.muted, background:C.s2, padding:'5px 12px', borderRadius:50, border:'1px solid '+C.border }}>
+                      {it.emoji} {it.name} x{it.qty}
+                    </span>
+                  ))}
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontSize:12, color:C.muted }}>Jami</span>
+                  <span style={{ fontSize:20, fontWeight:900, color:C.navy, letterSpacing:-.5 }}>{sum(order.total)}</span>
+                </div>
+              </div>
+            </div>
+          ))
         )}
 
-        {/* ── BIRTHDAYS */}
-        {activeTab==='bdays'&&(
+        {activeTab==='bdays' && (
           <div>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-              <div style={{fontSize:16,fontWeight:800,color:C.dark,letterSpacing:-.3}}>Дни рождения</div>
-              <button onClick={()=>setBdayModal(true)}
-                style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:50,border:'none',
-                  background:`linear-gradient(135deg,${C.navy},${C.mid})`,color:'#fff',cursor:'pointer',fontSize:13,fontWeight:700,
-                  boxShadow:`0 4px 14px ${C.navy}44`}}>
-                <span style={{fontSize:16}}>+</span> Добавить
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+              <div style={{ fontSize:16, fontWeight:800, color:C.dark }}>Tug'ilgan kunlar</div>
+              <button onClick={() => setBdayModal(true)} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:50, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, boxShadow:'0 4px 14px '+C.navy+'44' }}>
+                <Plus size={15} /> Qo'shish
               </button>
             </div>
-            {bdays.map((b,i)=>{
+            {bdays.length===0 && (
+              <div style={{ textAlign:'center', padding:'48px 0' }}>
+                <Gift size={56} weight="duotone" color={C.muted} style={{ opacity:.3, marginBottom:12 }} />
+                <div style={{ fontSize:16, fontWeight:700, color:C.dark, marginBottom:6 }}>Tug'ilgan kunlar yo'q</div>
+                <div style={{ fontSize:13, color:C.muted }}>Yaqinlaringizning tug'ilgan kunini qo'shing</div>
+              </div>
+            )}
+            {bdays.map((b,i) => {
               const days=daysUntil(b.date), soon=days<=7, vSoon=days<=3;
               return (
-                <div key={i} style={{background:C.s1,borderRadius:22,padding:0,marginBottom:12,overflow:'hidden',
-                  border:`1.5px solid ${vSoon?'#ef4444':soon?C.navy:C.border}`,
-                  boxShadow:soon?`0 6px 20px ${vSoon?'rgba(239,68,68,.15)':C.navy+'22'}`:'none',transition:'all .2s'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:0}}>
-                    {/* Left color strip */}
-                    <div style={{width:6,alignSelf:'stretch',background:vSoon?'linear-gradient(180deg,#ef4444,#f97316)':soon?`linear-gradient(180deg,${C.navy},${C.mid})`:`linear-gradient(180deg,${C.border},${C.border})`,flexShrink:0,borderRadius:'0 0 0 0'}}/>
-                    <div style={{width:64,height:72,display:'flex',alignItems:'center',justifyContent:'center',fontSize:34,flexShrink:0}}>{b.emoji}</div>
-                    <div style={{flex:1,padding:'14px 4px 14px 0'}}>
-                      <div style={{fontSize:15,fontWeight:700,color:C.dark}}>{b.name}</div>
-                      <div style={{fontSize:12,color:C.muted,marginTop:3}}>{b.date}</div>
-                      {soon&&<div style={{fontSize:11,fontWeight:700,color:vSoon?'#ef4444':C.navy,marginTop:4}}>{vSoon?'🔥 Скоро!':`⏰ Через ${days} дн.`}</div>}
+                <div key={i} style={{ background:C.s1, borderRadius:20, marginBottom:12, overflow:'hidden', border:'1.5px solid '+(vSoon?'#ef4444':soon?C.navy:C.border), boxShadow:soon?'0 6px 20px '+(vSoon?'rgba(239,68,68,.15)':C.navy+'22'):'none' }}>
+                  <div style={{ display:'flex', alignItems:'center' }}>
+                    <div style={{ width:6, alignSelf:'stretch', background:vSoon?'linear-gradient(180deg,#ef4444,#f97316)':soon?'linear-gradient(180deg,'+C.navy+','+C.mid+')':C.border, flexShrink:0 }} />
+                    <div style={{ width:64, height:72, display:'flex', alignItems:'center', justifyContent:'center', fontSize:34, flexShrink:0 }}>{b.emoji}</div>
+                    <div style={{ flex:1, padding:'14px 4px 14px 0' }}>
+                      <div style={{ fontSize:15, fontWeight:700, color:C.dark }}>{b.name}</div>
+                      <div style={{ fontSize:12, color:C.muted, marginTop:3 }}>{b.date}</div>
+                      {soon && <div style={{ fontSize:11, fontWeight:700, color:vSoon?'#ef4444':C.navy, marginTop:4 }}>{vSoon?'Yaqin qoldi!':days+' kun qoldi'}</div>}
                     </div>
-                    <div style={{textAlign:'center',padding:'0 16px 0 8px'}}>
-                      <div style={{fontSize:26,fontWeight:900,color:vSoon?'#ef4444':soon?C.navy:C.dark,lineHeight:1,letterSpacing:-1}}>{days}</div>
-                      <div style={{fontSize:9,color:C.muted,fontWeight:600,marginTop:2,textTransform:'uppercase',letterSpacing:.5}}>дней</div>
+                    <div style={{ textAlign:'center', padding:'0 12px 0 8px' }}>
+                      <div style={{ fontSize:26, fontWeight:900, color:vSoon?'#ef4444':soon?C.navy:C.dark, lineHeight:1 }}>{days}</div>
+                      <div style={{ fontSize:9, color:C.muted, fontWeight:600, marginTop:2, textTransform:'uppercase' }}>kun</div>
                     </div>
-                    <button onClick={async()=>{try{await api.del(`/api/birthdays/${b.id}`);}catch{}setBdays(b2=>b2.filter((_,j)=>j!==i));}}
-                      style={{padding:'0 16px 0 0',background:'none',border:'none',cursor:'pointer',color:'#ef4444',opacity:.5,lineHeight:1,alignSelf:'center',display:'flex',alignItems:'center'}}><X size={16}/></button>
+                    <button onClick={async () => { try{ await api.del('/api/birthdays/'+b.id); }catch{} setBdays(b2=>b2.filter((_,j)=>j!==i)); }}
+                      style={{ padding:'0 16px', background:'none', border:'none', cursor:'pointer', color:'#ef4444', opacity:.5, display:'flex', alignItems:'center' }}>
+                      <Trash size={16} />
+                    </button>
                   </div>
                 </div>
               );
@@ -1108,141 +972,55 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
           </div>
         )}
 
-        {/* ── CARDS */}
-        {activeTab==='cards'&&(
+        {activeTab==='settings' && (
           <div>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-              <div style={{fontSize:16,fontWeight:800,color:C.dark,letterSpacing:-.3}}>Мои карты</div>
-              <button onClick={()=>setCardModal(true)}
-                style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:50,border:'none',
-                  background:`linear-gradient(135deg,${C.navy},${C.mid})`,color:'#fff',cursor:'pointer',fontSize:13,fontWeight:700,
-                  boxShadow:`0 4px 14px ${C.navy}44`}}>
-                <span style={{fontSize:16}}>+</span> Добавить
-              </button>
-            </div>
-            {cards.length===0?(
-              <div style={{textAlign:'center',padding:'64px 0',color:C.muted}}>
-                <div style={{fontSize:64,marginBottom:16,opacity:.2}}>💳</div>
-                <div style={{fontSize:18,fontWeight:700,color:C.dark,marginBottom:8}}>Карт пока нет</div>
-                <div style={{fontSize:14}}>Добавьте карту для быстрой оплаты</div>
+            <div style={{ background:C.s1, borderRadius:20, overflow:'hidden', border:'1px solid '+C.border, marginBottom:12 }}>
+              <div style={{ padding:'10px 18px', borderBottom:'1px solid '+C.border }}>
+                <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>Ko'rinish</span>
               </div>
-            ):(
-              cards.map((card)=>(
-                <div key={card.id} style={{marginBottom:16,borderRadius:24,overflow:'hidden',
-                  boxShadow:`0 8px 32px rgba(0,0,0,${isDark?.2:.1})`,
-                  border:`2px solid ${card.isDefault?C.navy:'transparent'}`}}>
-                  {/* Credit card face */}
-                  <div style={{background:'linear-gradient(145deg,#060d1a,#0f2259 40%,#1d4ed8 75%,#2563eb)',padding:'24px 24px 20px',position:'relative',overflow:'hidden',minHeight:170}}>
-                    {/* Decorative circles */}
-                    <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'rgba(255,255,255,.05)'}}/>
-                    <div style={{position:'absolute',bottom:-60,right:60,width:130,height:130,borderRadius:'50%',background:'rgba(59,130,246,.12)'}}/>
-                    <div style={{position:'absolute',top:20,left:'35%',width:80,height:80,borderRadius:'50%',background:'rgba(255,255,255,.03)'}}/>
-                    {/* Chip */}
-                    <div style={{position:'relative',display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:24}}>
-                      <div style={{width:36,height:28,borderRadius:6,background:'linear-gradient(135deg,#fde68a,#f59e0b)',
-                        display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}>
-                        <div style={{width:28,height:20,borderRadius:4,border:'1.5px solid rgba(0,0,0,.2)',background:'linear-gradient(135deg,#fde68a,#d97706)'}}/>
-                      </div>
-                      <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4}}>
-                        <span style={{fontSize:13,fontWeight:900,color:'rgba(255,255,255,.9)',letterSpacing:1.5}}>{card.brand}</span>
-                        {card.isDefault&&<span style={{fontSize:10,fontWeight:700,color:'#fff',background:'rgba(255,255,255,.18)',backdropFilter:'blur(8px)',padding:'3px 10px',borderRadius:50,border:'1px solid rgba(255,255,255,.2)'}}>✓ Основная</span>}
-                      </div>
-                    </div>
-                    {/* Card number */}
-                    <div style={{fontSize:19,fontWeight:700,color:'rgba(255,255,255,.95)',letterSpacing:4,marginBottom:20,position:'relative',fontFamily:'monospace'}}>
-                      •••• &nbsp;•••• &nbsp;•••• &nbsp;{card.last4}
-                    </div>
-                    {/* Footer */}
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',position:'relative'}}>
-                      <div>
-                        <div style={{fontSize:9,color:'rgba(255,255,255,.45)',fontWeight:700,letterSpacing:1.8,marginBottom:4,textTransform:'uppercase'}}>Владелец</div>
-                        <div style={{fontSize:14,color:'rgba(255,255,255,.9)',fontWeight:600,letterSpacing:.5}}>{(card.holderName||'—').toUpperCase()}</div>
-                      </div>
-                      <div style={{textAlign:'right'}}>
-                        <div style={{fontSize:9,color:'rgba(255,255,255,.45)',fontWeight:700,letterSpacing:1.8,marginBottom:4,textTransform:'uppercase'}}>Срок</div>
-                        <div style={{fontSize:14,color:'rgba(255,255,255,.9)',fontWeight:600}}>{card.expiry}</div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Action bar */}
-                  <div style={{background:C.s1,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:`1px solid ${C.border}`}}>
-                    {!card.isDefault?(
-                      <button onClick={async()=>{
-                        try{const u=await api.patch(`/api/cards/${card.id}/default`,{});setCards(u);}
-                        catch{setCards(p=>p.map(c=>({...c,isDefault:c.id===card.id})));}
-                      }} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:12,border:`1.5px solid ${C.navy}`,
-                        background:'transparent',color:C.navy,cursor:'pointer',fontSize:12,fontWeight:700}}>
-                        <span>✓</span> Сделать основной
-                      </button>
-                    ):(
-                      <span style={{fontSize:12,color:C.muted,fontStyle:'italic'}}>Используется по умолчанию</span>
-                    )}
-                    <button onClick={async()=>{
-                      try{await api.del(`/api/cards/${card.id}`);}catch{}finally{
-                        setCards(p=>{const n=p.filter(c=>c.id!==card.id);if(card.isDefault&&n.length>0)n[0]={...n[0],isDefault:true};return n;});
-                      }
-                    }} style={{width:38,height:38,borderRadius:12,border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.07)',
-                      color:'#ef4444',cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center'}}>🗑</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* ── SETTINGS */}
-        {activeTab==='settings'&&(
-          <div>
-            <div style={{fontSize:16,fontWeight:800,color:C.dark,marginBottom:16,letterSpacing:-.3}}>Настройки</div>
-
-            {/* Appearance group */}
-            <div style={{background:C.s1,borderRadius:22,overflow:'hidden',border:`1px solid ${C.border}`,marginBottom:12,boxShadow:`0 2px 12px rgba(0,0,0,${isDark?.05:.02})`}}>
-              <div style={{padding:'12px 18px',borderBottom:`1px solid ${C.border}`}}>
-                <span style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.4,textTransform:'uppercase'}}>Оформление</span>
-              </div>
-              <div style={{padding:'16px 18px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <div style={{display:'flex',alignItems:'center',gap:14}}>
-                  <div style={{width:44,height:44,borderRadius:14,background:isDark?'linear-gradient(135deg,#1e293b,#334155)':'linear-gradient(135deg,#fef9c3,#fde68a)',
-                    display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,border:`1px solid ${C.border}`}}>
-                    {isDark?'🌙':'☀️'}
+              <div style={{ padding:'16px 18px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                  <div style={{ width:44, height:44, borderRadius:14, background:isDark?'linear-gradient(135deg,#1e293b,#334155)':'linear-gradient(135deg,#fef3c7,#fde68a)', display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid '+C.border, color:isDark?'#93c5fd':'#d97706' }}>
+                    {isDark ? <Moon size={22} weight="duotone"/> : <Sun size={22} weight="duotone"/>}
                   </div>
                   <div>
-                    <div style={{fontSize:15,fontWeight:700,color:C.dark}}>{isDark?'Тёмная тема':'Светлая тема'}</div>
-                    <div style={{fontSize:12,color:C.muted,marginTop:2}}>Изменить внешний вид</div>
+                    <div style={{ fontSize:15, fontWeight:700, color:C.dark }}>{isDark?"Qorong'u tema":"Yorug' tema"}</div>
+                    <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>Ko'rinishni o'zgartirish</div>
                   </div>
                 </div>
-                <Toggle on={isDark} onToggle={()=>setIsDark(d=>!d)} C={C}/>
+                <Toggle on={isDark} onToggle={() => setIsDark(d=>!d)} C={C} />
               </div>
             </div>
-
-            {/* Account group */}
-            <div style={{background:C.s1,borderRadius:22,overflow:'hidden',border:`1px solid ${C.border}`,marginBottom:20,boxShadow:`0 2px 12px rgba(0,0,0,${isDark?.05:.02})`}}>
-              <div style={{padding:'12px 18px',borderBottom:`1px solid ${C.border}`}}>
-                <span style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.4,textTransform:'uppercase'}}>Аккаунт</span>
+            <div style={{ background:C.s1, borderRadius:20, overflow:'hidden', border:'1px solid '+C.border, marginBottom:16 }}>
+              <div style={{ padding:'10px 18px', borderBottom:'1px solid '+C.border }}>
+                <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>Hisob</span>
               </div>
-              <div style={{padding:'15px 18px',display:'flex',alignItems:'center',gap:14}}>
-                <div style={{width:44,height:44,borderRadius:14,background:'linear-gradient(135deg,#1d4ed8,#3b82f6)',
-                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:'#fff',border:`1px solid ${C.border}`}}>👤</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:15,fontWeight:700,color:C.dark}}>{user?.name||'Гость'}</div>
-                  <div style={{fontSize:12,color:C.muted,marginTop:2}}>{user?.phone||''}</div>
+              {[
+                { icon:<UserCircle size={20} weight="duotone"/>, color:'#4f46e5', label:'Ism Familiya',  val:user?.name||'—' },
+                { icon:<Phone size={20} weight="duotone"/>,      color:'#059669', label:'Telefon raqam', val:user?.phone||'—' },
+                { icon:<Star size={20} weight="duotone"/>,       color:'#f59e0b', label:'Status',        val:'Gold Member' },
+              ].map((row,i,arr) => (
+                <div key={row.label} style={{ padding:'14px 18px', display:'flex', alignItems:'center', gap:12, borderBottom:i<arr.length-1?'1px solid '+C.border:'none' }}>
+                  <div style={{ width:40, height:40, borderRadius:12, background:row.color+'15', display:'flex', alignItems:'center', justifyContent:'center', color:row.color, flexShrink:0 }}>
+                    {row.icon}
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:11, color:C.muted, fontWeight:600, marginBottom:2 }}>{row.label}</div>
+                    <div style={{ fontSize:14, fontWeight:700, color:C.dark }}>{row.val}</div>
+                  </div>
                 </div>
-                <div style={{fontSize:11,fontWeight:700,color:C.navy,background:C.s2,padding:'4px 12px',borderRadius:50,border:`1px solid ${C.border}`}}>🥇 Gold</div>
-              </div>
+              ))}
             </div>
-
-            {/* Logout */}
-            <button onClick={onLogout}
-              style={{width:'100%',padding:'17px',borderRadius:22,border:'1.5px solid rgba(239,68,68,.25)',background:'rgba(239,68,68,.06)',
-                color:'#ef4444',cursor:'pointer',fontWeight:800,fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',gap:10,
-                boxShadow:'0 2px 12px rgba(239,68,68,.08)'}}>
-              <span style={{fontSize:18}}>🚪</span><span>Выйти из аккаунта</span>
+            <button onClick={onLogout} style={{ width:'100%', padding:16, borderRadius:18, border:'1.5px solid rgba(239,68,68,.25)', background:'rgba(239,68,68,.05)', color:'#ef4444', cursor:'pointer', fontWeight:700, fontSize:15, display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}>
+              <SignOut size={18} /> Hisobdan chiqish
             </button>
           </div>
         )}
+
       </div>
     </div>
   );
+}
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1372,7 +1150,7 @@ export default function App() {
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} />;
-    if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} cards={cards} setCards={setCards} setUser={setUser} />;
+    if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} />;
     return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} />;
   };
 
