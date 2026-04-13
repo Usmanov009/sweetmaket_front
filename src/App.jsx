@@ -828,59 +828,59 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
       )}
 
       {/* HERO */}
-      <div style={{ background:'linear-gradient(145deg,#1e1b4b 0%,#4f46e5 58%,#7c3aed 100%)', paddingTop:isDesktop?40:68, paddingBottom:88, position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', width:360, height:360, borderRadius:'50%', background:'rgba(255,255,255,.04)', top:-120, right:-100 }} />
-        <div style={{ position:'absolute', width:220, height:220, borderRadius:'50%', background:'rgba(255,255,255,.05)', bottom:-70, left:-60 }} />
-        <div style={{ maxWidth:600, margin:'0 auto', padding:'0 24px', position:'relative' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:32 }}>
-            <button onClick={() => setPage('home')} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:10, padding:'8px 14px', color:'#fff', cursor:'pointer', fontSize:13, fontWeight:600 }}>
-              <House size={16} /> Bosh sahifa
+      <div style={{ background:'linear-gradient(145deg,#1e1b4b 0%,#4f46e5 58%,#7c3aed 100%)', paddingTop:isDesktop?28:52, paddingBottom:52, position:'relative', overflow:'hidden' }}>
+        <div style={{ maxWidth:600, margin:'0 auto', padding:'0 20px', position:'relative' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+            <button onClick={() => setPage('home')} style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:8, padding:'6px 11px', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600 }}>
+              <House size={14} /> Bosh sahifa
             </button>
             <button onClick={() => { setNameForm({firstName:user?.firstName||'',lastName:user?.lastName||''}); setNameModal(true); }}
-              style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:10, padding:'8px 14px', color:'#fff', cursor:'pointer', fontSize:13, fontWeight:600 }}>
-              <PencilSimple size={16} /> Tahrirlash
+              style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:8, padding:'6px 11px', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600 }}>
+              <PencilSimple size={14} /> Tahrirlash
             </button>
           </div>
-          <div style={{ textAlign:'center' }}>
-            <div style={{ width:104, height:104, borderRadius:'50%', background:'linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.08))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:38, fontWeight:900, color:'#fff', border:'3px solid rgba(255,255,255,.28)', boxShadow:'0 16px 48px rgba(0,0,0,.28)', margin:'0 auto 18px', letterSpacing:-1 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+            <div style={{ width:68, height:68, borderRadius:'50%', background:'linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.08))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#fff', border:'2px solid rgba(255,255,255,.28)', flexShrink:0 }}>
               {initials}
             </div>
-            <div style={{ fontSize:26, fontWeight:900, color:'#fff', marginBottom:6 }}>{user?.name||'Foydalanuvchi'}</div>
-            <div style={{ fontSize:13, color:'rgba(255,255,255,.6)', marginBottom:18, display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
-              <Phone size={13} /> {user?.phone||''}
-            </div>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(255,255,255,.12)', backdropFilter:'blur(10px)', border:'1px solid rgba(255,255,255,.2)', borderRadius:50, padding:'7px 20px' }}>
-              <Star size={15} color="#fbbf24" weight="fill" />
-              <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>Gold Member</span>
+            <div>
+              <div style={{ fontSize:18, fontWeight:900, color:'#fff', marginBottom:3 }}>{user?.name||'Foydalanuvchi'}</div>
+              <div style={{ fontSize:12, color:'rgba(255,255,255,.6)', marginBottom:7, display:'flex', alignItems:'center', gap:4 }}>
+                <Phone size={11} /> {user?.phone||''}
+              </div>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:50, padding:'4px 12px' }}>
+                <Star size={12} color="#fbbf24" weight="fill" />
+                <span style={{ fontSize:11, fontWeight:700, color:'#fff' }}>Gold Member</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* STATS */}
-      <div style={{ maxWidth:600, margin:'-30px auto 0', padding:'0 16px' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+      <div style={{ maxWidth:600, margin:'-18px auto 0', padding:'0 16px' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
           {[
-            { icon:<Package size={20} weight="duotone"/>,  color:'#4f46e5', val:orders.length, label:'Buyurtmalar' },
-            { icon:<Star size={20} weight="duotone"/>,     color:'#f59e0b', val:(orders.length*150).toLocaleString(), label:'Ballar' },
-            { icon:<TrendUp size={20} weight="duotone"/>,  color:'#059669', val:sum(totalSpent), label:'Sarflangan', small:totalSpent>999999 },
+            { icon:<Package size={16} weight="duotone"/>, color:'#4f46e5', val:orders.length,                         label:'Buyurtmalar' },
+            { icon:<Star    size={16} weight="duotone"/>, color:'#f59e0b', val:(orders.length*150).toLocaleString(),   label:'Ballar' },
+            { icon:<TrendUp size={16} weight="duotone"/>, color:'#059669', val:sum(totalSpent),                        label:'Sarflangan', small:totalSpent>999999 },
           ].map(s => (
-            <div key={s.label} style={{ background:C.s1, borderRadius:18, padding:'18px 10px', textAlign:'center', border:'1px solid '+C.border, boxShadow:'0 4px 20px rgba(0,0,0,.07)' }}>
-              <div style={{ width:40, height:40, borderRadius:12, background:s.color+'15', margin:'0 auto 10px', display:'flex', alignItems:'center', justifyContent:'center', color:s.color }}>
+            <div key={s.label} style={{ background:C.s1, borderRadius:14, padding:'12px 8px', textAlign:'center', border:'1px solid '+C.border, boxShadow:'0 2px 10px rgba(0,0,0,.06)' }}>
+              <div style={{ width:30, height:30, borderRadius:9, background:s.color+'15', margin:'0 auto 6px', display:'flex', alignItems:'center', justifyContent:'center', color:s.color }}>
                 {s.icon}
               </div>
-              <div style={{ fontSize:s.small?10:18, fontWeight:900, color:C.dark, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.val}</div>
-              <div style={{ fontSize:11, color:C.muted, marginTop:4, fontWeight:500 }}>{s.label}</div>
+              <div style={{ fontSize:s.small?9:15, fontWeight:800, color:C.dark, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.val}</div>
+              <div style={{ fontSize:10, color:C.muted, marginTop:2, fontWeight:500 }}>{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* TABS */}
-      <div style={{ maxWidth:600, margin:'20px auto 0', padding:'0 16px' }}>
-        <div style={{ display:'flex', background:C.s2, borderRadius:16, padding:4, gap:4 }}>
+      <div style={{ maxWidth:600, margin:'12px auto 0', padding:'0 16px' }}>
+        <div style={{ display:'flex', background:C.s2, borderRadius:12, padding:3, gap:3 }}>
           {TABS.map(({ id, icon, label }) => (
-            <button key={id} onClick={() => setActiveTab(id)} style={{ flex:1, padding:'12px 8px', borderRadius:12, border:'none', cursor:'pointer', background:activeTab===id?C.s1:'transparent', color:activeTab===id?'#4f46e5':C.muted, fontWeight:activeTab===id?700:500, fontSize:11, display:'flex', flexDirection:'column', alignItems:'center', gap:5, transition:'all .2s', boxShadow:activeTab===id?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
+            <button key={id} onClick={() => setActiveTab(id)} style={{ flex:1, padding:'8px 6px', borderRadius:10, border:'none', cursor:'pointer', background:activeTab===id?C.s1:'transparent', color:activeTab===id?'#4f46e5':C.muted, fontWeight:activeTab===id?700:500, fontSize:10, display:'flex', flexDirection:'column', alignItems:'center', gap:4, transition:'all .2s', boxShadow:activeTab===id?'0 1px 6px rgba(0,0,0,.07)':'none' }}>
               {icon}
               {label}
             </button>
