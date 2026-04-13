@@ -786,7 +786,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
   ];
 
   return (
-
+    <>
       {/* Birthday Modal */}
       {bdayModal && (
         <BottomModal C={C} onClose={() => setBdayModal(false)} title="Tug'ilgan kun qo'shish">
@@ -1019,9 +1019,8 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
         )}
 
       </div>
-    </div>
+    </>
   );
-}
 }
 
 /* ═══════════════════════════════════════════════════════
