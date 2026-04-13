@@ -136,7 +136,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
       {mode === 'register' && (
         <>
           {[
-            { label: 'Ism Familiya', icon: <User size={18} weight="duotone" />, value: name, set: setName, placeholder: 'Aziz Karimov' },
+            { label: 'Ism Familiya', icon: <User size={18} weight="duotone" />, value: name, set: v => setName(v.replace(/[0-9]/g, '')), placeholder: 'Aziz Karimov' },
             { label: "Do'kon nomi",  icon: <Storefront size={18} weight="duotone" />, value: shopName, set: setShopName, placeholder: 'Aziz Shirinliklari' },
             { label: 'Manzil (ixtiyoriy)', icon: <MapPin size={18} weight="duotone" />, value: address, set: setAddress, placeholder: 'Toshkent, Chilonzor' },
           ].map(({ label, icon, value, set, placeholder }) => (
