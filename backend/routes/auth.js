@@ -39,7 +39,7 @@ router.post('/request-otp', async (req, res) => {
     res.json({ message: 'OTP yuborildi', devOtp: otp });
   } catch (error) {
     console.error('OTP request error:', error);
-    res.status(500).json({ error: 'Xatolik yuz berdi' });
+    res.status(500).json({ error: error.message || 'Xatolik yuz berdi' });
   }
 });
 

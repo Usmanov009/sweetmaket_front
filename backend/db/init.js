@@ -20,6 +20,10 @@ async function initDB() {
       created_at BIGINT NOT NULL
     )
   `);
+  // Migrate: if created_at was TIMESTAMPTZ, convert to BIGINT (ms epoch)
+  await pool.query(
+    `ALTER TABLE otps ALTER COLUMN created_at TYPE BIGINT USING (EXTRACT(EPOCH FROM created_at::TIMESTAMPTZ) * 1000)::BIGINT`
+  ).catch(() => {});
   await pool.query(`
     CREATE TABLE IF NOT EXISTS orders (
       id           TEXT PRIMARY KEY,
