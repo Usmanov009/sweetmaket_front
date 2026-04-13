@@ -332,11 +332,19 @@ const CREATE_STEPS = [
   {key:'decoration', question:'Как украсить?',          hint:'Выберите стиль декора'},
 ];
 
-function CreatePage({ C, isDesktop, toast, setPage, bakeries = [] }) {
+function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) {
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({type:null,size:null,flavor:null,decoration:null,bakery:null,note:''});
+  const [form, setForm] = useState({type:null,size:null,flavor:null,decoration:null,bakery:null,note:'',image:null});
   const [publishing, setPublishing] = useState(false);
+  const [imgDrag, setImgDrag] = useState(false);
   const setF = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const handleImageFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => setF('image', e.target.result);
+    reader.readAsDataURL(file);
+  };
 
   const currentStepCfg = CREATE_STEPS[step];
   const currentVal     = currentStepCfg ? form[currentStepCfg.key] : null;
@@ -349,9 +357,19 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [] }) {
   const goBack = () => setStep(s => Math.max(0, s - 1));
 
   const handleOrder = () => {
-    const name   = [form.type?.label, form.flavor?.label].filter(Boolean).join(' · ') || 'Buyurtma tort';
-    const detail = [form.size?.label, form.decoration?.label, form.bakery?.name].filter(Boolean).join(' · ');
-    toast('🛒 Buyurtma savatchaga qo\'shildi!');
+    const name = [form.type?.label, form.flavor?.label].filter(Boolean).join(' · ') || 'Buyurtma tort';
+    if (addToCart) {
+      addToCart({
+        id: 'custom_' + Date.now(),
+        name,
+        price: totalPrice,
+        emoji: form.type?.emoji || '🎂',
+        category: form.type?.category || 'tort',
+        bg: form.type?.color || '#fce4ec',
+        image: form.image || null,
+      }, 1);
+    }
+    toast('Savatga qo\'shildi!');
     setStep(5);
   };
 
@@ -575,6 +593,46 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [] }) {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Image upload */}
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:12}}>
+            Rasm (ixtiyoriy)
+          </div>
+          <div
+            onDragOver={e=>{e.preventDefault();setImgDrag(true);}}
+            onDragLeave={()=>setImgDrag(false)}
+            onDrop={e=>{e.preventDefault();setImgDrag(false);handleImageFile(e.dataTransfer.files[0]);}}
+            onClick={()=>document.getElementById('create-img-input').click()}
+            style={{
+              position:'relative', borderRadius:16, overflow:'hidden', cursor:'pointer',
+              border:`2px dashed ${imgDrag?C.navy:C.border}`,
+              background: imgDrag ? C.navy+'0a' : C.s1,
+              height: form.image ? 160 : 100,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              transition:'all .2s',
+            }}>
+            <input id="create-img-input" type="file" accept="image/*" style={{display:'none'}}
+              onChange={e=>handleImageFile(e.target.files[0])}/>
+            {form.image ? (
+              <>
+                <img src={form.image} alt="upload" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                <button onClick={e=>{e.stopPropagation();setF('image',null);}}
+                  style={{position:'absolute',top:8,right:8,width:28,height:28,borderRadius:'50%',
+                    background:'rgba(0,0,0,.5)',border:'none',cursor:'pointer',color:'#fff',
+                    display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700}}>
+                  ✕
+                </button>
+              </>
+            ) : (
+              <div style={{textAlign:'center',color:C.muted}}>
+                <div style={{fontSize:28,marginBottom:6}}>📸</div>
+                <div style={{fontSize:13,fontWeight:600}}>Rasm yuklash</div>
+                <div style={{fontSize:11,marginTop:2}}>Tort uchun dizayn rasmi</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1171,7 +1229,7 @@ export default function App() {
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} />;
-    if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} />;
+    if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} addToCart={addToCart} />;
     if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={handleAddToOrder} toast={toast} setPage={setPage} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} />;
     return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;
