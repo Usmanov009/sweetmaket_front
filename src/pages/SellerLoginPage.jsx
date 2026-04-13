@@ -65,29 +65,8 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
 
   const iconPos = { position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: ACCENT, display: 'flex' };
 
-  const PasswordField = ({ label, value, onChange, show, onToggle, placeholder }) => (
-    <div style={{ marginBottom: 12 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>{label}</label>
-      <div style={{ position: 'relative' }}>
-        <span style={iconPos}><Lock size={18} weight="duotone" /></span>
-        <input
-          type={show ? 'text' : 'password'}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          style={{ ...iStyle, paddingRight: 46 }}
-          className="input-focus"
-        />
-        <button
-          type="button"
-          onClick={onToggle}
-          style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 0, display: 'flex' }}
-        >
-          {show ? <EyeSlash size={18} /> : <Eye size={18} />}
-        </button>
-      </div>
-    </div>
-  );
+  const passFieldStyle = { ...iStyle, paddingRight: 46 };
+  const eyeBtnStyle = { position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 0, display: 'flex' };
 
   const formContent = (
     <div style={{
@@ -199,24 +178,42 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
       </div>
 
       {/* Password */}
-      <PasswordField
-        label="Parol"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        show={showPass}
-        onToggle={() => setShowPass(p => !p)}
-        placeholder={mode === 'register' ? 'Kamida 6 ta belgi' : 'Parolingiz'}
-      />
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Parol</label>
+        <div style={{ position: 'relative' }}>
+          <span style={iconPos}><Lock size={18} weight="duotone" /></span>
+          <input
+            type={showPass ? 'text' : 'password'}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder={mode === 'register' ? 'Kamida 6 ta belgi' : 'Parolingiz'}
+            style={passFieldStyle}
+            className="input-focus"
+          />
+          <button type="button" onClick={() => setShowPass(p => !p)} style={eyeBtnStyle}>
+            {showPass ? <EyeSlash size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+      </div>
 
       {mode === 'register' && (
-        <PasswordField
-          label="Parolni tasdiqlang"
-          value={password2}
-          onChange={e => setPassword2(e.target.value)}
-          show={showPass2}
-          onToggle={() => setShowPass2(p => !p)}
-          placeholder="Parolni qayta kiriting"
-        />
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Parolni tasdiqlang</label>
+          <div style={{ position: 'relative' }}>
+            <span style={iconPos}><Lock size={18} weight="duotone" /></span>
+            <input
+              type={showPass2 ? 'text' : 'password'}
+              value={password2}
+              onChange={e => setPassword2(e.target.value)}
+              placeholder="Parolni qayta kiriting"
+              style={passFieldStyle}
+              className="input-focus"
+            />
+            <button type="button" onClick={() => setShowPass2(p => !p)} style={eyeBtnStyle}>
+              {showPass2 ? <EyeSlash size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
       )}
 
       {error && (
