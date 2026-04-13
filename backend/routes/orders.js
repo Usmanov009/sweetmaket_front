@@ -21,9 +21,10 @@ router.post('/', async (req, res, next) => {
 
     // Bakery dan seller_id ni olish
     let sellerId = null;
-    if (bakery && bakery.id && bakery.id.toString().startsWith('seller_')) {
-      // Agar bu seller bakery bo'lsa
-      sellerId = parseInt(bakery.id.toString().replace('seller_', ''));
+    if (bakery && bakery.sellerId) {
+      sellerId = bakery.sellerId.toString();
+    } else if (bakery && bakery.id && bakery.id.toString().startsWith('seller_')) {
+      sellerId = bakery.id.toString().replace('seller_', '');
     }
 
     const id = genId();

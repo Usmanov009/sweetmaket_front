@@ -24,7 +24,7 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS orders (
       id           TEXT PRIMARY KEY,
       user_id      TEXT NOT NULL REFERENCES users(id),
-      seller_id    INTEGER NOT NULL,
+      seller_id    TEXT,
       items        JSONB NOT NULL DEFAULT '[]',
       total        NUMERIC NOT NULL,
       bakery       JSONB,
@@ -34,6 +34,9 @@ async function initDB() {
       created_at   TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  // Migrate: seller_id ni INTEGER dan TEXT ga o'tkazish (mavjud jadval uchun)
+  await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id DROP NOT NULL`).catch(() => {});
+  await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
   await pool.query(`
     CREATE TABLE IF NOT EXISTS cards (
       id          TEXT PRIMARY KEY,
@@ -97,6 +100,8 @@ async function initDB() {
       created_at   TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  // Migrate: mavjud sellers jadvaliga products ustunini qo'shish
+  await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS products JSONB DEFAULT '[]'`).catch(() => {});
   console.log('✅ PostgreSQL jadvallar tayyor');
 }
 
