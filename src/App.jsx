@@ -828,7 +828,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
       )}
 
       {/* HERO */}
-      <div style={{ background:'linear-gradient(145deg,#1e1b4b 0%,#4f46e5 58%,#7c3aed 100%)', paddingTop:isDesktop?16:36, paddingBottom:28, position:'relative', overflow:'hidden' }}>
+      <div style={{ background:'linear-gradient(145deg,#1e1b4b 0%,#4f46e5 58%,#7c3aed 100%)', paddingTop:isDesktop?12:20, paddingBottom:16, position:'relative', overflow:'hidden' }}>
         <div style={{ maxWidth:600, margin:'0 auto', padding:'0 20px', position:'relative' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
             <button onClick={() => setPage('home')} style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:8, padding:'6px 11px', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600 }}>
