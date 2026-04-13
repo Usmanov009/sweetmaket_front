@@ -11,6 +11,11 @@ function hashPassword(pw) {
   return crypto.createHash('sha256').update(pw + 'sweetmarket_salt').digest('hex');
 }
 
+// Normalize phone to digits only (e.g. "+998 90 123 45 67" → "998901234567")
+function normalizePhone(phone) {
+  return (phone || '').replace(/\D/g, '');
+}
+
 function sellerAuth(req, res, next) {
   const header = req.headers['authorization'] || '';
   const token  = header.startsWith('Bearer ') ? header.slice(7) : null;
@@ -32,15 +37,20 @@ router.post('/register', async (req, res) => {
     if (!name || !shopName || !phone || !password)
       return res.status(400).json({ error: 'Ism, do\'kon nomi, telefon va parol kerak' });
 
-    const existing = (await pool.query('SELECT id FROM sellers WHERE phone=$1', [phone])).rows[0];
+    const normPhone = normalizePhone(phone);
+    const existing = (await pool.query(
+      `SELECT id FROM sellers WHERE REGEXP_REPLACE(phone, '[^0-9]', '', 'g') = $1`,
+      [normPhone]
+    )).rows[0];
     if (existing) return res.status(400).json({ error: 'Bu telefon raqam allaqachon ro\'yxatdan o\'tgan' });
 
     const id = genId();
     const hash = hashPassword(password);
+    // Store phone in normalized digits-only form for consistent lookup
     await pool.query(
       `INSERT INTO sellers (id, name, shop_name, phone, password, address, description)
        VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [id, name, shopName, phone, hash, address||'', description||'']
+      [id, name, shopName, normPhone, hash, address||'', description||'']
     );
     const row = (await pool.query('SELECT * FROM sellers WHERE id=$1', [id])).rows[0];
     const token = jwt.sign({ id: row.id, phone: row.phone, role: 'seller' }, JWT_SECRET, { expiresIn: '30d' });
@@ -56,7 +66,12 @@ router.post('/login', async (req, res) => {
     const { phone, password } = req.body;
     if (!phone || !password) return res.status(400).json({ error: 'Telefon va parol kerak' });
 
-    const row = (await pool.query('SELECT * FROM sellers WHERE phone=$1', [phone])).rows[0];
+    const normPhone = normalizePhone(phone);
+    // Match by digits-only comparison so format (spaces/dashes) never matters
+    const row = (await pool.query(
+      `SELECT * FROM sellers WHERE REGEXP_REPLACE(phone, '[^0-9]', '', 'g') = $1`,
+      [normPhone]
+    )).rows[0];
     if (!row) return res.status(400).json({ error: 'Sotuvchi topilmadi' });
     if (row.password !== hashPassword(password)) return res.status(400).json({ error: 'Parol noto\'g\'ri' });
 
