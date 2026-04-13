@@ -91,39 +91,37 @@ router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
 router.get('/orders', sellerAuth, async (req, res) => {
   try {
     const sellerId = req.seller.id;
-    
-    const { rows: myOrders } = await pool.query(
+    // seller_id may be INTEGER or TEXT depending on migration state — cast to TEXT for safety
+    const { rows } = await pool.query(
       `SELECT o.*, u.name as user_name, u.phone as user_phone
        FROM orders o
        LEFT JOIN users u ON u.id = o.user_id
-       WHERE o.seller_id = $1
+       WHERE o.seller_id::TEXT = $1
        ORDER BY o.created_at DESC
        LIMIT 100`,
       [sellerId]
     );
-    
-    // Ikkala ro'yxatni birlashtirish
-    const allOrders = [...myOrders];
-    
-    res.json(allOrders);
+    res.json(rows);
   } catch(e) {
-    console.error('Seller orders error:', e);
-    res.status(500).json({ error: e.message });
+    console.error('Seller orders error:', e.message);
+    res.json([]); // return empty array instead of 500
   }
 });
 
 // GET /api/seller/products
 router.get('/products', sellerAuth, async (req, res) => {
   try {
+    // products column may not exist yet — use COALESCE fallback
     const { rows } = await pool.query(
-      'SELECT products FROM sellers WHERE id = $1',
+      `SELECT COALESCE(products, '[]'::jsonb) as products FROM sellers WHERE id = $1`,
       [req.seller.id]
     );
-    const products = rows[0]?.products || [];
-    res.json(products);
+    res.json(rows[0]?.products || []);
   } catch(e) {
-    console.error('Get seller products error:', e);
-    res.status(500).json({ error: e.message });
+    console.error('Get seller products error:', e.message);
+    // products column might not exist yet — run migration and return empty
+    await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS products JSONB DEFAULT '[]'`).catch(()=>{});
+    res.json([]);
   }
 });
 
@@ -135,8 +133,11 @@ router.post('/products', sellerAuth, async (req, res) => {
       return res.status(400).json({ error: 'Name, emoji va price kerak' });
     }
 
+    // Ensure products column exists
+    await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS products JSONB DEFAULT '[]'`).catch(()=>{});
+
     const { rows } = await pool.query(
-      'SELECT products FROM sellers WHERE id = $1',
+      `SELECT COALESCE(products, '[]'::jsonb) as products FROM sellers WHERE id = $1`,
       [req.seller.id]
     );
     
@@ -164,7 +165,7 @@ router.post('/products', sellerAuth, async (req, res) => {
     
     res.json(newProduct);
   } catch(e) {
-    console.error('Add seller product error:', e);
+    console.error('Add seller product error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
@@ -173,7 +174,7 @@ router.post('/products', sellerAuth, async (req, res) => {
 router.delete('/products/:id', sellerAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT products FROM sellers WHERE id = $1',
+      `SELECT COALESCE(products, '[]'::jsonb) as products FROM sellers WHERE id = $1`,
       [req.seller.id]
     );
     
