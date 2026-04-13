@@ -858,7 +858,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
       </div>
 
       {/* STATS */}
-      <div style={{ maxWidth:600, margin:'-18px auto 0', padding:'0 16px' }}>
+      <div style={{ maxWidth:600, margin:'12px auto 0', padding:'0 16px' }}>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
           {[
             { icon:<Package size={16} weight="duotone"/>, color:'#4f46e5', val:orders.length,                         label:'Buyurtmalar' },
