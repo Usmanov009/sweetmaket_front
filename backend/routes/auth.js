@@ -122,8 +122,8 @@ router.post('/telegram', async (req, res) => {
     }
     
     const seller = rowToSeller(sellerRow);
-    const token = jwt.sign({ id: seller.id, type: 'seller', phone: seller.phone }, JWT_SECRET, { expiresIn: '30d' });
-    res.json({ token, user: seller, userType: 'seller' });
+    const token = jwt.sign({ id: seller.id, role: 'seller', phone: seller.phone }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, seller, userType: 'seller' });
   } else {
     // Check if already registered as seller
     const existingSeller = (await pool.query('SELECT * FROM sellers WHERE telegram_id = $1', [telegramId])).rows[0];

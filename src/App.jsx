@@ -1161,7 +1161,7 @@ export default function App() {
       .catch(() => localStorage.removeItem('sm_seller_token'));
   }, []);
 
-  // Restore session from localStorage on mount, or Telegram auto-login
+  // Restore session from localStorage on mount, or show Telegram role-select
   useEffect(() => {
     const token = localStorage.getItem('sm_token');
     if (token) {
@@ -1170,26 +1170,17 @@ export default function App() {
         setPage('home');
       }).catch(() => {
         localStorage.removeItem('sm_token');
-        // Try Telegram auth if inside Mini App
         const tg = window.Telegram?.WebApp;
-        if (tg?.initData) {
-          tg.ready(); tg.expand();
-          api.post('/api/auth/telegram', { initData: tg.initData })
-            .then(({ token: t, user: u }) => { localStorage.setItem('sm_token', t); setUser(u); setPage('home'); })
-            .catch(() => setPage('login'));
-        } else {
-          setUser(null); setPage('login');
-        }
+        if (tg?.initData) { tg.ready(); tg.expand(); setPage('telegram-auth'); }
+        else { setUser(null); setPage('login'); }
       });
       return;
     }
-    // No token — check Telegram
+    // Token yo'q — Telegram ichida bo'lsa rol tanlash sahifasini ko'rsat
     const tg = window.Telegram?.WebApp;
     if (tg?.initData) {
       tg.ready(); tg.expand();
-      api.post('/api/auth/telegram', { initData: tg.initData })
-        .then(({ token: t, user: u }) => { localStorage.setItem('sm_token', t); setUser(u); setPage('home'); })
-        .catch(() => setPage('login'));
+      setPage('telegram-auth');
     }
   }, []);
 
@@ -1216,6 +1207,7 @@ export default function App() {
       setPage('home');
     }
   };
+
   const handleLogout = () => {
     setUser(null); setOrders([]); setCards([]);
     localStorage.removeItem('sm_token');

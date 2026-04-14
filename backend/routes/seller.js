@@ -63,17 +63,27 @@ router.post('/register', async (req, res) => {
 // POST /api/seller/login
 router.post('/login', async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    const { phone, password, telegramId } = req.body;
     if (!phone || !password) return res.status(400).json({ error: 'Telefon va parol kerak' });
 
     const normPhone = normalizePhone(phone);
-    // Match by digits-only comparison so format (spaces/dashes) never matters
     const row = (await pool.query(
       `SELECT * FROM sellers WHERE REGEXP_REPLACE(phone, '[^0-9]', '', 'g') = $1`,
       [normPhone]
     )).rows[0];
     if (!row) return res.status(400).json({ error: 'Sotuvchi topilmadi' });
     if (row.password !== hashPassword(password)) return res.status(400).json({ error: 'Parol noto\'g\'ri' });
+
+    // Telegram orqali kirsa — telegram_id ni bog'lash
+    if (telegramId && !row.telegram_id) {
+      await pool.query(
+        `ALTER TABLE sellers ADD COLUMN IF NOT EXISTS telegram_id TEXT UNIQUE`
+      ).catch(() => {});
+      await pool.query(
+        `UPDATE sellers SET telegram_id = $1 WHERE id = $2`,
+        [String(telegramId), row.id]
+      ).catch(() => {});
+    }
 
     const token = jwt.sign({ id: row.id, phone: row.phone, role: 'seller' }, JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, seller: rowToSeller(row) });
