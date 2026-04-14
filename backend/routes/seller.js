@@ -206,18 +206,37 @@ router.get('/plan', sellerAuth, async (req, res) => {
 router.get('/orders', sellerAuth, async (req, res) => {
   try {
     const sellerId = req.seller.id;
-    const { rows } = await pool.query(
-      `SELECT o.*, u.name as user_name, u.phone as user_phone
-       FROM orders o
-       LEFT JOIN users u ON u.id = o.user_id
-       WHERE o.seller_id::TEXT = $1
-       ORDER BY o.created_at DESC
-       LIMIT 100`,
+    if (!sellerId) return res.status(400).json({ error: 'Seller ID topilmadi' });
+
+    // Step 1: fetch orders for this seller
+    const { rows: orderRows } = await pool.query(
+      `SELECT * FROM orders WHERE seller_id::TEXT = $1 ORDER BY created_at DESC LIMIT 100`,
       [sellerId]
     );
-    res.json(rows);
+
+    // Step 2: fetch user info for each order (separate query, avoids JOIN issues)
+    const userIds = [...new Set(orderRows.map(o => o.user_id).filter(Boolean))];
+    let userMap = {};
+    if (userIds.length > 0) {
+      try {
+        const placeholders = userIds.map((_, i) => `$${i + 1}`).join(',');
+        const { rows: userRows } = await pool.query(
+          `SELECT id, name, phone FROM users WHERE id IN (${placeholders})`,
+          userIds
+        );
+        userRows.forEach(u => { userMap[u.id] = u; });
+      } catch { /* non-fatal */ }
+    }
+
+    const result = orderRows.map(o => ({
+      ...o,
+      user_name:  userMap[o.user_id]?.name  || '',
+      user_phone: userMap[o.user_id]?.phone || '',
+    }));
+
+    res.json(result);
   } catch(e) {
-    console.error('Seller orders error:', e.message);
+    console.error('Seller orders error:', e.message, e.stack);
     res.status(500).json({ error: e.message });
   }
 });
