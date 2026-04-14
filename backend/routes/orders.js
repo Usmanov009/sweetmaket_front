@@ -22,7 +22,7 @@ router.get('/', async (req, res, next) => {
 // POST /api/orders
 router.post('/', async (req, res, next) => {
   try {
-    const { items, total, bakery, paymentMode, cardInfo } = req.body;
+    const { items, total, bakery, paymentMode, cardInfo, address } = req.body;
     if (!items || !total) return res.status(400).json({ error: 'Items va total kerak' });
 
     let sellerId = null;
@@ -34,16 +34,17 @@ router.post('/', async (req, res, next) => {
 
     const id = genId();
 
-    // Try insert with seller_id
+    // Try insert with seller_id and address
     let row;
     try {
       const { rows } = await pool.query(
-        `INSERT INTO orders (id, user_id, seller_id, items, total, bakery, payment_mode, card_info, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending') RETURNING *`,
+        `INSERT INTO orders (id, user_id, seller_id, items, total, bakery, payment_mode, card_info, address, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending') RETURNING *`,
         [id, req.user.id, sellerId, JSON.stringify(items), total,
          bakery ? JSON.stringify(bakery) : null,
          paymentMode || 'cash',
-         cardInfo ? JSON.stringify(cardInfo) : null]
+         cardInfo ? JSON.stringify(cardInfo) : null,
+         address || '']
       );
       row = rows[0];
     } catch (e) {
@@ -75,6 +76,7 @@ function rowToOrder(r) {
     bakery: r.bakery,
     paymentMode: r.payment_mode,
     cardInfo: r.card_info,
+    address: r.address || '',
     status: r.status,
     date: r.created_at ? new Date(r.created_at).toLocaleDateString('uz-UZ') : '',
     createdAt: r.created_at,

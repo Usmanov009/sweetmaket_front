@@ -41,6 +41,8 @@ async function initDB() {
   // Migrate: seller_id ni INTEGER dan TEXT ga o'tkazish (mavjud jadval uchun)
   await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id DROP NOT NULL`).catch(() => {});
   await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
+  // Migrate: address ustunini qo'shish
+  await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
   await pool.query(`
     CREATE TABLE IF NOT EXISTS cards (
       id          TEXT PRIMARY KEY,
@@ -104,8 +106,26 @@ async function initDB() {
       created_at   TIMESTAMPTZ DEFAULT NOW()
     )
   `);
-  // Migrate: mavjud sellers jadvaliga products ustunini qo'shish
+  // Migrate: mavjud sellers jadvaliga products va plan_earnings ustunlarini qo'shish
   await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS products JSONB DEFAULT '[]'`).catch(() => {});
+  await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS plan_earnings NUMERIC DEFAULT 0`).catch(() => {});
+
+  // Chat messages jadvali
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id          TEXT PRIMARY KEY,
+      order_id    TEXT NOT NULL,
+      sender_id   TEXT NOT NULL,
+      sender_type TEXT NOT NULL,
+      message     TEXT DEFAULT '',
+      image_url   TEXT DEFAULT '',
+      created_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  // Migrate: order_id INTEGER → TEXT, image_url qo'shish
+  await pool.query(`ALTER TABLE chat_messages ALTER COLUMN order_id TYPE TEXT USING order_id::TEXT`).catch(() => {});
+  await pool.query(`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT ''`).catch(() => {});
+
   console.log('✅ PostgreSQL jadvallar tayyor');
 }
 

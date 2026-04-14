@@ -1190,12 +1190,12 @@ export default function App() {
     localStorage.removeItem('sm_seller_token');
     setPage('seller-login');
   };
-    const handleAddToOrder = async (items, total, bakery, paymentMode = 'cash', cardInfo = null) => {
+  const handleAddToOrder = async (items, total, bakery, address = '') => {
     try {
-      const order = await api.post('/api/orders', { items, total, bakery, paymentMode, cardInfo });
+      const order = await api.post('/api/orders', { items, total, bakery, address });
       setOrders(prev => [...prev, order]);
     } catch {
-      setOrders(prev => [...prev, { items, total, bakery, paymentMode, cardInfo, date: new Date().toLocaleDateString('ru-RU'), status: 'pending' }]);
+      setOrders(prev => [...prev, { items, total, bakery, address, date: new Date().toLocaleDateString('ru-RU'), status: 'pending' }]);
     }
   };
 
@@ -1230,7 +1230,7 @@ export default function App() {
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} addToCart={addToCart} />;
-    if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={handleAddToOrder} toast={toast} setPage={setPage} />;
+    if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={(items, total, bakery, address) => handleAddToOrder(items, total, bakery, address)} toast={toast} setPage={setPage} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} />;
     return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;
   };

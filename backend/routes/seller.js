@@ -89,14 +89,92 @@ router.get('/me', sellerAuth, async (req, res) => {
   res.json({ seller: rowToSeller(row) });
 });
 
+// Helper: user ga notification yuborish
+async function notifyUser(userId, title, message, type = 'order') {
+  const id = genId();
+  await pool.query(
+    'INSERT INTO notifications (id, user_id, title, message, type) VALUES ($1,$2,$3,$4,$5)',
+    [id, userId, title, message, type]
+  ).catch(() => {});
+}
+
 // PATCH /api/seller/orders/:id/status
 router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
   try {
     const { status } = req.body;
-    const allowed = ['pending','confirmed','delivered','cancelled'];
+    const allowed = ['pending', 'confirmed', 'ready', 'delivered', 'cancelled'];
     if (!allowed.includes(status)) return res.status(400).json({ error: "Noto'g'ri status" });
+
+    // Buyurtma ma'lumotlarini olish
+    const orderRow = (await pool.query('SELECT * FROM orders WHERE id=$1', [req.params.id])).rows[0];
+
     await pool.query('UPDATE orders SET status=$1 WHERE id=$2', [status, req.params.id]);
+
+    if (orderRow) {
+      if (status === 'confirmed' && orderRow.user_id) {
+        await notifyUser(
+          orderRow.user_id,
+          'Buyurtmangiz qabul qilindi ✅',
+          "Sotuvchi buyurtmangizni qabul qildi va tayyorlamoqda",
+          'order_confirmed'
+        );
+      }
+
+      if (status === 'ready' && orderRow.user_id) {
+        const sellerRow = (await pool.query('SELECT address, shop_name FROM sellers WHERE id=$1', [req.seller.id])).rows[0];
+        const addr = sellerRow?.address || sellerRow?.shop_name || 'Qandolatchi manzili';
+        await notifyUser(
+          orderRow.user_id,
+          'Tortingiz tayyor! 🎂',
+          `Buyurtmangiz tayyor. Quyidagi manzilda olib keting: ${addr}`,
+          'order_ready'
+        );
+      }
+
+      if (status === 'delivered' && orderRow.user_id) {
+        // 10% komissiya plan ga qo'shish
+        const commission = Number(orderRow.total || 0) * 0.1;
+        await pool.query(
+          'UPDATE sellers SET plan_earnings = COALESCE(plan_earnings, 0) + $1 WHERE id=$2',
+          [commission, req.seller.id]
+        ).catch(() => {});
+        await notifyUser(
+          orderRow.user_id,
+          'Buyurtma topshirildi 🎉',
+          "Buyurtmangiz muvaffaqiyatli topshirildi. Rahmat!",
+          'order_delivered'
+        );
+      }
+    }
+
     res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/seller/plan
+router.get('/plan', sellerAuth, async (req, res) => {
+  try {
+    const sellerRow = (await pool.query(
+      'SELECT plan_earnings FROM sellers WHERE id=$1', [req.seller.id]
+    )).rows[0];
+    const { rows: deliveredOrders } = await pool.query(
+      `SELECT id, total, bakery, address, created_at FROM orders
+       WHERE seller_id::TEXT = $1 AND status = 'delivered'
+       ORDER BY created_at DESC`,
+      [req.seller.id]
+    );
+    res.json({
+      totalEarnings: Number(sellerRow?.plan_earnings || 0),
+      orders: deliveredOrders.map(o => ({
+        id: o.id,
+        total: Number(o.total),
+        commission: Number(o.total) * 0.1,
+        address: o.address || '',
+        createdAt: o.created_at,
+      })),
+    });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
@@ -108,7 +186,9 @@ router.get('/orders', sellerAuth, async (req, res) => {
     const sellerId = req.seller.id;
     // seller_id may be INTEGER or TEXT depending on migration state — cast to TEXT for safety
     const { rows } = await pool.query(
-      `SELECT o.*, u.name as user_name, u.phone as user_phone
+      `SELECT o.id, o.user_id, o.seller_id, o.items, o.total, o.bakery,
+              o.payment_mode, o.card_info, o.address, o.status, o.created_at,
+              u.name as user_name, u.phone as user_phone
        FROM orders o
        LEFT JOIN users u ON u.id = o.user_id
        WHERE o.seller_id::TEXT = $1
