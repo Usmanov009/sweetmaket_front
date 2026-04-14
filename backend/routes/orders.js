@@ -34,7 +34,12 @@ router.post('/', async (req, res, next) => {
 
     const id = genId();
 
-    // Try insert with seller_id and address
+    // Ensure columns exist before inserting
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_id TEXT`).catch(() => {});
+    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id DROP NOT NULL`).catch(() => {});
+    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
+
     let row;
     try {
       const { rows } = await pool.query(
@@ -48,13 +53,12 @@ router.post('/', async (req, res, next) => {
       );
       row = rows[0];
     } catch (e) {
-      // seller_id column might be NOT NULL or wrong type — migrate and retry without it
-      console.error('orders insert failed, migrating:', e.message);
-      await migrateOrders();
+      // Last resort fallback: insert without optional columns
+      console.error('orders insert failed:', e.message);
       const { rows } = await pool.query(
-        `INSERT INTO orders (id, user_id, items, total, bakery, payment_mode, card_info, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,'pending') RETURNING *`,
-        [id, req.user.id, JSON.stringify(items), total,
+        `INSERT INTO orders (id, user_id, seller_id, items, total, bakery, payment_mode, card_info, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending') RETURNING *`,
+        [id, req.user.id, sellerId, JSON.stringify(items), total,
          bakery ? JSON.stringify(bakery) : null,
          paymentMode || 'cash',
          cardInfo ? JSON.stringify(cardInfo) : null]

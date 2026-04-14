@@ -208,13 +208,28 @@ router.get('/orders', sellerAuth, async (req, res) => {
     const sellerId = req.seller.id;
     if (!sellerId) return res.status(400).json({ error: 'Seller ID topilmadi' });
 
-    // Step 1: fetch orders for this seller
-    const { rows: orderRows } = await pool.query(
-      `SELECT * FROM orders WHERE seller_id::TEXT = $1 ORDER BY created_at DESC LIMIT 100`,
-      [sellerId]
-    );
+    // Ensure seller_id column exists and is TEXT type
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_id TEXT`).catch(() => {});
+    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id DROP NOT NULL`).catch(() => {});
+    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
 
-    // Step 2: fetch user info for each order (separate query, avoids JOIN issues)
+    // Step 1: fetch orders for this seller — try with cast first, then without
+    let orderRows = [];
+    let queryError = null;
+    try {
+      const { rows } = await pool.query(
+        `SELECT * FROM orders WHERE seller_id = $1 ORDER BY created_at DESC LIMIT 100`,
+        [sellerId]
+      );
+      orderRows = rows;
+    } catch(e1) {
+      queryError = e1.message;
+      console.error('Seller orders query failed:', e1.message);
+      // Return the real error so we can diagnose
+      return res.status(500).json({ error: e1.message, sellerId });
+    }
+
+    // Step 2: fetch user info
     const userIds = [...new Set(orderRows.map(o => o.user_id).filter(Boolean))];
     let userMap = {};
     if (userIds.length > 0) {
@@ -239,6 +254,34 @@ router.get('/orders', sellerAuth, async (req, res) => {
     console.error('Seller orders error:', e.message, e.stack);
     res.status(500).json({ error: e.message });
   }
+});
+
+// GET /api/seller/diag  — temporary diagnostic endpoint
+router.get('/diag', sellerAuth, async (req, res) => {
+  const result = { sellerId: req.seller.id };
+  try {
+    const { rows } = await pool.query(`SELECT COUNT(*) as cnt FROM orders`);
+    result.totalOrders = rows[0]?.cnt;
+  } catch(e) { result.ordersTableError = e.message; }
+  try {
+    const { rows } = await pool.query(
+      `SELECT column_name, data_type FROM information_schema.columns WHERE table_name='orders' AND column_name='seller_id'`
+    );
+    result.sellerIdColumn = rows[0] || 'NOT FOUND';
+  } catch(e) { result.columnCheckError = e.message; }
+  try {
+    const { rows } = await pool.query(
+      `SELECT COUNT(*) as cnt FROM orders WHERE seller_id = $1`, [req.seller.id]
+    );
+    result.myOrders = rows[0]?.cnt;
+  } catch(e) { result.myOrdersError = e.message; }
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, seller_id FROM orders LIMIT 5`
+    );
+    result.sampleOrders = rows;
+  } catch(e) { result.sampleError = e.message; }
+  res.json(result);
 });
 
 // GET /api/seller/products
