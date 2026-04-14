@@ -1211,7 +1211,7 @@ export default function App() {
   const handleLogout = () => {
     setUser(null); setOrders([]); setCards([]);
     localStorage.removeItem('sm_token');
-    setPage('login');
+    setPage(window.Telegram?.WebApp?.initData ? 'telegram-auth' : 'login');
   };
   const handleSellerLogin = (sellerData) => {
     setSeller(sellerData);
@@ -1220,7 +1220,7 @@ export default function App() {
   const handleSellerLogout = () => {
     setSeller(null);
     localStorage.removeItem('sm_seller_token');
-    setPage('seller-login');
+    setPage(window.Telegram?.WebApp?.initData ? 'telegram-auth' : 'seller-login');
   };
   const handleAddToOrder = async (items, total, bakery, address = '') => {
     try {

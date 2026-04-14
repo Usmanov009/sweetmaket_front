@@ -3,6 +3,7 @@ const jwt     = require('jsonwebtoken');
 const crypto  = require('crypto');
 const pool    = require('../db/pool');
 const { genId } = require('../utils/db');
+const { sendTelegramMessage } = require('../utils/telegram');
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const JWT_SECRET = process.env.JWT_SECRET || 'sweetmarket_secret_key';
@@ -133,12 +134,24 @@ router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
     await pool.query('UPDATE orders SET status=$1 WHERE id=$2', [status, req.params.id]);
 
     if (orderRow) {
+      // User ning telegram_id sini olish
+      const userTgRow = orderRow.user_id
+        ? (await pool.query('SELECT telegram_id FROM users WHERE id=$1', [orderRow.user_id]).catch(() => ({ rows: [] }))).rows[0]
+        : null;
+      const userTgId = userTgRow?.telegram_id;
+      const orderId  = String(orderRow.id).slice(-6).toUpperCase();
+
       if (status === 'confirmed' && orderRow.user_id) {
         await notifyUser(
           orderRow.user_id,
           'Buyurtmangiz qabul qilindi ✅',
-          "Sotuvchi buyurtmangizni qabul qildi va tayyorlamoqda",
+          'Sotuvchi buyurtmangizni qabul qildi va tayyorlamoqda',
           'order_confirmed'
+        );
+        if (userTgId) sendTelegramMessage(userTgId,
+          `✅ <b>Buyurtmangiz tasdiqlandi!</b>\n` +
+          `🧾 Buyurtma #${orderId}\n\n` +
+          `Qandolatchi buyurtmangizni qabul qildi va tayyorlamoqda. Tayyor bo'lganda xabar beramiz!`
         );
       }
 
@@ -151,10 +164,15 @@ router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
           `Buyurtmangiz tayyor. Quyidagi manzilda olib keting: ${addr}`,
           'order_ready'
         );
+        if (userTgId) sendTelegramMessage(userTgId,
+          `🎂 <b>Buyurtmangiz tayyor!</b>\n` +
+          `🧾 Buyurtma #${orderId}\n\n` +
+          `📍 Olib ketish manzili:\n<b>${addr}</b>\n\n` +
+          `Iltimos, tez orada olib keting!`
+        );
       }
 
       if (status === 'delivered' && orderRow.user_id) {
-        // 10% komissiya plan ga qo'shish
         const commission = Number(orderRow.total || 0) * 0.1;
         await pool.query(
           'UPDATE sellers SET plan_earnings = COALESCE(plan_earnings, 0) + $1 WHERE id=$2',
@@ -163,8 +181,21 @@ router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
         await notifyUser(
           orderRow.user_id,
           'Buyurtma topshirildi 🎉',
-          "Buyurtmangiz muvaffaqiyatli topshirildi. Rahmat!",
+          'Buyurtmangiz muvaffaqiyatli topshirildi. Rahmat!',
           'order_delivered'
+        );
+        if (userTgId) sendTelegramMessage(userTgId,
+          `🎉 <b>Buyurtma topshirildi!</b>\n` +
+          `🧾 Buyurtma #${orderId}\n\n` +
+          `Buyurtmangiz muvaffaqiyatli topshirildi. Rahmat, yana buyurtma bering! 🍰`
+        );
+      }
+
+      if (status === 'cancelled' && orderRow.user_id) {
+        if (userTgId) sendTelegramMessage(userTgId,
+          `❌ <b>Buyurtma bekor qilindi</b>\n` +
+          `🧾 Buyurtma #${orderId}\n\n` +
+          `Afsuski qandolatchi buyurtmangizni bajara olmadi. Boshqa qandolatchiga murojaat qiling.`
         );
       }
     }
