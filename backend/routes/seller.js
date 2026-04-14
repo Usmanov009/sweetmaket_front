@@ -156,15 +156,25 @@ router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
 // GET /api/seller/plan
 router.get('/plan', sellerAuth, async (req, res) => {
   try {
+    // Lazy migrations — run silently if columns already exist
+    await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS plan_earnings NUMERIC DEFAULT 0`).catch(() => {});
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
+
     const sellerRow = (await pool.query(
-      'SELECT plan_earnings FROM sellers WHERE id=$1', [req.seller.id]
+      'SELECT COALESCE(plan_earnings, 0) as plan_earnings FROM sellers WHERE id=$1', [req.seller.id]
     )).rows[0];
-    const { rows: deliveredOrders } = await pool.query(
-      `SELECT id, total, bakery, address, created_at FROM orders
-       WHERE seller_id::TEXT = $1 AND status = 'delivered'
-       ORDER BY created_at DESC`,
-      [req.seller.id]
-    );
+
+    let deliveredOrders = [];
+    try {
+      const { rows } = await pool.query(
+        `SELECT id, total, address, created_at FROM orders
+         WHERE seller_id::TEXT = $1 AND status = 'delivered'
+         ORDER BY created_at DESC`,
+        [req.seller.id]
+      );
+      deliveredOrders = rows;
+    } catch { /* address column might still be missing on first call */ }
+
     res.json({
       totalEarnings: Number(sellerRow?.plan_earnings || 0),
       orders: deliveredOrders.map(o => ({
@@ -183,11 +193,11 @@ router.get('/plan', sellerAuth, async (req, res) => {
 // GET /api/seller/orders
 router.get('/orders', sellerAuth, async (req, res) => {
   try {
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
     const sellerId = req.seller.id;
-    // seller_id may be INTEGER or TEXT depending on migration state — cast to TEXT for safety
     const { rows } = await pool.query(
       `SELECT o.id, o.user_id, o.seller_id, o.items, o.total, o.bakery,
-              o.payment_mode, o.card_info, o.address, o.status, o.created_at,
+              o.payment_mode, o.card_info, COALESCE(o.address,'') as address, o.status, o.created_at,
               u.name as user_name, u.phone as user_phone
        FROM orders o
        LEFT JOIN users u ON u.id = o.user_id
@@ -199,7 +209,7 @@ router.get('/orders', sellerAuth, async (req, res) => {
     res.json(rows);
   } catch(e) {
     console.error('Seller orders error:', e.message);
-    res.json([]); // return empty array instead of 500
+    res.json([]);
   }
 });
 
