@@ -206,15 +206,11 @@ router.get('/plan', sellerAuth, async (req, res) => {
 router.get('/orders', sellerAuth, async (req, res) => {
   try {
     const sellerId = req.seller.id;
-    // Run migrations silently first
-    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
-    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
-
     const { rows } = await pool.query(
       `SELECT o.*, u.name as user_name, u.phone as user_phone
        FROM orders o
        LEFT JOIN users u ON u.id = o.user_id
-       WHERE o.seller_id = $1
+       WHERE o.seller_id::TEXT = $1
        ORDER BY o.created_at DESC
        LIMIT 100`,
       [sellerId]
