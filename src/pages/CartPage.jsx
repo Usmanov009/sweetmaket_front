@@ -40,7 +40,10 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
         setPage('profile');
       }, 2200);
     } catch (e) {
-      toast(e?.message || "Xatolik yuz berdi. Qayta urinib ko'ring.");
+      const msg = e?.message === 'Failed to fetch'
+        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta bosing."
+        : (e?.message || "Xatolik yuz berdi.");
+      toast(msg);
     } finally {
       setOrdering(false);
     }

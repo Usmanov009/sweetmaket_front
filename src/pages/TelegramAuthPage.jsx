@@ -49,8 +49,10 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
         localStorage.setItem('sm_token', data.token);
         onAuthSuccess(data.user, 'user');
       }
-    } catch {
-      setError("Xatolik yuz berdi. Qayta urinib ko'ring");
+    } catch (err) {
+      setError(err?.message === 'Failed to fetch'
+        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta urining."
+        : "Xatolik yuz berdi. Qayta urinib ko'ring");
     } finally {
       setLoading(false);
     }
@@ -71,8 +73,10 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
       if (!r.ok) { setError(data.error || 'Xatolik'); return; }
       localStorage.setItem('sm_seller_token', data.token);
       onAuthSuccess(data.seller, 'seller');
-    } catch {
-      setError("Xatolik yuz berdi");
+    } catch (err) {
+      setError(err?.message === 'Failed to fetch'
+        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta urining."
+        : "Xatolik yuz berdi");
     } finally {
       setLinkLoading(false);
     }
