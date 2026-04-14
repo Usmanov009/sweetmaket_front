@@ -208,31 +208,12 @@ router.get('/orders', sellerAuth, async (req, res) => {
     const sellerId = req.seller.id;
     if (!sellerId) return res.status(400).json({ error: 'Seller ID topilmadi' });
 
-    // Query by bakery JSON (always works) OR seller_id column (if TEXT type)
-    // bakery->>'id' = 'seller_abc123' is stored by CartPage for all seller orders
-    let orderRows = [];
-    try {
-      const { rows } = await pool.query(
-        `SELECT * FROM orders
-         WHERE bakery->>'id' = 'seller_' || $1
-            OR seller_id::TEXT = $1
-         ORDER BY created_at DESC LIMIT 100`,
-        [sellerId]
-      );
-      orderRows = rows;
-    } catch(e1) {
-      // Fallback: query only by bakery JSON (avoids seller_id type issues entirely)
-      try {
-        const { rows } = await pool.query(
-          `SELECT * FROM orders WHERE bakery->>'id' = $1 ORDER BY created_at DESC LIMIT 100`,
-          [`seller_${sellerId}`]
-        );
-        orderRows = rows;
-      } catch(e2) {
-        console.error('Seller orders query failed:', e2.message);
-        return res.status(500).json({ error: e2.message, sellerId });
-      }
-    }
+    // Query by bakery JSON id field — avoids seller_id column type issues entirely
+    // CartPage stores bakery.id = 'seller_<sellerId>' for all seller orders
+    const { rows: orderRows } = await pool.query(
+      `SELECT * FROM orders WHERE bakery->>'id' = $1 ORDER BY created_at DESC LIMIT 100`,
+      [`seller_${sellerId}`]
+    );
 
     // Step 2: fetch user info
     const userIds = [...new Set(orderRows.map(o => o.user_id).filter(Boolean))];
@@ -261,29 +242,22 @@ router.get('/orders', sellerAuth, async (req, res) => {
   }
 });
 
-// GET /api/seller/diag  — temporary diagnostic endpoint
+// GET /api/seller/diag  — diagnostic endpoint
 router.get('/diag', sellerAuth, async (req, res) => {
-  const result = { sellerId: req.seller.id };
+  const result = { sellerId: req.seller.id, sellerKey: `seller_${req.seller.id}` };
   try {
     const { rows } = await pool.query(`SELECT COUNT(*) as cnt FROM orders`);
     result.totalOrders = rows[0]?.cnt;
   } catch(e) { result.ordersTableError = e.message; }
   try {
     const { rows } = await pool.query(
-      `SELECT column_name, data_type FROM information_schema.columns WHERE table_name='orders' AND column_name='seller_id'`
+      `SELECT COUNT(*) as cnt FROM orders WHERE bakery->>'id' = $1`,
+      [`seller_${req.seller.id}`]
     );
-    result.sellerIdColumn = rows[0] || 'NOT FOUND';
-  } catch(e) { result.columnCheckError = e.message; }
+    result.myOrdersByBakery = rows[0]?.cnt;
+  } catch(e) { result.bakeryQueryError = e.message; }
   try {
-    const { rows } = await pool.query(
-      `SELECT COUNT(*) as cnt FROM orders WHERE seller_id = $1`, [req.seller.id]
-    );
-    result.myOrders = rows[0]?.cnt;
-  } catch(e) { result.myOrdersError = e.message; }
-  try {
-    const { rows } = await pool.query(
-      `SELECT id, seller_id FROM orders LIMIT 5`
-    );
+    const { rows } = await pool.query(`SELECT id, bakery->>'id' as bakery_id FROM orders LIMIT 5`);
     result.sampleOrders = rows;
   } catch(e) { result.sampleError = e.message; }
   res.json(result);
