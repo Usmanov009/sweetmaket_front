@@ -193,19 +193,36 @@ router.get('/plan', sellerAuth, async (req, res) => {
 // GET /api/seller/orders
 router.get('/orders', sellerAuth, async (req, res) => {
   try {
-    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
     const sellerId = req.seller.id;
-    const { rows } = await pool.query(
-      `SELECT o.id, o.user_id, o.seller_id, o.items, o.total, o.bakery,
-              o.payment_mode, o.card_info, COALESCE(o.address,'') as address, o.status, o.created_at,
-              u.name as user_name, u.phone as user_phone
-       FROM orders o
-       LEFT JOIN users u ON u.id = o.user_id
-       WHERE o.seller_id::TEXT = $1
-       ORDER BY o.created_at DESC
-       LIMIT 100`,
-      [sellerId]
-    );
+    let rows;
+    try {
+      // Try with address column
+      await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
+      ({ rows } = await pool.query(
+        `SELECT o.id, o.user_id, o.seller_id, o.items, o.total, o.bakery,
+                o.payment_mode, o.card_info, COALESCE(o.address,'') as address, o.status, o.created_at,
+                u.name as user_name, u.phone as user_phone
+         FROM orders o
+         LEFT JOIN users u ON u.id = o.user_id
+         WHERE o.seller_id::TEXT = $1
+         ORDER BY o.created_at DESC
+         LIMIT 100`,
+        [sellerId]
+      ));
+    } catch {
+      // Fallback: without address column
+      ({ rows } = await pool.query(
+        `SELECT o.id, o.user_id, o.seller_id, o.items, o.total, o.bakery,
+                o.payment_mode, o.card_info, '' as address, o.status, o.created_at,
+                u.name as user_name, u.phone as user_phone
+         FROM orders o
+         LEFT JOIN users u ON u.id = o.user_id
+         WHERE o.seller_id::TEXT = $1
+         ORDER BY o.created_at DESC
+         LIMIT 100`,
+        [sellerId]
+      ));
+    }
     res.json(rows);
   } catch(e) {
     console.error('Seller orders error:', e.message);
