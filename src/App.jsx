@@ -22,6 +22,7 @@ import HomePage from './pages/HomePage';
 import SellerLoginPage from './pages/SellerLoginPage';
 import SellerDashboardPage from './pages/SellerDashboardPage';
 import CartPage from './pages/CartPage';
+import ChatModal from './components/ChatModal';
 
 
 
@@ -813,6 +814,14 @@ function BottomModal({ onClose, title, children, C }) {
 /* ═══════════════════════════════════════════════════════
    PROFILE PAGE
 ═══════════════════════════════════════════════════════ */
+const ORDER_STATUS = {
+  pending:   { label: 'Kutilmoqda',    color: '#d97706', bg: 'rgba(217,119,6,.1)'   },
+  confirmed: { label: 'Tasdiqlandi',   color: '#2563eb', bg: 'rgba(37,99,235,.1)'   },
+  ready:     { label: 'Tayyor',        color: '#059669', bg: 'rgba(5,150,105,.12)'  },
+  delivered: { label: 'Yetkazildi',    color: '#7c3aed', bg: 'rgba(124,58,237,.1)'  },
+  cancelled: { label: 'Bekor qilindi', color: '#dc2626', bg: 'rgba(220,38,38,.1)'   },
+};
+
 function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, setUser, setPage }) {
   const [activeTab, setActiveTab] = useState('orders');
   const [bdays,     setBdays]     = useState([]);
@@ -821,6 +830,8 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
   const [nameModal,   setNameModal]   = useState(false);
   const [nameForm,    setNameForm]    = useState({ firstName: '', lastName: '' });
   const [nameLoading, setNameLoading] = useState(false);
+  const [showChat,   setShowChat]   = useState(false);
+  const [chatData,   setChatData]   = useState(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -956,37 +967,66 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
               <div style={{ fontSize:18, fontWeight:700, color:C.dark, marginBottom:8 }}>Buyurtmalar yo'q</div>
               <div style={{ fontSize:14 }}>Birinchi buyurtmangizni bering!</div>
             </div>
-          ) : orders.slice().reverse().map((order,i) => (
-            <div key={i} style={{ background:C.s1, borderRadius:20, marginBottom:12, border:'1px solid '+C.border, overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,.04)' }}>
-              <div style={{ padding:'13px 18px', borderBottom:'1px solid '+C.border, display:'flex', justifyContent:'space-between', alignItems:'center', background:C.navy+'08' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', flexShrink:0 }}>
-                    <Package size={16} />
+          ) : orders.slice().reverse().map((order, i) => {
+            const st = ORDER_STATUS[order.status] || ORDER_STATUS.pending;
+            // Extract seller ID from bakery JSON (id = 'seller_abc123')
+            const bakeryId = order.bakery?.id || '';
+            const sellerId = bakeryId.startsWith('seller_') ? bakeryId.replace('seller_', '') : (order.sellerId || order.seller_id || '');
+            const canChat  = order.status && order.status !== 'cancelled';
+            return (
+              <div key={order.id || i} style={{ background:C.s1, borderRadius:20, marginBottom:12, border:'1px solid '+C.border, overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,.04)' }}>
+                <div style={{ padding:'13px 18px', borderBottom:'1px solid '+C.border, display:'flex', justifyContent:'space-between', alignItems:'center', background:C.navy+'08' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', flexShrink:0 }}>
+                      <Package size={16} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:800, color:C.dark }}>Buyurtma #{String(order.id||'').slice(-6)||orders.length-i}</div>
+                      <div style={{ fontSize:11, color:C.muted }}>{order.date || (order.createdAt ? new Date(order.createdAt).toLocaleDateString('uz-UZ') : '')}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize:13, fontWeight:800, color:C.dark }}>Buyurtma #{orders.length-i}</div>
-                    <div style={{ fontSize:11, color:C.muted }}>{order.date}</div>
+                  <span style={{ fontSize:11, color:st.color, fontWeight:700, background:st.bg, padding:'5px 13px', borderRadius:50 }}>
+                    {st.label}
+                  </span>
+                </div>
+                {order.bakery?.name && (
+                  <div style={{ padding:'8px 18px 0', fontSize:12, color:C.muted, display:'flex', alignItems:'center', gap:4 }}>
+                    🏪 <span style={{ color:C.navy, fontWeight:600 }}>{order.bakery.name}</span>
+                  </div>
+                )}
+                <div style={{ padding:'12px 18px 14px' }}>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:12 }}>
+                    {(Array.isArray(order.items)?order.items:[]).map((it,j) => (
+                      <span key={j} style={{ fontSize:11, color:C.muted, background:C.s2, padding:'5px 12px', borderRadius:50, border:'1px solid '+C.border }}>
+                        {it.emoji} {it.name} x{it.qty||1}
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span style={{ fontSize:20, fontWeight:900, color:C.navy, letterSpacing:-.5 }}>{sum(order.total)}</span>
+                    {canChat && sellerId && (
+                      <button
+                        onClick={() => { setChatData({ orderId: order.id, userId: user.id, sellerId }); setShowChat(true); }}
+                        style={{ padding:'8px 16px', borderRadius:10, border:'none', background:'rgba(139,92,246,.12)', color:'#7c3aed', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:6 }}>
+                        💬 Chat
+                      </button>
+                    )}
                   </div>
                 </div>
-                <span style={{ fontSize:11, color:'#16a34a', fontWeight:700, background:'rgba(22,163,74,.1)', padding:'5px 13px', borderRadius:50, display:'flex', alignItems:'center', gap:4 }}>
-                  <Check size={11} weight="bold" /> Yetkazildi
-                </span>
               </div>
-              <div style={{ padding:'14px 18px' }}>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:14 }}>
-                  {order.items.map(it => (
-                    <span key={it.id} style={{ fontSize:11, color:C.muted, background:C.s2, padding:'5px 12px', borderRadius:50, border:'1px solid '+C.border }}>
-                      {it.emoji} {it.name} x{it.qty}
-                    </span>
-                  ))}
-                </div>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ fontSize:12, color:C.muted }}>Jami</span>
-                  <span style={{ fontSize:20, fontWeight:900, color:C.navy, letterSpacing:-.5 }}>{sum(order.total)}</span>
-                </div>
-              </div>
-            </div>
-          ))
+            );
+          })
+        )}
+        {showChat && chatData && (
+          <ChatModal
+            onClose={() => setShowChat(false)}
+            orderId={chatData.orderId}
+            userId={chatData.userId}
+            sellerId={chatData.sellerId}
+            isSeller={false}
+            C={C}
+            isDesktop={isDesktop}
+          />
         )}
 
         {activeTab==='bdays' && (
