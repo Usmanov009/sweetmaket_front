@@ -208,25 +208,30 @@ router.get('/orders', sellerAuth, async (req, res) => {
     const sellerId = req.seller.id;
     if (!sellerId) return res.status(400).json({ error: 'Seller ID topilmadi' });
 
-    // Ensure seller_id column exists and is TEXT type
-    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_id TEXT`).catch(() => {});
-    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id DROP NOT NULL`).catch(() => {});
-    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
-
-    // Step 1: fetch orders for this seller — try with cast first, then without
+    // Query by bakery JSON (always works) OR seller_id column (if TEXT type)
+    // bakery->>'id' = 'seller_abc123' is stored by CartPage for all seller orders
     let orderRows = [];
-    let queryError = null;
     try {
       const { rows } = await pool.query(
-        `SELECT * FROM orders WHERE seller_id = $1 ORDER BY created_at DESC LIMIT 100`,
+        `SELECT * FROM orders
+         WHERE bakery->>'id' = 'seller_' || $1
+            OR seller_id::TEXT = $1
+         ORDER BY created_at DESC LIMIT 100`,
         [sellerId]
       );
       orderRows = rows;
     } catch(e1) {
-      queryError = e1.message;
-      console.error('Seller orders query failed:', e1.message);
-      // Return the real error so we can diagnose
-      return res.status(500).json({ error: e1.message, sellerId });
+      // Fallback: query only by bakery JSON (avoids seller_id type issues entirely)
+      try {
+        const { rows } = await pool.query(
+          `SELECT * FROM orders WHERE bakery->>'id' = $1 ORDER BY created_at DESC LIMIT 100`,
+          [`seller_${sellerId}`]
+        );
+        orderRows = rows;
+      } catch(e2) {
+        console.error('Seller orders query failed:', e2.message);
+        return res.status(500).json({ error: e2.message, sellerId });
+      }
     }
 
     // Step 2: fetch user info
