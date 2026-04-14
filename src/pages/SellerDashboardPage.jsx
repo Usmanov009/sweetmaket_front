@@ -277,15 +277,22 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
   const [products,     setProducts]     = useState([]);
   const [plan,         setPlan]         = useState({ totalEarnings: 0, orders: [] });
   const [loading,      setLoading]      = useState(true);
+  const [ordersError,  setOrdersError]  = useState('');
   const [tab,          setTab]          = useState('orders');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showChat,     setShowChat]     = useState(false);
   const [chatData,     setChatData]     = useState(null);
 
   const loadOrders = () => {
+    setLoading(true);
+    setOrdersError('');
     sellerFetch('GET', '/api/seller/orders')
-      .then(data => setOrders(Array.isArray(data) ? data : []))
-      .catch(() => {})
+      .then(data => {
+        setOrders(Array.isArray(data) ? data : []);
+      })
+      .catch(e => {
+        setOrdersError(e?.message || 'Buyurtmalarni yuklashda xatolik');
+      })
       .finally(() => setLoading(false));
   };
 
@@ -333,7 +340,8 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
     setShowChat(true);
   };
 
-  const myOrders    = orders.filter(o => String(o.seller_id) === String(seller?.id));
+  // API already filters by seller — no client-side re-filter needed
+  const myOrders    = orders;
   const pendingCount = myOrders.filter(o => o.status === 'pending').length;
   const totalRevenue = myOrders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + Number(o.total || 0), 0);
   const topPad = isDesktop ? 0 : 52;
@@ -435,11 +443,20 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
               <div style={{ textAlign: 'center', padding: '60px 20px', color: C.muted }}>
                 <CircleNotch size={32} style={{ animation: 'spin 1s linear infinite', opacity: .4 }} />
               </div>
+            ) : ordersError ? (
+              <div style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 14, padding: '16px 18px', marginBottom: 12 }}>
+                <div style={{ color: '#ef4444', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Xatolik yuz berdi</div>
+                <div style={{ color: '#ef4444', fontSize: 12 }}>{ordersError}</div>
+                <button onClick={loadOrders} style={{ marginTop: 10, padding: '7px 14px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                  Qayta urinish
+                </button>
+              </div>
             ) : myOrders.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '64px 20px' }}>
                 <Package size={56} weight="duotone" color={C.muted} style={{ opacity: .35 }} />
                 <div style={{ fontWeight: 700, color: C.dark, marginTop: 14, marginBottom: 6 }}>Buyurtmalar yo'q</div>
                 <div style={{ color: C.muted, fontSize: 13 }}>Yangi buyurtmalar bu yerda ko'rinadi</div>
+                <div style={{ color: C.muted, fontSize: 11, marginTop: 8, opacity: 0.6 }}>Sotuvchi ID: {seller?.id}</div>
               </div>
             ) : myOrders.map(order => (
               <OrderCard

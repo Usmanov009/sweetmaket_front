@@ -226,7 +226,7 @@ router.get('/orders', sellerAuth, async (req, res) => {
     res.json(rows);
   } catch(e) {
     console.error('Seller orders error:', e.message);
-    res.json([]);
+    res.status(500).json({ error: e.message });
   }
 });
 
