@@ -1,6 +1,25 @@
-const router = require('express').Router();
-const pool   = require('../db/pool');
+const router  = require('express').Router();
+const https   = require('https');
+const pool    = require('../db/pool');
 const { genId } = require('../utils/db');
+
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+const BOT_TOKEN = process.env.BOT_TOKEN || '';
+
+// Telegram bot orqali xabar yuborish
+function sendTelegramMessage(chatId, text) {
+  if (!BOT_TOKEN || !chatId) return;
+  const body = JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' });
+  const req = https.request({
+    hostname: 'api.telegram.org',
+    path: `/bot${BOT_TOKEN}/sendMessage`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+  }, res => { res.resume(); });
+  req.on('error', () => {});
+  req.write(body);
+  req.end();
+}
 
 // Ensure orders table has nullable TEXT seller_id
 async function migrateOrders() {
@@ -67,6 +86,35 @@ router.post('/', async (req, res, next) => {
     }
 
     res.status(201).json(rowToOrder(row));
+
+    // Seller ga Telegram xabar yuborish (response dan keyin, non-blocking)
+    if (sellerId) {
+      pool.query('SELECT telegram_id, shop_name, name FROM sellers WHERE id = $1', [sellerId])
+        .then(({ rows: sRows }) => {
+          const seller = sRows[0];
+          if (!seller?.telegram_id) return;
+
+          const itemLines = (Array.isArray(row.items) ? row.items : [])
+            .map(i => `  • ${i.emoji || '🎂'} ${i.name} × ${i.qty || 1}`)
+            .join('\n');
+          const shopName = seller.shop_name || seller.name || 'Do\'kon';
+          const totalFmt = Number(row.total).toLocaleString('uz-UZ') + ' so\'m';
+          const addrLine = row.address ? `\n📍 Mijoz manzili: ${row.address}` : '';
+          const orderId  = String(row.id).slice(-6).toUpperCase();
+
+          const text =
+            `🔔 <b>Yangi buyurtma!</b>\n` +
+            `━━━━━━━━━━━━━━━\n` +
+            `🧾 Buyurtma #${orderId}\n` +
+            `\n<b>Mahsulotlar:</b>\n${itemLines}\n` +
+            `\n💰 Jami: <b>${totalFmt}</b>${addrLine}\n` +
+            `━━━━━━━━━━━━━━━\n` +
+            `SweetMarket ilovasidan kirish va tasdiqlash uchun dasturni oching.`;
+
+          sendTelegramMessage(seller.telegram_id, text);
+        })
+        .catch(() => {});
+    }
   } catch (e) { next(e); }
 });
 
