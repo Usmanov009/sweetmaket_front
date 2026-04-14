@@ -84,9 +84,21 @@ router.post('/login', async (req, res) => {
 
 // GET /api/seller/me
 router.get('/me', sellerAuth, async (req, res) => {
-  const row = (await pool.query('SELECT * FROM sellers WHERE id=$1', [req.seller.id])).rows[0];
-  if (!row) return res.status(404).json({ error: 'Topilmadi' });
-  res.json({ seller: rowToSeller(row) });
+  try {
+    // Try by id first, then fall back to phone (handles old tokens where id may differ)
+    let row = (await pool.query('SELECT * FROM sellers WHERE id=$1', [req.seller.id])).rows[0];
+    if (!row && req.seller.phone) {
+      const norm = normalizePhone(req.seller.phone);
+      row = (await pool.query(
+        `SELECT * FROM sellers WHERE REGEXP_REPLACE(phone, '[^0-9]', '', 'g') = $1`,
+        [norm]
+      )).rows[0];
+    }
+    if (!row) return res.status(404).json({ error: 'Sotuvchi topilmadi' });
+    res.json({ seller: rowToSeller(row) });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // Helper: user ga notification yuborish
@@ -194,35 +206,19 @@ router.get('/plan', sellerAuth, async (req, res) => {
 router.get('/orders', sellerAuth, async (req, res) => {
   try {
     const sellerId = req.seller.id;
-    let rows;
-    try {
-      // Try with address column
-      await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
-      ({ rows } = await pool.query(
-        `SELECT o.id, o.user_id, o.seller_id, o.items, o.total, o.bakery,
-                o.payment_mode, o.card_info, COALESCE(o.address,'') as address, o.status, o.created_at,
-                u.name as user_name, u.phone as user_phone
-         FROM orders o
-         LEFT JOIN users u ON u.id = o.user_id
-         WHERE o.seller_id::TEXT = $1
-         ORDER BY o.created_at DESC
-         LIMIT 100`,
-        [sellerId]
-      ));
-    } catch {
-      // Fallback: without address column
-      ({ rows } = await pool.query(
-        `SELECT o.id, o.user_id, o.seller_id, o.items, o.total, o.bakery,
-                o.payment_mode, o.card_info, '' as address, o.status, o.created_at,
-                u.name as user_name, u.phone as user_phone
-         FROM orders o
-         LEFT JOIN users u ON u.id = o.user_id
-         WHERE o.seller_id::TEXT = $1
-         ORDER BY o.created_at DESC
-         LIMIT 100`,
-        [sellerId]
-      ));
-    }
+    // Run migrations silently first
+    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
+
+    const { rows } = await pool.query(
+      `SELECT o.*, u.name as user_name, u.phone as user_phone
+       FROM orders o
+       LEFT JOIN users u ON u.id = o.user_id
+       WHERE o.seller_id = $1
+       ORDER BY o.created_at DESC
+       LIMIT 100`,
+      [sellerId]
+    );
     res.json(rows);
   } catch(e) {
     console.error('Seller orders error:', e.message);
