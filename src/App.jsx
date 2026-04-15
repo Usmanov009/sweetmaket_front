@@ -16,7 +16,6 @@ import BottomNav from './components/BottomNav';
 import SidebarNav from './components/SidebarNav';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import TelegramAuthPage from './pages/TelegramAuthPage';
 import NotificationsPage from './pages/NotificationsPage';
 import HomePage from './pages/HomePage';
 import SellerLoginPage from './pages/SellerLoginPage';
@@ -1170,17 +1169,10 @@ export default function App() {
         setPage('home');
       }).catch(() => {
         localStorage.removeItem('sm_token');
-        const tg = window.Telegram?.WebApp;
-        if (tg?.initData) { tg.ready(); tg.expand(); setPage('telegram-auth'); }
-        else { setUser(null); setPage('login'); }
+        setUser(null);
+        setPage('login');
       });
       return;
-    }
-    // Token yo'q — Telegram ichida bo'lsa rol tanlash sahifasini ko'rsat
-    const tg = window.Telegram?.WebApp;
-    if (tg?.initData) {
-      tg.ready(); tg.expand();
-      setPage('telegram-auth');
     }
   }, []);
 
@@ -1211,7 +1203,7 @@ export default function App() {
   const handleLogout = () => {
     setUser(null); setOrders([]); setCards([]);
     localStorage.removeItem('sm_token');
-    setPage(window.Telegram?.WebApp?.initData ? 'telegram-auth' : 'login');
+    setPage('login');
   };
   const handleSellerLogin = (sellerData) => {
     setSeller(sellerData);
@@ -1220,7 +1212,7 @@ export default function App() {
   const handleSellerLogout = () => {
     setSeller(null);
     localStorage.removeItem('sm_seller_token');
-    setPage(window.Telegram?.WebApp?.initData ? 'telegram-auth' : 'seller-login');
+    setPage('seller-login');
   };
   const handleAddToOrder = async (items, total, bakery, address = '') => {
     try {
@@ -1257,7 +1249,6 @@ export default function App() {
     if (page === 'seller-login') return <SellerLoginPage onLogin={handleSellerLogin} goUserLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
     if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} />;
     if (page === 'login') return <LoginPage onLogin={handleLogin} goSignup={() => setPage('signup')} goSellerLogin={() => setPage('seller-login')} C={C} isDesktop={isDesktop} setPage={setPage} />;
-    if (page === 'telegram-auth') return <TelegramAuthPage onBack={() => setPage('login')} onAuthSuccess={handleTelegramAuth} C={C} isDesktop={isDesktop} />;
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} />;
@@ -1267,7 +1258,7 @@ export default function App() {
     return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;
   };
 
-  const showNav = user && !['login','signup','seller-login','seller','telegram-auth'].includes(page);
+  const showNav = user && !['login','signup','seller-login','seller'].includes(page);
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, color:C.text, transition:'background .3s,color .3s', display: showNav && isDesktop ? 'flex' : 'block' }}>

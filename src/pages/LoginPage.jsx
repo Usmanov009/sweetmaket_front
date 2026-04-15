@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import {
-  Phone, User, ArrowLeft, TelegramLogo,
+  Phone, User, ArrowLeft,
   ArrowRight, ShieldCheck, CircleNotch, Storefront,
 } from '@phosphor-icons/react';
 import api from '../api';
@@ -207,30 +207,6 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             yoki
             <div style={{ flex: 1, height: 1, background: C.border }} />
           </div>
-
-          {/* Telegram */}
-          <button
-            onClick={() => setPage('telegram-auth')}
-            style={{
-              width: '100%',
-              padding: '13px 20px',
-              borderRadius: 14,
-              border: `1.5px solid ${C.border}`,
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 14,
-              color: C.dark,
-              background: C.s2,
-              transition: 'all .2s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-            }}
-          >
-            <TelegramLogo size={20} color="#0088cc" weight="fill" />
-            Telegram orqali kirish
-          </button>
 
           {/* Footer links */}
           <div style={{
