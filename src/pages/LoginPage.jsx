@@ -6,8 +6,10 @@ import {
 import api from '../api';
 import OtpInput from '../components/OtpInput';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
+import { useLocale } from '../locale.js';
 
 export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDesktop, setPage }) {
+  const { t } = useLocale();
   const [firstName, setFirstName] = useState('');
   const [lastName,  setLastName]  = useState('');
   const [phone,     setPhone]     = useState('+998');
@@ -29,9 +31,9 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
   useEffect(() => () => clearInterval(timerRef.current), []);
 
   const handleSend = async () => {
-    if (!firstName.trim()) { setError('Ismingizni kiriting'); return; }
-    if (!lastName.trim())  { setError('Familiyangizni kiriting'); return; }
-    if (!isValidPhone(phone)) { setError("To'g'ri telefon raqam kiriting (+998 XX XXX XX XX)"); return; }
+    if (!firstName.trim()) { setError(t('firstName') + ' ' + t('required')); return; }
+    if (!lastName.trim())  { setError(t('lastName') + ' ' + t('required')); return; }
+    if (!isValidPhone(phone)) { setError(t('correctPhone')); return; }
     setError(''); setLoading(true);
     try {
       const data = await api.post('/api/auth/request-otp', { phone });
@@ -42,7 +44,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
   };
 
   const handleVerify = async () => {
-    if (otp.length < 6) { setError('6 xonali kodni kiriting'); return; }
+    if (otp.length < 6) { setError(t('enterCode')); return; }
     setError(''); setLoading(true);
     try {
       const { token, user } = await api.post('/api/auth/verify', {
@@ -124,18 +126,18 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               lineHeight: 1.2,
               marginBottom: 8,
             }}>
-              Xush kelibsiz
+              {t('welcome')}
             </div>
             <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
-              Hisobingizga kirish uchun ma'lumot kiriting
+              {t('loginInfoText')}
             </div>
           </div>
 
           {/* Ism / Familiya row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
             {[
-              { label: 'Ism',      value: firstName, set: setFirstName, placeholder: 'Aziz'   },
-              { label: 'Familiya', value: lastName,  set: setLastName,  placeholder: 'Karimov' },
+              { label: t('firstName'),      value: firstName, set: setFirstName, placeholder: 'Aziz'   },
+              { label: t('lastName'), value: lastName,  set: setLastName,  placeholder: 'Karimov' },
             ].map(({ label, value, set, placeholder }) => (
               <div key={label}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
@@ -160,7 +162,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
           {/* Telefon */}
           <div style={{ marginBottom: 20 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
-              Telefon raqam
+              {t('phoneNumber')}
             </label>
             <div style={{ position: 'relative' }}>
               <span style={iconWrap}><Phone size={18} weight="duotone" /></span>
@@ -197,14 +199,9 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} />
               : <Phone size={18} />
             }
-            {loading ? 'Yuborilmoqda...' : 'SMS kodni yuborish'}
-            {!loading && <ArrowRight size={16} />}
-          </button>
-
-          {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0', color: C.muted, fontSize: 13 }}>
+            {loading ? t('sending') : t('sendSms')}
             <div style={{ flex: 1, height: 1, background: C.border }} />
-            yoki
+            {t('or')}
             <div style={{ flex: 1, height: 1, background: C.border }} />
           </div>
 
@@ -219,9 +216,9 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             color: C.muted,
           }}>
             <span>
-              Hisob yo'qmi?{' '}
+              {t('noAccount')}{' '}
               <span onClick={goSignup} style={{ color: ACCENT, fontWeight: 700, cursor: 'pointer' }}>
-                Ro'yxatdan o'tish
+                {t('signUp')}
               </span>
             </span>
             <span style={{ color: C.border }}>|</span>
@@ -229,7 +226,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               onClick={goSellerLogin}
               style={{ color: '#059669', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
             >
-              <Storefront size={13} weight="fill" /> Sotuvchi kabineti
+              <Storefront size={13} weight="fill" /> {t('sellerPortal')}
             </span>
           </div>
         </>
@@ -255,7 +252,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               borderRadius: 10,
             }}
           >
-            <ArrowLeft size={15} /> Orqaga
+            <ArrowLeft size={15} /> {t('back')}
           </button>
 
           <div style={{ marginBottom: 24 }}>
@@ -266,10 +263,10 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               color: C.dark,
               marginBottom: 8,
             }}>
-              SMS kodni kiriting
+              {t('enterCode')}
             </div>
             <div style={{ fontSize: 14, color: C.muted }}>
-              Kod yuborildi:{' '}
+              {t('codeSent')}: {' '}
               <span style={{ color: ACCENT, fontWeight: 700 }}>{phone}</span>
             </div>
           </div>
@@ -299,7 +296,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} />
               : <ShieldCheck size={18} />
             }
-            {loading ? 'Tekshirilmoqda...' : 'Tasdiqlash'}
+            {loading ? t('sending') : t('verify')}
           </button>
 
           {devOtp && (
@@ -314,20 +311,19 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               fontWeight: 600,
               border: `1px solid ${C.border}`,
             }}>
-              Test kodi:{' '}
-              <span style={{ letterSpacing: 4, fontFamily: 'monospace', fontSize: 16 }}>{devOtp}</span>
+              {t('testCode')} <span style={{ letterSpacing: 4, fontFamily: 'monospace', fontSize: 16 }}>{devOtp}</span>
             </div>
           )}
 
           <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: C.muted }}>
             {timer > 0
-              ? <span>Qayta yuborish: <span style={{ color: ACCENT, fontWeight: 700 }}>00:{String(timer).padStart(2, '0')}</span></span>
+              ? <span>{t('resendIn')} <span style={{ color: ACCENT, fontWeight: 700 }}>00:{String(timer).padStart(2, '0')}</span></span>
               : (
                 <span
                   onClick={handleResend}
                   style={{ color: ACCENT, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
-                  <Phone size={14} /> SMS qayta yuborish
+                  <Phone size={14} /> {t('sendAgain')}
                 </span>
               )
             }
@@ -368,14 +364,14 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             Sweet<span style={{ color: 'rgba(255,255,255,.45)' }}>Market</span>
           </div>
           <div style={{ color: 'rgba(255,255,255,.7)', fontSize: 16, maxWidth: 320, lineHeight: 1.8, marginBottom: 44 }}>
-            Eng mazali tortlar — bevosita usta konditerlardan
+              {t('loginHeroText')}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { icon: <Storefront size={20} weight="fill" />, text: "100+ ishonchli sotuvchi" },
-              { icon: <ShieldCheck size={20} weight="fill" />, text: "Xavfsiz to'lov tizimi" },
-              { icon: <Phone size={20} weight="fill" />, text: "Tez yetkazib berish" },
+              { icon: <Storefront size={20} weight="fill" />, text: t('loginFeature1') },
+              { icon: <ShieldCheck size={20} weight="fill" />, text: t('loginFeature2') },
+              { icon: <Phone size={20} weight="fill" />, text: t('loginFeature3') },
             ].map(({ icon, text }) => (
               <div key={text} style={{
                 display: 'flex',
@@ -421,7 +417,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
           Sweet<span style={{ opacity: .5 }}>Market</span>
         </div>
         <div style={{ color: 'rgba(255,255,255,.65)', fontSize: 14 }}>
-          Eng mazali tortlar bu yerda
+          {t('loginMobileText')}
         </div>
       </div>
       {formContent}

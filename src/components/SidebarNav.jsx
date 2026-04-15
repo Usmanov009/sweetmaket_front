@@ -1,15 +1,17 @@
 import { memo } from 'react';
 import { House, MagnifyingGlass, Cake, ShoppingCart, User, SignOut, Sun, Moon } from '@phosphor-icons/react';
+import { useLocale } from '../locale.js';
 
-const ITEMS = [
-  { id:'home',    Icon: House,            label:'Bosh sahifa' },
-  { id:'explore', Icon: MagnifyingGlass,  label:'Qidiruv'     },
-  { id:'create',  Icon: Cake,             label:'Yaratish'    },
-  { id:'cart',    Icon: ShoppingCart,     label:'Savatcha'    },
-  { id:'profile', Icon: User,             label:'Profil'      },
+const ITEMS = (t) => [
+  { id:'home',    Icon: House,            label:t('navHome') },
+  { id:'explore', Icon: MagnifyingGlass,  label:t('navExplore') },
+  { id:'create',  Icon: Cake,             label:t('navCreate') },
+  { id:'cart',    Icon: ShoppingCart,     label:t('navCart') },
+  { id:'profile', Icon: User,             label:t('navProfile') },
 ];
 
 const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, setIsDark = ()=>{}, user, onLogout, cartCount = 0 }) {
+  const { lang, setLang, t } = useLocale();
   const initials = user?.name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'SM';
   return (
     <aside style={{
@@ -27,7 +29,7 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, setIsDar
 
       {/* Nav items */}
       <nav style={{ flex:1, display:'flex', flexDirection:'column', gap:2 }}>
-        {ITEMS.map(({ id, Icon, label }) => {
+        {ITEMS(t).map(({ id, Icon, label }) => {
           const active = page===id || (page==='notifications' && id==='profile');
           return (
             <button key={id} onClick={() => setPage(id)}
@@ -62,6 +64,17 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, setIsDar
         })}
       </nav>
 
+      {/* Language switcher */}
+      <div style={{ display:'flex', gap:8, padding:'16px 0', flexWrap:'wrap' }}>
+        {['uz','ru'].map(code => (
+          <button key={code} onClick={() => setLang(code)}
+            style={{ flex:1, minWidth:50, padding:'10px 0', borderRadius:14, border:'1px solid '+(lang===code?C.navy:C.border),
+              background: lang===code ? C.navy : 'transparent', color: lang===code ? '#fff' : C.dark, cursor:'pointer', fontWeight:700 }}>
+            {code.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
       {/* User footer */}
       <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:16, marginTop:8 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:12, cursor:'pointer' }}
@@ -92,7 +105,7 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, setIsDar
             background:'transparent', color: C.muted, fontWeight:500, fontSize:13, marginTop:4,
           }}>
           {isDark ? <Sun size={18}/> : <Moon size={18}/>}
-          <span>{isDark ? 'Kunduzgi rejim' : 'Tungi rejim'}</span>
+          <span>{isDark ? t('lightMode') : t('darkMode')}</span>
         </button>
         <button onClick={onLogout}
           className="nav-item"
@@ -102,7 +115,7 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, setIsDar
             background:'transparent', color:'#ef4444', fontWeight:500, fontSize:13, marginTop:2,
           }}>
           <SignOut size={18} />
-          <span>Chiqish</span>
+          <span>{t('logout')}</span>
         </button>
       </div>
     </aside>

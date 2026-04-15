@@ -17,7 +17,10 @@
       "Bash(cp /c/Users/Ika85/OneDrive/Desktop/sweetmarket/server/routes/*.js /c/Users/Ika85/OneDrive/Desktop/sweetmarket-api/routes/)",
       "Bash(cmd /c \"netstat -ano | findstr :3001\")",
       "Bash(cmd /c \"netstat -ano | findstr LISTENING | findstr 3001\")",
-      "Bash(powershell -Command \"Get-Process -Id \\(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue\\).OwningProcess -ErrorAction SilentlyContinue | Select-Object Id, Name\")"
+      "Bash(powershell -Command \"Get-Process -Id \\(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue\\).OwningProcess -ErrorAction SilentlyContinue | Select-Object Id, Name\")",
+      "Bash(node -e ':*)",
+      "Bash(node)",
+      "Bash(node replace_profile.js)"
     ]
   }
 }

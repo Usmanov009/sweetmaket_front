@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --input-type=commonjs)",
+      "Bash(npm audit:*)",
+      "Bash(node -e \"const p=require\\('./node_modules/vite/package.json'\\); console.log\\('vite:', p.version\\)\")",
+      "Bash(npx vite:*)",
+      "Bash(cat c:/Users/Ika85/Desktop/sweetmarket/backend/db/*.sql)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(node -e \"require\\('./backend/routes/orders.js'\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(node backend/server.js)",
+      "Bash(curl -s http://localhost:3001/api/bakeries)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('build:',p.scripts.build\\); console.log\\('start:',p.scripts.start\\);\")"
+    ]
+  }
+}

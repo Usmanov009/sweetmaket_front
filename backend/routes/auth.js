@@ -3,6 +3,7 @@ const jwt    = require('jsonwebtoken');
 const crypto = require('crypto');
 const auth   = require('../middleware/auth');
 const pool   = require('../db/pool');
+const { sendTelegramMessage } = require('../utils/telegram');
 const { genId } = require('../utils/db');
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
@@ -25,7 +26,7 @@ function verifyTelegramData(initData) {
 
 // POST /api/auth/request-otp
 router.post('/request-otp', async (req, res) => {
-  const { phone } = req.body;
+  const phone = String(req.body.phone || '').trim();
   if (!phone) return res.status(400).json({ error: 'Telefon raqami kerak' });
 
   try {
@@ -35,6 +36,24 @@ router.post('/request-otp', async (req, res) => {
        ON CONFLICT (phone) DO UPDATE SET otp = $2, created_at = $3`,
       [phone, otp, Date.now()]
     );
+
+    const linked = await pool.query(
+      `SELECT telegram_id
+       FROM (
+         SELECT telegram_id FROM users WHERE phone = $1 AND telegram_id IS NOT NULL
+         UNION ALL
+         SELECT telegram_id FROM sellers WHERE phone = $1 AND telegram_id IS NOT NULL
+       ) AS linked
+       LIMIT 1`,
+      [phone]
+    );
+    const chat = linked.rows[0]?.telegram_id;
+    if (chat) {
+      sendTelegramMessage(chat, `Sweetmarket: Sizning OTP kodingiz ${otp}. Kod 5 daqiqa ichida amal qiladi.`);
+    } else {
+      console.log(`No linked Telegram chat for ${phone} — OTP stored, not sent by bot.`);
+    }
+
     console.log(`? OTP [${phone}]: ${otp}`);
     res.json({ message: 'OTP yuborildi', devOtp: otp });
   } catch (error) {

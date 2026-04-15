@@ -1,15 +1,17 @@
 import { memo } from 'react';
 import { House, MagnifyingGlass, Cake, ShoppingCart, User } from '@phosphor-icons/react';
+import { useLocale } from '../locale.js';
 
-const ITEMS = [
-  { id:'home',    Icon: House,            label:'Bosh' },
-  { id:'explore', Icon: MagnifyingGlass,  label:'Qidiruv' },
-  { id:'create',  Icon: Cake,             label:'Yaratish', isCenter: true },
-  { id:'cart',    Icon: ShoppingCart,     label:'Savatcha' },
-  { id:'profile', Icon: User,             label:'Profil' },
+const ITEMS = (t) => [
+  { id:'home',    Icon: House,            label:t('home') },
+  { id:'explore', Icon: MagnifyingGlass,  label:t('navExplore') },
+  { id:'create',  Icon: Cake,             label:t('navCreate'), isCenter: true },
+  { id:'cart',    Icon: ShoppingCart,     label:t('navCart') },
+  { id:'profile', Icon: User,             label:t('navProfile') },
 ];
 
 const BottomNav = memo(function BottomNav({ page, setPage, C, cartCount = 0 }) {
+  const { t } = useLocale();
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
@@ -19,7 +21,7 @@ const BottomNav = memo(function BottomNav({ page, setPage, C, cartCount = 0 }) {
       borderTop: `1px solid ${C.border}`,
       zIndex: 1000,
     }}>
-      {ITEMS.map(({ id, Icon, label, isCenter }) => {
+      {ITEMS(t).map(({ id, Icon, label, isCenter }) => {
         const active = page === id;
         if (isCenter) return (
           <button key={id} onClick={() => setPage(id)} style={{

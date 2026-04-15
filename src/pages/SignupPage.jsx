@@ -3,8 +3,10 @@ import { Phone, User, Lock } from '@phosphor-icons/react';
 import api from '../api';
 import OtpInput from '../components/OtpInput';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
+import { useLocale } from '../locale.js';
 
 export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
+  const { t } = useLocale();
   const [step,      setStep]      = useState(1);
   const [firstName, setFirstName] = useState('');
   const [lastName,  setLastName]  = useState('');
@@ -28,9 +30,9 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
   };
 
   const handleStep1 = async () => {
-    if (!firstName.trim()) { setError('Введите ваше имя'); return; }
-    if (!lastName.trim())  { setError('Введите фамилию'); return; }
-    if (!isValidPhone(phone)) { setError('Введите корректный номер'); return; }
+    if (!firstName.trim()) { setError(t('firstName') + ' ' + t('required')); return; }
+    if (!lastName.trim())  { setError(t('lastName') + ' ' + t('required')); return; }
+    if (!isValidPhone(phone)) { setError(t('correctPhone')); return; }
     setError(''); setLoading(true);
     try {
       const data = await api.post('/api/auth/request-otp', { phone });
@@ -41,7 +43,7 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
   };
 
   const handleRegister = async () => {
-    if (otp.length < 6) { setError('Введите 6-значный код'); return; }
+    if (otp.length < 6) { setError(t('enterCode')); return; }
     setError(''); setLoading(true);
     try {
       const { token, user } = await api.post('/api/auth/verify', { phone, otp, firstName: firstName.trim(), lastName: lastName.trim() });
@@ -61,17 +63,17 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
       {step===1 ? (
         <>
           <div style={{ fontFamily:"'Playfair Display',serif", fontSize:isDesktop?26:22, fontWeight:900, marginBottom:4, color:C.dark }}>
-            Создать аккаунт 🎂
+            {t('createAccount')}
           </div>
-          <div style={{ fontSize:13, color:C.muted, marginBottom:22 }}>Заполните данные для регистрации</div>
+          <div style={{ fontSize:13, color:C.muted, marginBottom:22 }}>{t('registrationText')}</div>
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
-            {[['Имя','Азиз',firstName,setFirstName],['Фамилия','Каримов',lastName,setLastName]].map(([lbl,ph,val,set])=>(
-              <div key={lbl}>
-                <label style={{ fontSize:12, fontWeight:600, color:C.navy, display:'block', marginBottom:6 }}>{lbl}</label>
+            {[{ label:t('firstName'), placeholder:'Aziz', value:firstName, set:setFirstName }, { label:t('lastName'), placeholder:'Karimov', value:lastName, set:setLastName }].map(({ label, placeholder, value, set })=> (
+              <div key={label}>
+                <label style={{ fontSize:12, fontWeight:600, color:C.navy, display:'block', marginBottom:6 }}>{label}</label>
                 <div style={{ position:'relative' }}>
                   <span style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:C.muted }}><User size={16}/></span>
-                  <input className="input-focus" type="text" value={val} onChange={e=>set(e.target.value)} placeholder={ph}
+                  <input className="input-focus" type="text" value={value} onChange={e=>set(e.target.value)} placeholder={placeholder}
                     style={{...iStyle,padding:'13px 12px 13px 40px'}}/>
                 </div>
               </div>
@@ -79,7 +81,7 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
           </div>
 
           <div style={{ marginBottom:18 }}>
-            <label style={{ fontSize:12, fontWeight:600, color:C.navy, display:'block', marginBottom:6 }}>Номер телефона</label>
+            <label style={{ fontSize:12, fontWeight:600, color:C.navy, display:'block', marginBottom:6 }}>{t('phoneNumber')}</label>
             <div style={{ position:'relative' }}>
               <span style={{ position:'absolute', left:15, top:'50%', transform:'translateY(-50%)', color:C.muted }}><Phone size={17}/></span>
               <input className="input-focus" type="tel" value={phone}
@@ -97,23 +99,23 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
             background:loading?C.mid:`linear-gradient(135deg,${C.navy},${C.mid})`,
             boxShadow:`0 4px 16px ${C.navy}40`, transition:'all .25s',
           }}>
-            {loading ? 'Отправка...' : 'Получить SMS →'}
+            {loading ? t('sending') : t('sendSms')}
           </button>
 
           <div style={{ textAlign:'center', marginTop:22, fontSize:14, color:C.muted }}>
-            Уже есть аккаунт?{' '}
-            <span onClick={goLogin} style={{ color:C.navy, fontWeight:700, cursor:'pointer' }}>Войти</span>
+            {t('accountExists')}{' '}
+            <span onClick={goLogin} style={{ color:C.navy, fontWeight:700, cursor:'pointer' }}>{t('login')}</span>
           </div>
         </>
       ) : (
         <>
           <button onClick={()=>{setStep(1);setOtp('');setError('');}}
             style={{ display:'flex', alignItems:'center', gap:6, background:'none', border:'none', cursor:'pointer', color:C.muted, fontSize:13, fontWeight:600, marginBottom:20, padding:0 }}>
-            ← Назад
+            ← {t('back')}
           </button>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:900, marginBottom:4, color:C.dark }}>SMS код</div>
+          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:900, marginBottom:4, color:C.dark }}>{t('smsCode')}</div>
           <div style={{ fontSize:13, color:C.muted, marginBottom:6 }}>
-            <span style={{ color:C.navy, fontWeight:700 }}>{phone}</span> — код отправлен
+            <span style={{ color:C.navy, fontWeight:700 }}>{phone}</span> — {t('codeSent')}
           </div>
 
           <OtpInput value={otp} onChange={setOtp} C={C}/>
@@ -126,20 +128,20 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
             background:(loading||otp.length<6)?C.mid:`linear-gradient(135deg,${C.navy},${C.mid})`,
             boxShadow:`0 4px 16px ${C.navy}40`, transition:'all .25s', opacity:(loading||otp.length<6)?.6:1,
           }}>
-            {loading ? 'Регистрация...' : '🎂 Зарегистрироваться'}
+            {loading ? t('sending') : t('register')}
           </button>
 
           {devOtp && (
             <div style={{ marginTop:16, background:C.pale, borderRadius:14, padding:'12px 16px', fontSize:13, color:C.navy, textAlign:'center', fontWeight:600, border:`1px solid ${C.border}` }}>
               <Lock size={14} style={{ marginRight:6, verticalAlign:'middle' }}/>
-              Код: <span style={{ letterSpacing:4, fontFamily:'monospace' }}>{devOtp}</span>
+              {t('testCode')} <span style={{ letterSpacing:4, fontFamily:'monospace' }}>{devOtp}</span>
             </div>
           )}
 
           <div style={{ textAlign:'center', marginTop:16, fontSize:13, color:C.muted }}>
             {timer>0
-              ? <span>Повторить через <span style={{ color:C.navy, fontWeight:700 }}>00:{String(timer).padStart(2,'0')}</span></span>
-              : <span onClick={handleStep1} style={{ color:C.navy, fontWeight:700, cursor:'pointer' }}>📲 Отправить снова</span>
+              ? <span>{t('resendIn')} <span style={{ color:C.navy, fontWeight:700 }}>00:{String(timer).padStart(2,'0')}</span></span>
+              : <span onClick={handleStep1} style={{ color:C.navy, fontWeight:700, cursor:'pointer' }}>{t('sendAgain')}</span>
             }
           </div>
         </>
@@ -159,7 +161,7 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
             Sweet<span style={{ opacity:.7 }}>Market</span>
           </div>
           <div style={{ color:'rgba(255,255,255,.7)', fontSize:16, maxWidth:320, lineHeight:1.7 }}>
-            Присоединяйтесь к тысячам любителей сладкого!
+            {t('signupHeroText')}
           </div>
         </div>
       </div>
@@ -175,7 +177,7 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
         <div style={{ fontFamily:"'Playfair Display',serif", fontSize:34, fontWeight:900, color:'#fff', marginBottom:6 }}>
           Sweet<span style={{ opacity:.7 }}>Market</span>
         </div>
-        <div style={{ color:'rgba(255,255,255,.65)', fontSize:13 }}>Создать аккаунт</div>
+        <div style={{ color:'rgba(255,255,255,.65)', fontSize:13 }}>{t('signupMobileSubtitle')}</div>
       </div>
       {formContent}
     </div>

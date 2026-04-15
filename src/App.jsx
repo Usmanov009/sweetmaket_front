@@ -916,10 +916,6 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
               <div style={{ fontSize:12, color:'rgba(255,255,255,.6)', marginBottom:7, display:'flex', alignItems:'center', gap:4 }}>
                 <Phone size={11} /> {user?.phone||''}
               </div>
-              <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:50, padding:'4px 12px' }}>
-                <Star size={12} color="#fbbf24" weight="fill" />
-                <span style={{ fontSize:11, fontWeight:700, color:'#fff' }}>Gold Member</span>
-              </div>
             </div>
           </div>
         </div>
@@ -927,11 +923,10 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
 
       {/* STATS */}
       <div style={{ maxWidth:600, margin:'12px auto 0', padding:'0 16px' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8 }}>
           {[
-            { icon:<Package size={16} weight="duotone"/>, color:'#4f46e5', val:orders.length,                         label:'Buyurtmalar' },
-            { icon:<Star    size={16} weight="duotone"/>, color:'#f59e0b', val:(orders.length*150).toLocaleString(),   label:'Ballar' },
-            { icon:<TrendUp size={16} weight="duotone"/>, color:'#059669', val:sum(totalSpent),                        label:'Sarflangan', small:totalSpent>999999 },
+            { icon:<Package size={16} weight="duotone"/>, color:'#4f46e5', val:orders.length, label:'Buyurtmalar' },
+            { icon:<TrendUp size={16} weight="duotone"/>, color:'#059669', val:sum(totalSpent), label:'Sarflangan', small:totalSpent>999999 },
           ].map(s => (
             <div key={s.label} style={{ background:C.s1, borderRadius:14, padding:'12px 8px', textAlign:'center', border:'1px solid '+C.border, boxShadow:'0 2px 10px rgba(0,0,0,.06)' }}>
               <div style={{ width:30, height:30, borderRadius:9, background:s.color+'15', margin:'0 auto 6px', display:'flex', alignItems:'center', justifyContent:'center', color:s.color }}>

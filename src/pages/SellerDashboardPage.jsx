@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Package, SignOut, Storefront, Phone, X,
-  ChatCircle, Plus, Trash, ImageSquare, UploadSimple,
-  CheckCircle, XCircle, UserCircle, MapPin, ClipboardText,
+  ChatCircle, CheckCircle, XCircle, UserCircle, MapPin, ClipboardText,
   CircleNotch, CurrencyDollar, Star, TrendUp, Clock,
 } from '@phosphor-icons/react';
 import { sum } from '../utils/format';
@@ -32,124 +31,6 @@ const STATUS_META = {
 };
 
 /* ─── Add-product modal ─────────────────────────────── */
-function AddProductModal({ C, onClose, onSave }) {
-  const [name,     setName]     = useState('');
-  const [price,    setPrice]    = useState('');
-  const [desc,     setDesc]     = useState('');
-  const [preview,  setPreview]  = useState(null);
-  const [dragging, setDragging] = useState(false);
-  const [saving,   setSaving]   = useState(false);
-  const [err,      setErr]      = useState('');
-  const fileRef = useRef(null);
-
-  const loadFile = file => {
-    if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = ev => setPreview(ev.target.result);
-    reader.readAsDataURL(file);
-  };
-
-  const handleSave = async () => {
-    if (!name.trim())           { setErr('Tort nomini kiriting'); return; }
-    if (!price || isNaN(price)) { setErr('Narxni kiriting');      return; }
-    setErr(''); setSaving(true);
-    try {
-      await onSave({ name: name.trim(), price: Number(price), desc: desc.trim(), image: preview, emoji: '🎂' });
-      onClose();
-    } catch(e) { setErr(e.message); }
-    finally { setSaving(false); }
-  };
-
-  const iStyle = {
-    width: '100%', background: C.s2, border: `1.5px solid ${C.border}`,
-    borderRadius: 12, padding: '13px 16px', color: C.dark, fontSize: 15,
-    outline: 'none', transition: 'all .2s',
-  };
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
-      zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 16, backdropFilter: 'blur(4px)',
-    }} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{
-        background: C.s1, borderRadius: 24, width: '100%', maxWidth: 480,
-        overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,.2)',
-      }}>
-        <div style={{
-          padding: '20px 24px', borderBottom: `1px solid ${C.border}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          background: 'linear-gradient(135deg, #064e3b, #059669)',
-        }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>Yangi tort qo'shish</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.65)', marginTop: 2 }}>Rasm va ma'lumot kiriting</div>
-          </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,.15)', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: '#fff', display: 'flex' }}>
-            <X size={18} />
-          </button>
-        </div>
-
-        <div style={{ padding: 24 }}>
-          <div
-            onDragOver={e => { e.preventDefault(); setDragging(true); }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={e => { e.preventDefault(); setDragging(false); loadFile(e.dataTransfer.files[0]); }}
-            onClick={() => fileRef.current?.click()}
-            style={{
-              width: '100%', height: 180, borderRadius: 16,
-              border: `2px dashed ${dragging ? '#059669' : C.border}`,
-              background: dragging ? 'rgba(5,150,105,.06)' : C.s2,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', marginBottom: 18, overflow: 'hidden',
-              transition: 'all .2s', position: 'relative',
-            }}
-          >
-            {preview ? (
-              <img src={preview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <>
-                <ImageSquare size={36} color={dragging ? '#059669' : C.muted} weight="duotone" />
-                <div style={{ marginTop: 8, fontWeight: 600, color: C.muted, fontSize: 13 }}>Rasm tanlang yoki tashlang</div>
-              </>
-            )}
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => loadFile(e.target.files[0])} />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Tort nomi</label>
-            <input className="input-focus" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Shokoladli tort" style={iStyle} />
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Narxi (so'm)</label>
-            <input className="input-focus" type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="150000" style={iStyle} />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Tavsif (ixtiyoriy)</label>
-            <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Tort haqida..." rows={3} style={{ ...iStyle, resize: 'none', lineHeight: 1.5 }} />
-          </div>
-
-          {err && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 14, background: 'rgba(239,68,68,.08)', padding: '10px 14px', borderRadius: 10 }}>{err}</div>}
-
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: `1.5px solid ${C.border}`, background: 'none', color: C.muted, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Bekor</button>
-            <button onClick={handleSave} disabled={saving} style={{
-              flex: 2, padding: '13px 0', borderRadius: 12, border: 'none',
-              background: 'linear-gradient(135deg,#064e3b,#059669)', color: '#fff',
-              cursor: saving ? 'default' : 'pointer', fontWeight: 700, fontSize: 14,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: saving ? 0.7 : 1,
-            }}>
-              {saving ? <CircleNotch size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={16} />}
-              {saving ? 'Saqlanmoqda...' : "Qo'shish"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ─── Order card ─────────────────────────────────────── */
 function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }) {
   const meta = STATUS_META[order.status] || { label: order.status, color: '#666', bg: '#eee' };
@@ -274,12 +155,10 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
 /* ─── Main component ─────────────────────────────────── */
 export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) {
   const [orders,       setOrders]       = useState([]);
-  const [products,     setProducts]     = useState([]);
   const [plan,         setPlan]         = useState({ totalEarnings: 0, orders: [] });
   const [loading,      setLoading]      = useState(true);
   const [ordersError,  setOrdersError]  = useState('');
   const [tab,          setTab]          = useState('orders');
-  const [showAddModal, setShowAddModal] = useState(false);
   const [showChat,     setShowChat]     = useState(false);
   const [chatData,     setChatData]     = useState(null);
 
@@ -298,9 +177,6 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
 
   useEffect(() => {
     loadOrders();
-    sellerFetch('GET', '/api/seller/products')
-      .then(data => setProducts(Array.isArray(data) ? data : []))
-      .catch(() => {});
     sellerFetch('GET', '/api/seller/plan')
       .then(data => setPlan(data || { totalEarnings: 0, orders: [] }))
       .catch(() => {});
@@ -322,18 +198,6 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
     }
   };
 
-  const handleAddProduct = async (payload) => {
-    const created = await sellerFetch('POST', '/api/seller/products', payload);
-    setProducts(prev => [...prev, created]);
-  };
-
-  const deleteProduct = async (id) => {
-    if (!confirm("Bu tortni o'chirishni tasdiqlaysizmi?")) return;
-    try {
-      await sellerFetch('DELETE', `/api/seller/products/${id}`);
-      setProducts(prev => prev.filter(p => p.id !== id));
-    } catch(e) { alert('Xatolik: ' + e.message); }
-  };
 
   const handleChat = order => {
     setChatData({ orderId: order.id, sellerId: seller?.id, sellerMode: true });
@@ -347,10 +211,9 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
   const topPad = isDesktop ? 0 : 52;
 
   const TABS = [
-    { id: 'orders',   icon: <Package size={20} />,    label: 'Buyurtmalar', badge: pendingCount },
-    { id: 'products', icon: <Storefront size={20} />, label: 'Tortlar',     badge: products.length },
-    { id: 'plan',     icon: <TrendUp size={20} />,    label: 'Plan' },
-    { id: 'profile',  icon: <UserCircle size={20} />, label: 'Profil' },
+    { id: 'orders',  icon: <Package size={20} />, label: 'Buyurtmalar', badge: pendingCount },
+    { id: 'plan',    icon: <TrendUp size={20} />,  label: 'Plan' },
+    { id: 'profile', icon: <UserCircle size={20} />, label: 'Profil' },
   ];
 
   return (
@@ -472,69 +335,6 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
             ))
           )}
 
-          {/* ── Products tab ── */}
-          {tab === 'products' && (
-            <div>
-              <button onClick={() => setShowAddModal(true)} style={{
-                width: '100%', padding: '14px 20px', borderRadius: 14, border: 'none',
-                background: 'linear-gradient(135deg,#064e3b,#059669)',
-                color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                marginBottom: 18, boxShadow: '0 4px 16px rgba(5,150,105,.3)',
-              }}>
-                <Plus size={18} /> Yangi tort qo'shish
-              </button>
-
-              {products.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                  <Storefront size={56} weight="duotone" color={C.muted} style={{ opacity: .35 }} />
-                  <div style={{ fontWeight: 700, color: C.dark, marginTop: 14, marginBottom: 6 }}>Tortlar yo'q</div>
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 14 }}>
-                  {products.map(product => (
-                    <div key={product.id} style={{
-                      background: C.s1, borderRadius: 20, overflow: 'hidden',
-                      border: `1px solid ${C.border}`, boxShadow: '0 2px 8px rgba(0,0,0,.04)', position: 'relative',
-                    }}>
-                      <div style={{
-                        width: '100%', height: 130,
-                        background: product.image ? `url(${product.image}) center/cover` : 'linear-gradient(135deg,#064e3b22,#05966922)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48,
-                      }}>
-                        {!product.image && (product.emoji || '🎂')}
-                      </div>
-                      <button onClick={() => deleteProduct(product.id)} style={{
-                        position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%',
-                        border: 'none', background: 'rgba(220,38,38,.85)', color: '#fff', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <Trash size={13} weight="bold" />
-                      </button>
-                      <div style={{ padding: '12px 14px' }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: C.dark, marginBottom: 4 }}>{product.name}</div>
-                        {product.desc && (
-                          <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                            {product.desc}
-                          </div>
-                        )}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: '#059669' }}>{sum(product.price)}</div>
-                          {product.rating && (
-                            <div style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <Star size={12} weight="fill" color="#f59e0b" /> {product.rating}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Plan tab ── */}
           {tab === 'plan' && (
             <div>
               {/* Total earnings card */}
@@ -653,9 +453,6 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
         </div>
       </div>
 
-      {showAddModal && (
-        <AddProductModal C={C} onClose={() => setShowAddModal(false)} onSave={handleAddProduct} />
-      )}
 
       {showChat && chatData && (
         <ChatModal
