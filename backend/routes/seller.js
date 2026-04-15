@@ -160,7 +160,7 @@ router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
         const addr = sellerRow?.address || sellerRow?.shop_name || 'Qandolatchi manzili';
         await notifyUser(
           orderRow.user_id,
-          'Tortingiz tayyor! 🎂',
+          '🎂 Buyurtmangiz tayyor',
           `Buyurtmangiz tayyor. Quyidagi manzilda olib keting: ${addr}`,
           'order_ready'
         );
@@ -192,6 +192,12 @@ router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
       }
 
       if (status === 'cancelled' && orderRow.user_id) {
+        await notifyUser(
+          orderRow.user_id,
+          '❌ Buyurtma bekor qilindi',
+          'Buyurtmangiz bekor qilindi. Iltimos, boshqa qandolatchiga murojaat qiling.',
+          'order_cancelled'
+        );
         if (userTgId) sendTelegramMessage(userTgId,
           `❌ <b>Buyurtma bekor qilindi</b>\n` +
           `🧾 Buyurtma #${orderId}\n\n` +

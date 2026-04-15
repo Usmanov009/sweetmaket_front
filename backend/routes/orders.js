@@ -9,6 +9,14 @@ async function migrateOrders() {
   await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
 }
 
+async function notifyUser(userId, title, message, type = 'order') {
+  const id = genId();
+  await pool.query(
+    'INSERT INTO notifications (id, user_id, title, message, type) VALUES ($1,$2,$3,$4,$5)',
+    [id, userId, title, message, type]
+  ).catch(() => {});
+}
+
 // GET /api/orders
 router.get('/', async (req, res, next) => {
   try {
@@ -69,6 +77,28 @@ router.post('/', async (req, res, next) => {
 
     res.status(201).json(rowToOrder(row));
 
+    const orderId = String(row.id).slice(-6).toUpperCase();
+
+    if (row.user_id) {
+      notifyUser(
+        row.user_id,
+        '✅ Buyurtmangiz qabul qilindi',
+        'Sizning buyurtmangiz qandolatchiga yetkazildi. Tez orada tasdiqlanadi.',
+        'order_created'
+      );
+      pool.query('SELECT telegram_id FROM users WHERE id = $1', [row.user_id])
+        .then(({ rows: uRows }) => {
+          const userTgId = uRows[0]?.telegram_id;
+          if (!userTgId) return;
+          sendTelegramMessage(userTgId,
+            `✅ <b>Buyurtmangiz qabul qilindi!</b>\n` +
+            `🧾 Buyurtma #${orderId}\n\n` +
+            `Qandolatchiga buyurtma yetkazildi. Tez orada tasdiqlanadi.`
+          );
+        })
+        .catch(() => {});
+    }
+
     // Seller ga Telegram xabar yuborish (response dan keyin, non-blocking)
     if (sellerId) {
       pool.query('SELECT telegram_id, shop_name, name FROM sellers WHERE id = $1', [sellerId])
@@ -76,13 +106,15 @@ router.post('/', async (req, res, next) => {
           const seller = sRows[0];
           if (!seller?.telegram_id) return;
 
-          const itemLines = (Array.isArray(row.items) ? row.items : [])
+          const items = Array.isArray(row.items)
+            ? row.items
+            : (typeof row.items === 'string' ? JSON.parse(row.items || '[]') : []);
+          const itemLines = items
             .map(i => `  • ${i.emoji || '🎂'} ${i.name} × ${i.qty || 1}`)
             .join('\n');
           const shopName = seller.shop_name || seller.name || 'Do\'kon';
           const totalFmt = Number(row.total).toLocaleString('uz-UZ') + ' so\'m';
           const addrLine = row.address ? `\n📍 Mijoz manzili: ${row.address}` : '';
-          const orderId  = String(row.id).slice(-6).toUpperCase();
 
           const text =
             `🔔 <b>Yangi buyurtma!</b>\n` +
