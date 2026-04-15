@@ -51,8 +51,8 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
       }
     } catch (err) {
       setError(err?.message === 'Failed to fetch'
-        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta urining."
-        : "Xatolik yuz berdi. Qayta urinib ko'ring");
+        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta urinib ko'ring."
+        : "Xatolik yuz berdi. Qayta urinib ko'ring.");
     } finally {
       setLoading(false);
     }
@@ -75,8 +75,8 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
       onAuthSuccess(data.seller, 'seller');
     } catch (err) {
       setError(err?.message === 'Failed to fetch'
-        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta urining."
-        : "Xatolik yuz berdi");
+        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta urinib ko'ring."
+        : "Xatolik yuz berdi.");
     } finally {
       setLinkLoading(false);
     }

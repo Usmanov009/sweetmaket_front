@@ -41,7 +41,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
       }, 2200);
     } catch (e) {
       const msg = e?.message === 'Failed to fetch'
-        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta bosing."
+        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta urinib ko'ring."
         : (e?.message || "Xatolik yuz berdi.");
       toast(msg);
     } finally {
