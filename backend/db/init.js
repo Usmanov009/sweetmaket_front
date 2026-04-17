@@ -77,8 +77,6 @@ async function initDB() {
       bg         TEXT DEFAULT '#fce4ec',
       price      NUMERIC DEFAULT 0,
       tags       JSONB DEFAULT '[]',
-      likes      INTEGER DEFAULT 0,
-      liked_by   JSONB DEFAULT '[]',
       public     BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
@@ -134,6 +132,21 @@ async function initDB() {
        FOREIGN KEY (${col}) REFERENCES users(id) ON DELETE CASCADE`
     ).catch(() => {});
   }
+
+  // Cake announcements table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS cake_announcements (
+      id         TEXT PRIMARY KEY,
+      seller_id  TEXT NOT NULL REFERENCES sellers(id),
+      name       TEXT NOT NULL,
+      emoji      TEXT DEFAULT '🎂',
+      ingredients TEXT NOT NULL,
+      price      NUMERIC DEFAULT 0,
+      description TEXT DEFAULT '',
+      category   TEXT DEFAULT 'tort',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
 
   console.log('✅ PostgreSQL jadvallar tayyor');
 }

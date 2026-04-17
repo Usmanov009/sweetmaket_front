@@ -36,6 +36,7 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/explore',  require('./routes/explore'));
 app.use('/api/bakeries', require('./routes/bakeries'));
 app.use('/api/chat',      require('./routes/chat'));
+app.use('/api/announcements', require('./routes/announcements'));
 
 // Protected routes
 app.use('/api/orders',        auth, require('./routes/orders'));

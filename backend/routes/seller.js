@@ -330,9 +330,9 @@ router.get('/products', sellerAuth, async (req, res) => {
 // POST /api/seller/products
 router.post('/products', sellerAuth, async (req, res) => {
   try {
-    const { name, emoji, price, desc, category = 'tort' } = req.body;
-    if (!name || !emoji || !price) {
-      return res.status(400).json({ error: 'Name, emoji va price kerak' });
+    const { name, emoji, price, desc, category = 'tort', ingredients } = req.body;
+    if (!name || !emoji || !price || !ingredients) {
+      return res.status(400).json({ error: 'Name, emoji, price va ingredients kerak' });
     }
 
     // Ensure products column exists
@@ -345,17 +345,16 @@ router.post('/products', sellerAuth, async (req, res) => {
     
     const products = rows[0]?.products || [];
     const newProduct = {
-      id: Date.now().toString(),
+      id: genId(),
       name,
       emoji,
       price: Number(price),
       desc: desc || '',
       category,
-      rating: '0.0',
+      ingredients: ingredients, // Required field
       badge: 'NEW',
       badgeColor: '#1a7a3a',
-      bg: 'linear-gradient(135deg,#ffb3d1,#ffd6e7)',
-      liked: false
+      bg: 'linear-gradient(135deg,#ffb3d1,#ffd6e7)'
     };
     
     products.push(newProduct);
@@ -406,5 +405,54 @@ function rowToSeller(r) {
     createdAt: r.created_at,
   };
 }
+
+// GET /api/seller/announcements
+router.get('/announcements', sellerAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM cake_announcements WHERE seller_id = $1 ORDER BY created_at DESC',
+      [req.seller.id]
+    );
+    res.json(rows);
+  } catch(e) {
+    console.error('Get seller announcements error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/seller/announcements
+router.post('/announcements', sellerAuth, async (req, res) => {
+  try {
+    const { name, emoji, ingredients, price, description, category = 'tort' } = req.body;
+    if (!name || !ingredients) {
+      return res.status(400).json({ error: 'Name va ingredients kerak' });
+    }
+
+    const id = genId();
+    await pool.query(
+      `INSERT INTO cake_announcements (id, seller_id, name, emoji, ingredients, price, description, category)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [id, req.seller.id, name, emoji || '🎂', ingredients, price || 0, description || '', category]
+    );
+
+    const { rows } = await pool.query('SELECT * FROM cake_announcements WHERE id = $1', [id]);
+    res.json(rows[0]);
+  } catch(e) {
+    console.error('Create announcement error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DELETE /api/seller/announcements/:id
+router.delete('/announcements/:id', sellerAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM cake_announcements WHERE id = $1 AND seller_id = $2', 
+      [req.params.id, req.seller.id]);
+    res.json({ ok: true });
+  } catch(e) {
+    console.error('Delete announcement error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 module.exports = router;

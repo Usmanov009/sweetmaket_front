@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const jwt    = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const auth   = require('../middleware/auth');
 const pool   = require('../db/pool');
@@ -24,40 +25,114 @@ function verifyTelegramData(initData) {
   return crypto.createHmac('sha256', secret).update(dataStr).digest('hex') === hash;
 }
 
-// POST /api/auth/verify
-router.post('/verify', async (req, res) => {
-  const phone = String(req.body.phone || '').trim();
-  const firstName = String(req.body.firstName || '').trim();
-  const lastName = String(req.body.lastName || '').trim();
-
-  if (!phone) return res.status(400).json({ error: 'Telefon raqami kerak' });
-
-  let userRow = (await pool.query('SELECT * FROM users WHERE phone = $1', [phone])).rows[0];
-  if (!userRow) {
-    const id = genId();
-    const nm = [firstName, lastName].filter(Boolean).join(' ');
-    await pool.query(
-      `INSERT INTO users (id, phone, first_name, last_name, name) VALUES ($1,$2,$3,$4,$5)`,
-      [id, phone, firstName, lastName, nm]
-    );
-    await pool.query(
-      `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5),($6,$2,$7,$8,$9)`,
-      [genId(), id, '🎂', 'Onam', '12 Апреля', genId(), '🎉', "Do'stim", '3 Июня']
-    );
-    userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [id])).rows[0];
-  } else if (firstName || lastName) {
-    const fn = firstName || userRow.first_name;
-    const ln = lastName || userRow.last_name;
-    await pool.query(
-      `UPDATE users SET first_name=$1, last_name=$2, name=$3 WHERE id=$4`,
-      [fn, ln, [fn, ln].filter(Boolean).join(' '), userRow.id]
-    );
-    userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [userRow.id])).rows[0];
+// POST /api/auth/register
+router.post('/register', async (req, res) => {
+  const { phone, password, firstName, lastName } = req.body;
+  
+  if (!phone || !password) {
+    return res.status(400).json({ error: 'Telefon raqami va parol kerak' });
   }
-
+  
+  const existingUser = (await pool.query('SELECT * FROM users WHERE phone = $1', [phone])).rows[0];
+  if (existingUser) {
+    return res.status(400).json({ error: 'Bu telefon raqami allaqachon ro\'yxatdan o\'tgan' });
+  }
+  
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const id = genId();
+  const nm = [firstName, lastName].filter(Boolean).join(' ');
+  
+  await pool.query(
+    `INSERT INTO users (id, phone, password, first_name, last_name, name) VALUES ($1,$2,$3,$4,$5,$6)`,
+    [id, phone, hashedPassword, firstName, lastName, nm]
+  );
+  
+  await pool.query(
+    `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5),($6,$2,$7,$8,$9)`,
+    [genId(), id, '🎂', 'Onam', '12 Апреля', genId(), '🎉', "Do'stim", '3 Июня']
+  );
+  
+  const userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [id])).rows[0];
   const user = rowToUser(userRow);
   const token = jwt.sign({ id: user.id, phone: user.phone }, JWT_SECRET, { expiresIn: '30d' });
+  
   res.json({ token, user });
+});
+
+// POST /api/auth/login
+router.post('/login', async (req, res) => {
+  const { phone, password } = req.body;
+  
+  if (!phone || !password) {
+    return res.status(400).json({ error: 'Telefon raqami va parol kerak' });
+  }
+  
+  const userRow = (await pool.query('SELECT * FROM users WHERE phone = $1', [phone])).rows[0];
+  if (!userRow) {
+    return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+  }
+  
+  const isValidPassword = await bcrypt.compare(password, userRow.password);
+  if (!isValidPassword) {
+    return res.status(400).json({ error: 'Noto\'g\'ri parol' });
+  }
+  
+  const user = rowToUser(userRow);
+  const token = jwt.sign({ id: user.id, phone: user.phone }, JWT_SECRET, { expiresIn: '30d' });
+  
+  res.json({ token, user });
+});
+
+// POST /api/auth/seller/register
+router.post('/seller/register', async (req, res) => {
+  const { name, shopName, phone, password, address } = req.body;
+  
+  if (!name || !shopName || !phone || !password) {
+    return res.status(400).json({ error: 'Ism, do\'kon nomi, telefon raqami va parol kerak' });
+  }
+  
+  const existingSeller = (await pool.query('SELECT * FROM sellers WHERE phone = $1', [phone])).rows[0];
+  if (existingSeller) {
+    return res.status(400).json({ error: 'Bu telefon raqami allaqachon ro\'yxatdan o\'tgan' });
+  }
+  
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const id = genId();
+  
+  await pool.query(
+    `INSERT INTO sellers (id, name, shop_name, phone, password, address) VALUES ($1,$2,$3,$4,$5,$6)`,
+    [id, name, shopName, phone, hashedPassword, address]
+  );
+  
+  const sellerRow = (await pool.query('SELECT * FROM sellers WHERE id = $1', [id])).rows[0];
+  const seller = rowToSeller(sellerRow);
+  const token = jwt.sign({ id: seller.id, role: 'seller', phone: seller.phone }, JWT_SECRET, { expiresIn: '30d' });
+  
+  res.json({ token, seller, userType: 'seller' });
+});
+
+// POST /api/auth/seller/login
+router.post('/seller/login', async (req, res) => {
+  const { phone, password } = req.body;
+  
+  if (!phone || !password) {
+    return res.status(400).json({ error: 'Telefon raqami va parol kerak' });
+  }
+  
+  const sellerRow = (await pool.query('SELECT * FROM sellers WHERE phone = $1', [phone])).rows[0];
+  if (!sellerRow) {
+    return res.status(400).json({ error: 'Sotuvchi topilmadi' });
+  }
+  
+  const isValidPassword = await bcrypt.compare(password, sellerRow.password);
+  if (!isValidPassword) {
+    return res.status(400).json({ error: 'Noto\'g\'ri parol' });
+  }
+  
+  const seller = rowToSeller(sellerRow);
+  const token = jwt.sign({ id: seller.id, role: 'seller', phone: seller.phone }, JWT_SECRET, { expiresIn: '30d' });
+  
+  res.json({ token, seller, userType: 'seller' });
 });
 
 // POST /api/auth/telegram
