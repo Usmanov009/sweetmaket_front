@@ -65,7 +65,7 @@ router.post('/request-otp', async (req, res) => {
       // Bot bor lekin telefon bog'lanmagan
       console.log(`OTP for ${phone}: ${otp} (no telegram linked)`);
       return res.status(400).json({
-        error: `Telefon raqamingiz Telegram botga ulanmagan.\nAvval @sweetmarket_bot ga /start yuboring va telefon raqamingizni ulashing.`,
+        error: `Telefon raqamingiz Telegram botga ulanmagan.\nAvval @sweet_market_ika_bot0 ga /start yuboring va telefon raqamingizni ulashing.`,
         notLinked: true,
       });
     }
