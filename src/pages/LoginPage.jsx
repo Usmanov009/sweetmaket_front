@@ -18,7 +18,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
   const [timer,     setTimer]     = useState(0);
-  const [devOtp,    setDevOtp]    = useState('');
+  const [devOtp,    setDevOtp]    = useState(''); // dev only (no BOT_TOKEN)
   const timerRef = useRef(null);
 
   const startTimer = () => {
@@ -39,7 +39,13 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
       const data = await api.post('/api/auth/request-otp', { phone });
       setDevOtp(data.devOtp || '');
       setStep('otp'); startTimer();
-    } catch(e) { setError(e.message); }
+    } catch(e) {
+      if (e.notLinked) {
+        setError('📱 Avval Telegram botni oching va telefon raqamingizni ulang: @sweetmarket_bot');
+      } else {
+        setError(e.message);
+      }
+    }
     finally { setLoading(false); }
   };
 
@@ -200,10 +206,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               : <Phone size={18} />
             }
             {loading ? t('sending') : t('sendSms')}
-            <div style={{ flex: 1, height: 1, background: C.border }} />
-            {t('or')}
-            <div style={{ flex: 1, height: 1, background: C.border }} />
-          </div>
+          </button>
 
           {/* Footer links */}
           <div style={{
@@ -266,8 +269,10 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               {t('enterCode')}
             </div>
             <div style={{ fontSize: 14, color: C.muted }}>
-              {t('codeSent')}: {' '}
-              <span style={{ color: ACCENT, fontWeight: 700 }}>{phone}</span>
+              {devOtp
+                ? <>{t('codeSent')}: <span style={{ color: ACCENT, fontWeight: 700 }}>{phone}</span></>
+                : <>Tasdiqlash kodi <span style={{ color: '#0088cc', fontWeight: 700 }}>Telegram botingizga</span> yuborildi</>
+              }
             </div>
           </div>
 

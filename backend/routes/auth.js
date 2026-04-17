@@ -49,13 +49,26 @@ router.post('/request-otp', async (req, res) => {
     );
     const chat = linked.rows[0]?.telegram_id;
     if (chat) {
-      sendTelegramMessage(chat, `Sweetmarket: Sizning OTP kodingiz ${otp}. Kod 5 daqiqa ichida amal qiladi.`);
+      sendTelegramMessage(chat,
+        `🔐 <b>SweetMarket — Tasdiqlash kodi</b>\n\n` +
+        `Sizning kodingiz: <code>${otp}</code>\n\n` +
+        `⏱ Kod 5 daqiqa ichida amal qiladi.\n` +
+        `Agar siz so'ramagan bo'lsangiz, e'tibor bermang.`
+      );
+      console.log(`OTP sent via Telegram bot to chat ${chat} for ${phone}`);
+      res.json({ message: 'OTP Telegram botingizga yuborildi' });
+    } else if (!BOT_TOKEN) {
+      // Dev mode: BOT_TOKEN yo'q — ekranda ko'rsatish
+      console.log(`DEV OTP [${phone}]: ${otp}`);
+      res.json({ message: 'OTP yuborildi', devOtp: otp });
     } else {
-      console.log(`No linked Telegram chat for ${phone} — OTP stored, not sent by bot.`);
+      // Bot bor lekin telefon bog'lanmagan
+      console.log(`OTP for ${phone}: ${otp} (no telegram linked)`);
+      return res.status(400).json({
+        error: `Telefon raqamingiz Telegram botga ulanmagan.\nAvval @sweetmarket_bot ga /start yuboring va telefon raqamingizni ulashing.`,
+        notLinked: true,
+      });
     }
-
-    console.log(`? OTP [${phone}]: ${otp}`);
-    res.json({ message: 'OTP yuborildi', devOtp: otp });
   } catch (error) {
     console.error('OTP request error:', error);
     res.status(500).json({ error: error.message || 'Xatolik yuz berdi' });

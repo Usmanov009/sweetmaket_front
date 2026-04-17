@@ -131,10 +131,14 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
             {loading ? t('sending') : t('register')}
           </button>
 
-          {devOtp && (
+          {devOtp ? (
             <div style={{ marginTop:16, background:C.pale, borderRadius:14, padding:'12px 16px', fontSize:13, color:C.navy, textAlign:'center', fontWeight:600, border:`1px solid ${C.border}` }}>
               <Lock size={14} style={{ marginRight:6, verticalAlign:'middle' }}/>
               {t('testCode')} <span style={{ letterSpacing:4, fontFamily:'monospace' }}>{devOtp}</span>
+            </div>
+          ) : (
+            <div style={{ marginTop:12, fontSize:13, color:'#0088cc', textAlign:'center', fontWeight:500 }}>
+              📱 Tasdiqlash kodi Telegram botingizga yuborildi
             </div>
           )}
 

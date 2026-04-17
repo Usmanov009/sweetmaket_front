@@ -15,13 +15,13 @@ const api = {
   async get(url) {
     const r = await fetch(BASE + url, { headers: this._headers() });
     const data = await this._parse(r);
-    if (!r.ok) throw new Error(data.error || 'Server xatosi');
+    if (!r.ok) throw Object.assign(new Error(data.error || 'Server xatosi'), data);
     return data;
   },
   async post(url, body) {
     const r = await fetch(BASE + url, { method: 'POST', headers: this._headers(), body: JSON.stringify(body) });
     const data = await this._parse(r);
-    if (!r.ok) throw new Error(data.error || 'Server xatosi');
+    if (!r.ok) throw Object.assign(new Error(data.error || 'Server xatosi'), data);
     return data;
   },
   async patch(url, body) {
