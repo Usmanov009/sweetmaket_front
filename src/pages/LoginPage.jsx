@@ -1,10 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
-import {
-  Phone, User, ArrowLeft,
-  ArrowRight, ShieldCheck, CircleNotch, Storefront,
-} from '@phosphor-icons/react';
+import { useState } from 'react';
+import { Phone, User, ShieldCheck, CircleNotch, Storefront } from '@phosphor-icons/react';
 import api from '../api';
-import OtpInput from '../components/OtpInput';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 import { useLocale } from '../locale.js';
 
@@ -13,62 +9,25 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
   const [firstName, setFirstName] = useState('');
   const [lastName,  setLastName]  = useState('');
   const [phone,     setPhone]     = useState('+998');
-  const [step,      setStep]      = useState('info');
-  const [otp,       setOtp]       = useState('');
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
-  const [timer,     setTimer]     = useState(0);
-  const [devOtp,    setDevOtp]    = useState(''); // dev only (no BOT_TOKEN)
-  const timerRef = useRef(null);
 
-  const startTimer = () => {
-    setTimer(59);
-    timerRef.current = setInterval(() => setTimer(p => {
-      if (p <= 1) { clearInterval(timerRef.current); return 0; }
-      return p - 1;
-    }), 1000);
-  };
-  useEffect(() => () => clearInterval(timerRef.current), []);
-
-  const handleSend = async () => {
+  const handleLogin = async () => {
     if (!firstName.trim()) { setError(t('firstName') + ' ' + t('required')); return; }
     if (!lastName.trim())  { setError(t('lastName') + ' ' + t('required')); return; }
     if (!isValidPhone(phone)) { setError(t('correctPhone')); return; }
     setError(''); setLoading(true);
     try {
-      const data = await api.post('/api/auth/request-otp', { phone });
-      setDevOtp(data.devOtp || '');
-      setStep('otp'); startTimer();
-    } catch(e) {
-      if (e.notLinked) {
-        setError('📱 Avval Telegram botni oching va telefon raqamingizni ulang: @sweet_market_ika_bot');
-      } else {
-        setError(e.message);
-      }
-    }
-    finally { setLoading(false); }
-  };
-
-  const handleVerify = async () => {
-    if (otp.length < 6) { setError(t('enterCode')); return; }
-    setError(''); setLoading(true);
-    try {
       const { token, user } = await api.post('/api/auth/verify', {
-        phone, otp, firstName: firstName.trim(), lastName: lastName.trim(),
+        phone, firstName: firstName.trim(), lastName: lastName.trim(),
       });
       localStorage.setItem('sm_token', token);
       onLogin(user);
-    } catch(e) { setError(e.message); }
-    finally { setLoading(false); }
-  };
-
-  const handleResend = async () => {
-    setOtp(''); setError(''); setLoading(true);
-    try {
-      const data = await api.post('/api/auth/request-otp', { phone });
-      setDevOtp(data.devOtp || ''); startTimer();
-    } catch(e) { setError(e.message); }
-    finally { setLoading(false); }
+    } catch(e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const ACCENT = '#4f46e5';
@@ -120,8 +79,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
       boxShadow: isDesktop ? '0 24px 80px rgba(0,0,0,.13)' : 'none',
     }}>
 
-      {/* ── INFO STEP ── */}
-      {step === 'info' && (
+      {/* ── LOGIN FORM ── */}
         <>
           <div style={{ marginBottom: 28 }}>
             <div style={{
@@ -158,7 +116,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
                     onChange={e => set(e.target.value)}
                     placeholder={placeholder}
                     style={inputStyle}
-                    onKeyDown={e => e.key === 'Enter' && handleSend()}
+                    onKeyDown={e => e.key === 'Enter' && handleLogin()}
                   />
                 </div>
               </div>
@@ -179,7 +137,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
                 onChange={e => setPhone(formatPhone(e.target.value))}
                 onKeyDown={e => {
                   if (['Backspace','Delete'].includes(e.key) && rawDigits(phone).length <= 3) e.preventDefault();
-                  if (e.key === 'Enter') handleSend();
+                  if (e.key === 'Enter') handleLogin();
                 }}
                 placeholder="+998 90 123 45 67"
                 style={inputStyle}
@@ -200,12 +158,12 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             </div>
           )}
 
-          <button className="btn-hover" onClick={handleSend} disabled={loading} style={primaryBtn(loading)}>
+          <button className="btn-hover" onClick={handleLogin} disabled={loading} style={primaryBtn(loading)}>
             {loading
               ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} />
               : <Phone size={18} />
             }
-            {loading ? t('sending') : t('sendSms')}
+            {loading ? t('sending') : t('login')}
           </button>
 
           {/* Footer links */}
@@ -233,108 +191,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             </span>
           </div>
         </>
-      )}
 
-      {/* ── OTP STEP ── */}
-      {step === 'otp' && (
-        <>
-          <button
-            onClick={() => { setStep('info'); setOtp(''); setError(''); }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              background: C.s2,
-              border: 'none',
-              cursor: 'pointer',
-              color: C.muted,
-              fontSize: 13,
-              fontWeight: 600,
-              marginBottom: 24,
-              padding: '8px 14px',
-              borderRadius: 10,
-            }}
-          >
-            <ArrowLeft size={15} /> {t('back')}
-          </button>
-
-          <div style={{ marginBottom: 24 }}>
-            <div style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: isDesktop ? 26 : 22,
-              fontWeight: 900,
-              color: C.dark,
-              marginBottom: 8,
-            }}>
-              {t('enterCode')}
-            </div>
-            <div style={{ fontSize: 14, color: C.muted }}>
-              {devOtp
-                ? <>{t('codeSent')}: <span style={{ color: ACCENT, fontWeight: 700 }}>{phone}</span></>
-                : <>Tasdiqlash kodi <span style={{ color: '#0088cc', fontWeight: 700 }}>Telegram botingizga</span> yuborildi</>
-              }
-            </div>
-          </div>
-
-          <OtpInput value={otp} onChange={setOtp} C={C} />
-
-          {error && (
-            <div style={{
-              color: C.danger || '#ef4444',
-              fontSize: 13,
-              marginBottom: 16,
-              background: 'rgba(239,68,68,.08)',
-              padding: '10px 14px',
-              borderRadius: 10,
-            }}>
-              {error}
-            </div>
-          )}
-
-          <button
-            className="btn-hover"
-            onClick={handleVerify}
-            disabled={loading || otp.length < 6}
-            style={primaryBtn(loading || otp.length < 6)}
-          >
-            {loading
-              ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} />
-              : <ShieldCheck size={18} />
-            }
-            {loading ? t('sending') : t('verify')}
-          </button>
-
-          {devOtp && (
-            <div style={{
-              marginTop: 16,
-              background: C.pale,
-              borderRadius: 12,
-              padding: '12px 16px',
-              fontSize: 13,
-              color: ACCENT,
-              textAlign: 'center',
-              fontWeight: 600,
-              border: `1px solid ${C.border}`,
-            }}>
-              {t('testCode')} <span style={{ letterSpacing: 4, fontFamily: 'monospace', fontSize: 16 }}>{devOtp}</span>
-            </div>
-          )}
-
-          <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: C.muted }}>
-            {timer > 0
-              ? <span>{t('resendIn')} <span style={{ color: ACCENT, fontWeight: 700 }}>00:{String(timer).padStart(2, '0')}</span></span>
-              : (
-                <span
-                  onClick={handleResend}
-                  style={{ color: ACCENT, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                >
-                  <Phone size={14} /> {t('sendAgain')}
-                </span>
-              )
-            }
-          </div>
-        </>
-      )}
     </div>
   );
 

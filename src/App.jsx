@@ -303,6 +303,11 @@ const CREATE_OPTIONS = {
     {id:'tort',  category:'tort', emoji:'🎂', label:'Oddiy tort',  desc:'Klassik ko\'p qavatli tort', basePrice:89000, color:'#fce4ec'},
     {id:'bento', category:'tort', emoji:'🎁', label:'Bento tort',  desc:'Kichik, bezakli mini tort',  basePrice:69000, color:'#e8f5e9'},
   ],
+  shape: [
+    {id:'round',  emoji:'⭕', label:'Doira',    desc:'Klassik doiraviy shakl',   color:'#fce4ec'},
+    {id:'square', emoji:'◼️', label:'Kvadrat',  desc:'Zamonaviy kvadrat tort', color:'#e8f5e9'},
+    {id:'heart',  emoji:'❤️', label:'Yurak',    desc:'Romantik yurak shakli',   color:'#ffe4e1'},
+  ],
   size: [
     {id:'mini', emoji:'🫐', label:'Мини',     sub:'1 кг',  desc:'до 6 порций',   priceAdd:0,     color:'#e3f2fd'},
     {id:'std',  emoji:'🍓', label:'Стандарт', sub:'2 кг',  desc:'до 12 порций',  priceAdd:20000, color:'#fff8e1'},
@@ -327,6 +332,7 @@ const CREATE_OPTIONS = {
 
 const CREATE_STEPS = [
   {key:'type',       question:'Что хотите заказать?',   hint:'Выберите вид выпечки'},
+  {key:'shape',      question:'Qaysi shakl yoqadi?',      hint:'Oddiy tort uchun shakl tanlang'},
   {key:'size',       question:'Какой размер нужен?',    hint:'Зависит от числа гостей'},
   {key:'flavor',     question:'Какой вкус предпочитаете?', hint:'Самые популярные вкусы'},
   {key:'decoration', question:'Как украсить?',          hint:'Выберите стиль декора'},
@@ -334,7 +340,7 @@ const CREATE_STEPS = [
 
 function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) {
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({type:null,size:null,flavor:null,decoration:null,bakery:null,note:'',image:null});
+  const [form, setForm] = useState({type:null,shape:null,size:null,flavor:null,decoration:null,bakery:null,note:'',image:null});
   const [publishing, setPublishing] = useState(false);
   const [imgDrag, setImgDrag] = useState(false);
   const setF = (k,v) => setForm(f=>({...f,[k]:v}));
@@ -346,18 +352,28 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
     reader.readAsDataURL(file);
   };
 
-  const currentStepCfg = CREATE_STEPS[step];
+  const activeSteps = form.type?.id === 'tort'
+    ? CREATE_STEPS
+    : CREATE_STEPS.filter(s => s.key !== 'shape');
+  const currentStepCfg = activeSteps[step];
   const currentVal     = currentStepCfg ? form[currentStepCfg.key] : null;
-  const selections     = [form.type,form.size,form.flavor,form.decoration].filter(Boolean);
-  const progress       = step / (CREATE_STEPS.length + 1); // 0→1
+  const selections     = [form.type, form.shape, form.size, form.flavor, form.decoration].filter(Boolean);
+  const progress       = step / (activeSteps.length + 1); // 0→1
 
-  const totalPrice = (form.type?.basePrice||0)+(form.size?.priceAdd||0)+(form.flavor?.priceAdd||0)+(form.decoration?.priceAdd||0);
+  const totalPrice = (form.type?.basePrice||0)+(form.shape?.priceAdd||0)+(form.size?.priceAdd||0)+(form.flavor?.priceAdd||0)+(form.decoration?.priceAdd||0);
 
-  const goNext = () => setStep(s => s + 1);
-  const goBack = () => setStep(s => Math.max(0, s - 1));
+  const selectOption = (key, opt) => {
+    setF(key, opt);
+    if (key === 'type') {
+      if (opt.id !== 'tort') setF('shape', null);
+      setStep(opt.id === 'tort' ? 1 : 2);
+      return;
+    }
+    setStep(s => Math.min(activeSteps.length - 1, s + 1));
+  };
 
   const handleOrder = () => {
-    const name = [form.type?.label, form.flavor?.label].filter(Boolean).join(' · ') || 'Buyurtma tort';
+    const name = [form.type?.label, form.shape?.label, form.flavor?.label].filter(Boolean).join(' · ') || 'Buyurtma tort';
     if (addToCart) {
       addToCart({
         id: 'custom_' + Date.now(),
@@ -370,7 +386,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
       }, 1);
     }
     toast('Savatga qo\'shildi!');
-    setStep(5);
+    setStep(6);
   };
 
   const handlePublish = async (publish) => {
@@ -389,7 +405,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
       } catch { toast('Xatolik yuz berdi'); }
       finally { setPublishing(false); }
     }
-    setStep(6);
+    setStep(7);
   };
 
   const resetAndHome = () => {
@@ -417,127 +433,17 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             width:`${Math.max(progress*100,4)}%`,transition:'width .4s cubic-bezier(.4,0,.2,1)'}}/>
         </div>
         <div style={{fontSize:12,fontWeight:700,color:C.muted,minWidth:36,textAlign:'right'}}>
-          {step < 4 ? `${step+1} / 4` : ''}
+          {step < CREATE_STEPS.length ? `${step+1} / ${CREATE_STEPS.length}` : ''}
         </div>
       </div>
     </div>
   );
 
-  /* ── STEP 5: PUBLISH PROMPT ── */
+  const goBack = () => setStep(s => Math.max(0, s - 1));
+  const goNext = () => setStep(s => Math.min(7, s + 1));
+
+  /* ── STEP 5: DETAILS ── */
   if (step === 5) return (
-    <div style={{minHeight:'100vh',background:C.bg}}>
-      <Header onBack={()=>setStep(4)}/>
-      <div style={{maxWidth:440,margin:'0 auto',padding:'40px 24px 100px',textAlign:'center'}}>
-        {/* big cake visual */}
-        <div style={{width:140,height:140,borderRadius:40,margin:'0 auto 28px',overflow:'hidden',
-          boxShadow:`0 12px 40px ${C.navy}22`,border:`2px solid ${C.border}`}}>
-          <CakeVisual category={form.type?.category} bg={form.type?.color||'#fce4ec'} height={140}/>
-        </div>
-
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:C.dark,marginBottom:10,lineHeight:1.2}}>
-          Shirinligingizni boshqalar bilan ulashing?
-        </div>
-        <div style={{color:C.muted,fontSize:14,lineHeight:1.8,marginBottom:32}}>
-          Qidiruv bo'limida e'lon qilinsa, boshqa foydalanuvchilar ham ko'rishi mumkin.
-        </div>
-
-        {/* selection chips */}
-        <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:32}}>
-          {selections.map(o=>(
-            <div key={o.id} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',
-              borderRadius:50,background:o.color,border:`1px solid ${C.border}`,fontSize:13,fontWeight:600,color:C.dark}}>
-              <span>{o.emoji}</span><span>{o.label}</span>
-            </div>
-          ))}
-          <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',
-            borderRadius:50,background:`linear-gradient(135deg,${C.navy},${C.mid})`,
-            fontSize:13,fontWeight:700,color:'#fff'}}>
-            {totalPrice.toLocaleString('ru-RU')} so'm
-          </div>
-        </div>
-
-        <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          <button onClick={()=>handlePublish(true)} disabled={publishing}
-            style={{width:'100%',padding:'16px',borderRadius:16,border:'none',
-              background:`linear-gradient(135deg,${C.navy},${C.mid})`,
-              color:'#fff',cursor:publishing?'default':'pointer',fontWeight:700,fontSize:15,
-              boxShadow:`0 6px 20px ${C.navy}44`,opacity:publishing?.6:1,transition:'opacity .2s'}}>
-            {publishing?'Joylashtirilmoqda...':'🌟 Ha, e\'lon qilish'}
-          </button>
-          <button onClick={()=>handlePublish(false)} disabled={publishing}
-            style={{width:'100%',padding:'15px',borderRadius:16,
-              border:`1.5px solid ${C.border}`,background:'transparent',
-              color:C.muted,cursor:'pointer',fontWeight:600,fontSize:15}}>
-            Yo'q, faqat savatga
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  /* ── STEP 6: DONE ── */
-  if (step === 6) return (
-    <div style={{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 24px 100px',textAlign:'center'}}>
-      {/* success ring */}
-      <div style={{position:'relative',marginBottom:28}}>
-        <div style={{width:130,height:130,borderRadius:'50%',overflow:'hidden',
-          boxShadow:'0 12px 40px rgba(16,185,129,.25)'}}>
-          <CakeVisual category={form.type?.category} bg={form.type?.color||'#fce4ec'} height={130}/>
-        </div>
-        <div style={{position:'absolute',bottom:4,right:4,width:36,height:36,borderRadius:'50%',
-          background:'#10b981',display:'flex',alignItems:'center',justifyContent:'center',
-          boxShadow:'0 4px 12px rgba(16,185,129,.4)'}}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-      </div>
-
-      <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:900,color:C.dark,marginBottom:8}}>
-        Buyurtma qabul qilindi!
-      </div>
-      <div style={{color:C.muted,fontSize:14,lineHeight:1.8,marginBottom:28,maxWidth:300}}>
-        Konditer <b style={{color:C.dark}}>30 daqiqa</b> ichida siz bilan bog'lanadi.
-      </div>
-
-      {/* summary card */}
-      <div style={{width:'100%',maxWidth:360,background:C.s1,borderRadius:24,border:`1px solid ${C.border}`,
-        overflow:'hidden',marginBottom:28,boxShadow:`0 4px 20px rgba(0,0,0,.06)`}}>
-        <div style={{background:`linear-gradient(135deg,${C.navy},${C.mid})`,padding:'16px 20px',
-          display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <span style={{color:'rgba(255,255,255,.8)',fontSize:13,fontWeight:600}}>Jami summa</span>
-          <span style={{color:'#fff',fontSize:20,fontWeight:900}}>{totalPrice.toLocaleString('ru-RU')} so'm</span>
-        </div>
-        <div style={{padding:'16px 20px',display:'flex',flexWrap:'wrap',gap:8}}>
-          {selections.map(o=>(
-            <div key={o.id} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 11px',
-              borderRadius:50,background:o.color,fontSize:12,fontWeight:600,color:C.dark}}>
-              {o.emoji} {o.label}
-            </div>
-          ))}
-        </div>
-        {form.bakery && (
-          <div style={{borderTop:`1px solid ${C.border}`,padding:'12px 20px',
-            display:'flex',alignItems:'center',gap:10}}>
-            <span style={{fontSize:22}}>{form.bakery.emoji}</span>
-            <div style={{textAlign:'left'}}>
-              <div style={{fontSize:13,fontWeight:700,color:C.dark}}>{form.bakery.name}</div>
-              <div style={{fontSize:11,color:C.muted}}>⏰ {form.bakery.hours}</div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <button onClick={resetAndHome}
-        style={{width:'100%',maxWidth:360,padding:'16px',borderRadius:16,border:'none',
-          background:`linear-gradient(135deg,${C.navy},${C.mid})`,
-          color:'#fff',cursor:'pointer',fontWeight:700,fontSize:15,
-          boxShadow:`0 6px 20px ${C.navy}44`}}>
-        Bosh sahifaga →
-      </button>
-    </div>
-  );
-
-  /* ── STEP 4: DETAILS (bakery + note + price) ── */
-  if (step === 4) return (
     <div style={{minHeight:'100vh',background:C.bg}}>
       <Header onBack={goBack}/>
       <div style={{maxWidth:520,margin:'0 auto',padding:'24px 20px 120px'}}>
@@ -563,7 +469,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             Filial tanlang
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:10}}>
-            {/* Sellers only */}
             {bakeries.filter(b => b.isSeller).map(b => {
               const active = form.bakery?.id === b.id;
               return (
@@ -692,7 +597,116 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
     </div>
   );
 
-  /* ── STEPS 0–3: CHOICE ── */
+  /* ── STEP 6: PUBLISH PROMPT ── */
+  if (step === 6) return (
+    <div style={{minHeight:'100vh',background:C.bg}}>
+      <Header onBack={()=>setStep(5)}/>
+      <div style={{maxWidth:440,margin:'0 auto',padding:'40px 24px 100px',textAlign:'center'}}>
+        <div style={{width:140,height:140,borderRadius:40,margin:'0 auto 28px',overflow:'hidden',
+          boxShadow:`0 12px 40px ${C.navy}22`,border:`2px solid ${C.border}`}}>
+          <CakeVisual category={form.type?.category} shape={form.shape?.id} bg={form.type?.color||'#fce4ec'} height={140}/>
+        </div>
+
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:C.dark,marginBottom:10,lineHeight:1.2}}>
+          Shirinligingizni boshqalar bilan ulashing?
+        </div>
+        <div style={{color:C.muted,fontSize:14,lineHeight:1.8,marginBottom:32}}>
+          Qidiruv bo'limida e'lon qilinsa, boshqa foydalanuvchilar ham ko'rishi mumkin.
+        </div>
+
+        <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:32}}>
+          {selections.map(o=>(
+            <div key={o.id} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',
+              borderRadius:50,background:o.color,border:`1px solid ${C.border}`,fontSize:13,fontWeight:600,color:C.dark}}>
+              <span>{o.emoji}</span><span>{o.label}</span>
+            </div>
+          ))}
+          <div style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',
+            borderRadius:50,background:`linear-gradient(135deg,${C.navy},${C.mid})`,
+            fontSize:13,fontWeight:700,color:'#fff'}}>
+            {totalPrice.toLocaleString('ru-RU')} so'm
+          </div>
+        </div>
+
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          <button onClick={()=>handlePublish(true)} disabled={publishing}
+            style={{width:'100%',padding:'16px',borderRadius:16,border:'none',
+              background:`linear-gradient(135deg,${C.navy},${C.mid})`,
+              color:'#fff',cursor:publishing?'default':'pointer',fontWeight:700,fontSize:15,
+              boxShadow:`0 6px 20px ${C.navy}44`,opacity:publishing?.6:1,transition:'opacity .2s'}}>
+            {publishing?'Joylashtirilmoqda...':'🌟 Ha, e\'lon qilish'}
+          </button>
+          <button onClick={()=>handlePublish(false)} disabled={publishing}
+            style={{width:'100%',padding:'15px',borderRadius:16,
+              border:`1.5px solid ${C.border}`,background:'transparent',
+              color:C.muted,cursor:'pointer',fontWeight:600,fontSize:15}}>
+            Yo'q, faqat savatga
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ── STEP 7: DONE ── */
+  if (step === 7) return (
+    <div style={{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 24px 100px',textAlign:'center'}}>
+      <div style={{position:'relative',marginBottom:28}}>
+        <div style={{width:130,height:130,borderRadius:'50%',overflow:'hidden',
+          boxShadow:'0 12px 40px rgba(16,185,129,.25)'}}>
+          <CakeVisual category={form.type?.category} shape={form.shape?.id} bg={form.type?.color||'#fce4ec'} height={130}/>
+        </div>
+        <div style={{position:'absolute',bottom:4,right:4,width:36,height:36,borderRadius:'50%',
+          background:'#10b981',display:'flex',alignItems:'center',justifyContent:'center',
+          boxShadow:'0 4px 12px rgba(16,185,129,.4)'}}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+
+      <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:900,color:C.dark,marginBottom:8}}>
+        Buyurtma qabul qilindi!
+      </div>
+      <div style={{color:C.muted,fontSize:14,lineHeight:1.8,marginBottom:28,maxWidth:300}}>
+        Konditer <b style={{color:C.dark}}>30 daqiqa</b> ichida siz bilan bog'lanadi.
+      </div>
+
+      <div style={{width:'100%',maxWidth:360,background:C.s1,borderRadius:24,border:`1px solid ${C.border}`,
+        overflow:'hidden',marginBottom:28,boxShadow:`0 4px 20px rgba(0,0,0,.06)`}}>
+        <div style={{background:`linear-gradient(135deg,${C.navy},${C.mid})`,padding:'16px 20px',
+          display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <span style={{color:'rgba(255,255,255,.8)',fontSize:13,fontWeight:600}}>Jami summa</span>
+          <span style={{color:'#fff',fontSize:20,fontWeight:900}}>{totalPrice.toLocaleString('ru-RU')} so'm</span>
+        </div>
+        <div style={{padding:'16px 20px',display:'flex',flexWrap:'wrap',gap:8}}>
+          {selections.map(o=>(
+            <div key={o.id} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 11px',
+              borderRadius:50,background:o.color,fontSize:12,fontWeight:600,color:C.dark}}>
+              {o.emoji} {o.label}
+            </div>
+          ))}
+        </div>
+        {form.bakery && (
+          <div style={{borderTop:`1px solid ${C.border}`,padding:'12px 20px',
+            display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontSize:22}}>{form.bakery.emoji}</span>
+            <div style={{textAlign:'left'}}>
+              <div style={{fontSize:13,fontWeight:700,color:C.dark}}>{form.bakery.name}</div>
+              <div style={{fontSize:11,color:C.muted}}>⏰ {form.bakery.hours}</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <button onClick={resetAndHome}
+        style={{width:'100%',maxWidth:360,padding:'16px',borderRadius:16,border:'none',
+          background:`linear-gradient(135deg,${C.navy},${C.mid})`,
+          color:'#fff',cursor:'pointer',fontWeight:700,fontSize:15,
+          boxShadow:`0 6px 20px ${C.navy}44`}}>
+        Bosh sahifaga →
+      </button>
+    </div>
+  );
+
+  /* ── STEPS 0–4: CHOICE ── */
   let opts = CREATE_OPTIONS[currentStepCfg.key];
   if (currentStepCfg.key === 'size' && form.type?.id === 'bento') {
     opts = opts.filter(o => o.id === 'mini' || o.id === 'std');
@@ -701,7 +715,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
   return (
     <div style={{minHeight:'100vh',background:C.bg}}>
       <Header onBack={goBack} backHidden={step===0}/>
-
       <div style={{maxWidth:560,margin:'0 auto',padding:'28px 20px 120px'}}>
 
         {/* question */}
@@ -718,7 +731,11 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             const active = currentVal?.id === opt.id;
             const addPrice = opt.basePrice ?? opt.priceAdd;
             return (
-              <button key={opt.id} onClick={()=>{ setF(currentStepCfg.key,opt); goNext(); }}
+              <button key={opt.id} onClick={()=>{
+                  setF(currentStepCfg.key,opt);
+                  if (currentStepCfg.key === 'type' && opt.id !== 'tort') setF('shape', null);
+                  goNext();
+                }}
                 style={{borderRadius:22,border:`2px solid ${active?C.navy:C.border}`,
                   background: active ? opt.color : C.s1,
                   cursor:'pointer',textAlign:'left',outline:'none',overflow:'hidden',
@@ -726,7 +743,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
                   boxShadow: active ? `0 8px 28px ${C.navy}28` : `0 2px 8px rgba(0,0,0,.04)`,
                   transform: active ? 'translateY(-2px)' : 'none'}}>
 
-                {/* check badge */}
                 {active && (
                   <div style={{position:'absolute',top:12,right:12,width:26,height:26,borderRadius:'50%',
                     background:C.navy,display:'flex',alignItems:'center',justifyContent:'center',zIndex:1,
@@ -735,14 +751,13 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
                   </div>
                 )}
 
-                {/* image area */}
                 <CakeVisual
                   category={currentStepCfg.key === 'type' ? opt.category : form.type?.category}
+                  shape={currentStepCfg.key === 'shape' ? opt.id : form.shape?.id}
                   bg={opt.color}
                   height={110}
                 />
 
-                {/* text */}
                 <div style={{padding:'12px 14px 14px'}}>
                   <div style={{fontSize:14,fontWeight:800,color:active?C.navy:C.dark,marginBottom:4}}>{opt.label}</div>
                   {opt.sub && <div style={{fontSize:11,color:C.navy,fontWeight:700,marginBottom:3}}>{opt.sub}</div>}
@@ -759,7 +774,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
           })}
         </div>
 
-        {/* live price bar */}
         {totalPrice > 0 && (
           <div style={{background:C.s1,borderRadius:16,padding:'14px 18px',border:`1px solid ${C.border}`,
             display:'flex',alignItems:'center',justifyContent:'space-between',
@@ -777,7 +791,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
           </div>
         )}
 
-        {/* continue button if already chose this step */}
         {currentVal && (
           <button onClick={goNext}
             style={{width:'100%',marginTop:14,padding:'15px',borderRadius:16,

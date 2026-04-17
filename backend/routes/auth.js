@@ -24,98 +24,35 @@ function verifyTelegramData(initData) {
   return crypto.createHmac('sha256', secret).update(dataStr).digest('hex') === hash;
 }
 
-// POST /api/auth/request-otp
-router.post('/request-otp', async (req, res) => {
-  const phone = String(req.body.phone || '').trim();
-  if (!phone) return res.status(400).json({ error: 'Telefon raqami kerak' });
-
-  try {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    await pool.query(
-      `INSERT INTO otps (phone, otp, created_at) VALUES ($1, $2, $3)
-       ON CONFLICT (phone) DO UPDATE SET otp = $2, created_at = $3`,
-      [phone, otp, Date.now()]
-    );
-
-    const linked = await pool.query(
-      `SELECT telegram_id
-       FROM (
-         SELECT telegram_id FROM users WHERE phone = $1 AND telegram_id IS NOT NULL
-         UNION ALL
-         SELECT telegram_id FROM sellers WHERE phone = $1 AND telegram_id IS NOT NULL
-       ) AS linked
-       LIMIT 1`,
-      [phone]
-    );
-    const chat = linked.rows[0]?.telegram_id;
-    if (chat) {
-      sendTelegramMessage(chat,
-        `🔐 <b>SweetMarket — Tasdiqlash kodi</b>\n\n` +
-        `Sizning kodingiz: <code>${otp}</code>\n\n` +
-        `⏱ Kod 5 daqiqa ichida amal qiladi.\n` +
-        `Agar siz so'ramagan bo'lsangiz, e'tibor bermang.`
-      );
-      console.log(`OTP sent via Telegram bot to chat ${chat} for ${phone}`);
-      res.json({ message: 'OTP Telegram botingizga yuborildi' });
-    } else if (!BOT_TOKEN) {
-      // Dev mode: BOT_TOKEN yo'q — ekranda ko'rsatish
-      console.log(`DEV OTP [${phone}]: ${otp}`);
-      res.json({ message: 'OTP yuborildi', devOtp: otp });
-    } else {
-      // Bot bor lekin telefon bog'lanmagan
-      console.log(`OTP for ${phone}: ${otp} (no telegram linked)`);
-      return res.status(400).json({
-        error: `Telefon raqamingiz Telegram botga ulanmagan.\nAvval @sweet_market_ika_bot ga /start yuboring va telefon raqamingizni ulashing.`,
-        notLinked: true,
-      });
-    }
-  } catch (error) {
-    console.error('OTP request error:', error);
-    res.status(500).json({ error: error.message || 'Xatolik yuz berdi' });
-  }
-});
-
 // POST /api/auth/verify
 router.post('/verify', async (req, res) => {
-  const { phone, otp, firstName, lastName } = req.body;
-  if (!phone || !otp) return res.status(400).json({ error: 'Telefon va OTP kerak' });
+  const phone = String(req.body.phone || '').trim();
+  const firstName = String(req.body.firstName || '').trim();
+  const lastName = String(req.body.lastName || '').trim();
 
-  const { rows } = await pool.query('SELECT * FROM otps WHERE phone = $1', [phone]);
-  const record = rows[0];
-  if (!record) return res.status(400).json({ error: "OTP noto'g'ri" });
-  if (record.otp !== otp) return res.status(400).json({ error: "OTP noto'g'ri" });
-  if (Date.now() - Number(record.created_at) > 5 * 60 * 1000) {
-    await pool.query('DELETE FROM otps WHERE phone = $1', [phone]);
-    return res.status(400).json({ error: "OTP muddati o'tgan" });
-  }
-  await pool.query('DELETE FROM otps WHERE phone = $1', [phone]);
+  if (!phone) return res.status(400).json({ error: 'Telefon raqami kerak' });
 
   let userRow = (await pool.query('SELECT * FROM users WHERE phone = $1', [phone])).rows[0];
   if (!userRow) {
     const id = genId();
-    const fn = firstName || '';
-    const ln = lastName  || '';
-    const nm = [fn, ln].filter(Boolean).join(' ');
+    const nm = [firstName, lastName].filter(Boolean).join(' ');
     await pool.query(
       `INSERT INTO users (id, phone, first_name, last_name, name) VALUES ($1,$2,$3,$4,$5)`,
-      [id, phone, fn, ln, nm]
+      [id, phone, firstName, lastName, nm]
     );
-    // Default tug'ilgan kunlar
     await pool.query(
       `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5),($6,$2,$7,$8,$9)`,
       [genId(), id, '🎂', 'Onam', '12 Апреля', genId(), '🎉', "Do'stim", '3 Июня']
     );
     userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [id])).rows[0];
-  } else {
-    if (firstName || lastName) {
-      const fn = firstName || userRow.first_name;
-      const ln = lastName  || userRow.last_name;
-      await pool.query(
-        `UPDATE users SET first_name=$1, last_name=$2, name=$3 WHERE id=$4`,
-        [fn, ln, [fn, ln].filter(Boolean).join(' '), userRow.id]
-      );
-      userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [userRow.id])).rows[0];
-    }
+  } else if (firstName || lastName) {
+    const fn = firstName || userRow.first_name;
+    const ln = lastName || userRow.last_name;
+    await pool.query(
+      `UPDATE users SET first_name=$1, last_name=$2, name=$3 WHERE id=$4`,
+      [fn, ln, [fn, ln].filter(Boolean).join(' '), userRow.id]
+    );
+    userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [userRow.id])).rows[0];
   }
 
   const user = rowToUser(userRow);

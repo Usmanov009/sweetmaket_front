@@ -1,39 +1,49 @@
 /* Reusable cake/dessert illustration — replaces emoji in product cards */
 
 const visuals = {
-  tort: ({ size }) => (
-    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* plate */}
-      <ellipse cx="60" cy="98" rx="46" ry="10" fill="#e0c9f0" opacity=".45"/>
-      {/* bottom layer */}
-      <rect x="18" y="72" width="84" height="22" rx="11" fill="#f48fb1"/>
-      <rect x="18" y="72" width="84" height="8" rx="4" fill="#f06292"/>
-      {/* cream line */}
-      <path d="M18 72 Q30 64 42 72 Q54 80 66 72 Q78 64 90 72 Q99 78 102 72" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
-      {/* middle layer */}
-      <rect x="24" y="50" width="72" height="22" rx="11" fill="#ce93d8"/>
-      <rect x="24" y="50" width="72" height="8" rx="4" fill="#ba68c8"/>
-      {/* cream line */}
-      <path d="M24 50 Q35 42 46 50 Q57 58 68 50 Q79 42 90 50 Q95 55 96 50" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
-      {/* top layer */}
-      <rect x="30" y="30" width="60" height="20" rx="10" fill="#f48fb1"/>
-      <rect x="30" y="30" width="60" height="7" rx="3.5" fill="#f06292"/>
-      {/* frosting top */}
-      <path d="M34 30 Q40 22 46 30 Q52 22 58 30 Q64 22 70 30 Q76 22 82 30 Q86 26 86 30" stroke="none" fill="#fff" opacity=".7"/>
-      {/* candles */}
-      <rect x="50" y="16" width="5" height="14" rx="2.5" fill="#ffcc02"/>
-      <rect x="65" y="19" width="5" height="11" rx="2.5" fill="#ff7043"/>
-      {/* flames */}
-      <ellipse cx="52.5" cy="13" rx="3" ry="4.5" fill="#ff9800" opacity=".9"/>
-      <ellipse cx="52.5" cy="12" rx="1.5" ry="2.5" fill="#fff176"/>
-      <ellipse cx="67.5" cy="16" rx="3" ry="4.5" fill="#ff9800" opacity=".9"/>
-      <ellipse cx="67.5" cy="15" rx="1.5" ry="2.5" fill="#fff176"/>
-      {/* sprinkles */}
-      <rect x="38" y="56" width="6" height="2.5" rx="1.25" fill="#ff7043" transform="rotate(30 38 56)"/>
-      <rect x="80" y="58" width="6" height="2.5" rx="1.25" fill="#64b5f6" transform="rotate(-20 80 58)"/>
-      <rect x="55" y="38" width="5" height="2" rx="1" fill="#a5d6a7" transform="rotate(45 55 38)"/>
-    </svg>
-  ),
+  tort: ({ size, shape }) => {
+    const isSquare = shape === 'square';
+    const isHeart = shape === 'heart';
+    const layerRx = isSquare ? 6 : 11;
+
+    return (
+      <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* plate */}
+        <ellipse cx="60" cy="98" rx="46" ry="10" fill="#e0c9f0" opacity=".45"/>
+        {/* bottom layer */}
+        <rect x="18" y="72" width="84" height="22" rx={layerRx} fill="#f48fb1"/>
+        <rect x="18" y="72" width="84" height="8" rx="4" fill="#f06292"/>
+        {/* cream line */}
+        <path d="M18 72 Q30 64 42 72 Q54 80 66 72 Q78 64 90 72 Q99 78 102 72" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+        {/* middle layer */}
+        <rect x="24" y="50" width="72" height="22" rx={layerRx} fill="#ce93d8"/>
+        <rect x="24" y="50" width="72" height="8" rx="4" fill="#ba68c8"/>
+        {/* cream line */}
+        <path d="M24 50 Q35 42 46 50 Q57 58 68 50 Q79 42 90 50 Q95 55 96 50" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+        {/* top layer */}
+        {isHeart ? (
+          <path d="M60 24 C50 14 34 20 34 38 C34 56 60 78 60 78 C60 78 86 56 86 38 C86 20 70 14 60 24 Z" fill="#f48fb1"/>
+        ) : (
+          <rect x="30" y="30" width="60" height="20" rx={layerRx} fill="#f48fb1"/>
+        )}
+        <rect x="30" y="30" width="60" height="7" rx="3.5" fill="#f06292"/>
+        {/* frosting top */}
+        <path d="M34 30 Q40 22 46 30 Q52 22 58 30 Q64 22 70 30 Q76 22 82 30 Q86 26 86 30" stroke="none" fill="#fff" opacity=".7"/>
+        {/* candles */}
+        <rect x="50" y="16" width="5" height="14" rx="2.5" fill="#ffcc02"/>
+        <rect x="65" y="19" width="5" height="11" rx="2.5" fill="#ff7043"/>
+        {/* flames */}
+        <ellipse cx="52.5" cy="13" rx="3" ry="4.5" fill="#ff9800" opacity=".9"/>
+        <ellipse cx="52.5" cy="12" rx="1.5" ry="2.5" fill="#fff176"/>
+        <ellipse cx="67.5" cy="16" rx="3" ry="4.5" fill="#ff9800" opacity=".9"/>
+        <ellipse cx="67.5" cy="15" rx="1.5" ry="2.5" fill="#fff176"/>
+        {/* sprinkles */}
+        <rect x="38" y="56" width="6" height="2.5" rx="1.25" fill="#ff7043" transform="rotate(30 38 56)"/>
+        <rect x="80" y="58" width="6" height="2.5" rx="1.25" fill="#64b5f6" transform="rotate(-20 80 58)"/>
+        <rect x="55" y="38" width="5" height="2" rx="1" fill="#a5d6a7" transform="rotate(45 55 38)"/>
+      </svg>
+    );
+  },
 
   keks: ({ size }) => (
     <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
