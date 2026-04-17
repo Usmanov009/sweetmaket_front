@@ -1104,7 +1104,6 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
               {[
                 { icon:<UserCircle size={20} weight="duotone"/>, color:'#4f46e5', label:'Ism Familiya',  val:user?.name||'—' },
                 { icon:<Phone size={20} weight="duotone"/>,      color:'#059669', label:'Telefon raqam', val:user?.phone||'—' },
-                { icon:<Star size={20} weight="duotone"/>,       color:'#f59e0b', label:'Status',        val:'Gold Member' },
               ].map((row,i,arr) => (
                 <div key={row.label} style={{ padding:'14px 18px', display:'flex', alignItems:'center', gap:12, borderBottom:i<arr.length-1?'1px solid '+C.border:'none' }}>
                   <div style={{ width:40, height:40, borderRadius:12, background:row.color+'15', display:'flex', alignItems:'center', justifyContent:'center', color:row.color, flexShrink:0 }}>

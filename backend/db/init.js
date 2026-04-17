@@ -6,6 +6,7 @@ async function initDB() {
       id          TEXT PRIMARY KEY,
       phone       TEXT,
       telegram_id TEXT,
+      password    TEXT DEFAULT '',
       first_name  TEXT DEFAULT '',
       last_name   TEXT DEFAULT '',
       name        TEXT DEFAULT '',
@@ -13,6 +14,7 @@ async function initDB() {
       created_at  TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT DEFAULT ''`).catch(() => {});
   await pool.query(`
     CREATE TABLE IF NOT EXISTS orders (
       id           TEXT PRIMARY KEY,

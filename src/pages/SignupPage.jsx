@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Phone, User } from '@phosphor-icons/react';
+import { Phone, User, ShieldCheck } from '@phosphor-icons/react';
 import api from '../api';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 import { useLocale } from '../locale.js';
@@ -9,6 +9,7 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
   const [firstName, setFirstName] = useState('');
   const [lastName,  setLastName]  = useState('');
   const [phone,     setPhone]     = useState('+998');
+  const [password,  setPassword]  = useState('');
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
 
@@ -21,15 +22,20 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
     if (!firstName.trim()) { setError(t('firstName') + ' ' + t('required')); return; }
     if (!lastName.trim())  { setError(t('lastName') + ' ' + t('required')); return; }
     if (!isValidPhone(phone)) { setError(t('correctPhone')); return; }
+    if (!password.trim())   { setError(t('password') + ' ' + t('required')); return; }
     setError(''); setLoading(true);
     try {
-      const { token, user } = await api.post('/api/auth/verify', {
-        phone, firstName: firstName.trim(), lastName: lastName.trim(),
+      const { token, user } = await api.post('/api/auth/register', {
+        phone,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        password: password.trim(),
       });
       localStorage.setItem('sm_token', token);
       onLogin(user);
-    } catch(e) { setError(e.message); }
-    finally { setLoading(false); }
+    } catch(e) {
+      setError(e.message || t('registrationFailed'));
+    } finally { setLoading(false); }
   };
 
   const formContent = (
@@ -66,6 +72,17 @@ export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
               onChange={e=>setPhone(formatPhone(e.target.value))}
               onKeyDown={e=>{if(['Backspace','Delete'].includes(e.key)&&rawDigits(phone).length<=3)e.preventDefault(); if (e.key==='Enter') handleRegister();}}
               placeholder="+998 90 123 45 67" style={{...iStyle,fontSize:15}}/>
+          </div>
+        </div>
+
+        <div style={{ marginBottom:18 }}>
+          <label style={{ fontSize:12, fontWeight:600, color:C.navy, display:'block', marginBottom:6 }}>{t('password')}</label>
+          <div style={{ position:'relative' }}>
+            <span style={{ position:'absolute', left:15, top:'50%', transform:'translateY(-50%)', color:C.muted }}><ShieldCheck size={17}/></span>
+            <input className="input-focus" type="password" value={password}
+              onChange={e=>setPassword(e.target.value)}
+              onKeyDown={e=>{ if (e.key==='Enter') handleRegister(); }}
+              placeholder="********" style={{...iStyle,fontSize:15}}/>
           </div>
         </div>
 

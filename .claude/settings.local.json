@@ -20,7 +20,8 @@
       "Bash(powershell -Command \"Get-Process -Id \\(Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue\\).OwningProcess -ErrorAction SilentlyContinue | Select-Object Id, Name\")",
       "Bash(node -e ':*)",
       "Bash(node)",
-      "Bash(node replace_profile.js)"
+      "Bash(node replace_profile.js)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

@@ -6,25 +6,24 @@ import { useLocale } from '../locale.js';
 
 export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDesktop, setPage }) {
   const { t } = useLocale();
-  const [firstName, setFirstName] = useState('');
-  const [lastName,  setLastName]  = useState('');
-  const [phone,     setPhone]     = useState('+998');
-  const [loading,   setLoading]   = useState(false);
-  const [error,     setError]     = useState('');
+  const [phone,    setPhone]    = useState('+998');
+  const [password, setPassword] = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
 
   const handleLogin = async () => {
-    if (!firstName.trim()) { setError(t('firstName') + ' ' + t('required')); return; }
-    if (!lastName.trim())  { setError(t('lastName') + ' ' + t('required')); return; }
     if (!isValidPhone(phone)) { setError(t('correctPhone')); return; }
+    if (!password.trim()) { setError(t('password') + ' ' + t('required')); return; }
     setError(''); setLoading(true);
     try {
-      const { token, user } = await api.post('/api/auth/verify', {
-        phone, firstName: firstName.trim(), lastName: lastName.trim(),
+      const { token, user } = await api.post('/api/auth/login', {
+        phone,
+        password: password.trim(),
       });
       localStorage.setItem('sm_token', token);
       onLogin(user);
-    } catch(e) {
-      setError(e.message);
+    } catch (e) {
+      setError(e.message || t('loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -97,33 +96,61 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             </div>
           </div>
 
-          {/* Ism / Familiya row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-            {[
-              { label: t('firstName'),      value: firstName, set: setFirstName, placeholder: 'Aziz'   },
-              { label: t('lastName'), value: lastName,  set: setLastName,  placeholder: 'Karimov' },
-            ].map(({ label, value, set, placeholder }) => (
-              <div key={label}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
-                  {label}
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <span style={iconWrap}><User size={18} weight="duotone" /></span>
-                  <input
-                    className="input-focus"
-                    type="text"
-                    value={value}
-                    onChange={e => set(e.target.value)}
-                    placeholder={placeholder}
-                    style={inputStyle}
-                    onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  />
-                </div>
-              </div>
-            ))}
+          {/* Telefon */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
+              {t('phoneNumber')}
+            </label>
+            <div style={{ position: 'relative' }}>
+              <span style={iconWrap}><Phone size={18} weight="duotone" /></span>
+              <input
+                className="input-focus"
+                type="tel"
+                value={phone}
+                onChange={e => setPhone(formatPhone(e.target.value))}
+                onKeyDown={e => {
+                  if (['Backspace','Delete'].includes(e.key) && rawDigits(phone).length <= 3) e.preventDefault();
+                  if (e.key === 'Enter') handleLogin();
+                }}
+                placeholder="+998 90 123 45 67"
+                style={inputStyle}
+              />
+            </div>
           </div>
 
-          {/* Telefon */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
+              {t('password')}
+            </label>
+            <div style={{ position: 'relative' }}>
+              <span style={iconWrap}><ShieldCheck size={18} weight="duotone" /></span>
+              <input
+                className="input-focus"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                placeholder="********"
+                style={inputStyle}
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div style={{
+              color: C.danger || '#ef4444',
+              fontSize: 13,
+              marginBottom: 16,
+              background: 'rgba(239,68,68,.08)',
+              padding: '10px 14px',
+              borderRadius: 10,
+            }}>
+              {error}
+            </div>
+          )}
+
+          <button className="btn-hover" onClick={handleLogin} disabled={loading} style={primaryBtn(loading)}>
+
           <div style={{ marginBottom: 20 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
               {t('phoneNumber')}
