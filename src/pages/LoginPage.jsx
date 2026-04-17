@@ -41,7 +41,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
       setStep('otp'); startTimer();
     } catch(e) {
       if (e.notLinked) {
-        setError('📱 Avval Telegram botni oching va telefon raqamingizni ulang: @sweet_market_ika_bot0');
+        setError('📱 Avval Telegram botni oching va telefon raqamingizni ulang: @sweet_market_ika_bot');
       } else {
         setError(e.message);
       }
