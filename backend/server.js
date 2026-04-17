@@ -37,6 +37,7 @@ app.use('/api/explore',  require('./routes/explore'));
 app.use('/api/bakeries', require('./routes/bakeries'));
 app.use('/api/chat',      require('./routes/chat'));
 app.use('/api/announcements', require('./routes/announcements'));
+app.use('/api/admin',     require('./routes/admin')); // Temporary admin route
 
 // Protected routes
 app.use('/api/orders',        auth, require('./routes/orders'));
