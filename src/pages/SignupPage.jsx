@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Phone, User, ShieldCheck } from '@phosphor-icons/react';
 import api from '../api';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
-import { useLocale } from '../locale.js';
+import { useLocale } from '../locale.jsx';
 
 export default function SignupPage({ onLogin, goLogin, C, isDesktop }) {
   const { t } = useLocale();

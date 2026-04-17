@@ -149,8 +149,6 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             </div>
           )}
 
-          <button className="btn-hover" onClick={handleLogin} disabled={loading} style={primaryBtn(loading)}>
-
           <div style={{ marginBottom: 20 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
               {t('phoneNumber')}
