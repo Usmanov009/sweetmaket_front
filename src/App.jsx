@@ -1158,6 +1158,9 @@ export default function App() {
   // Restore session from localStorage on mount, or show Telegram role-select
   useEffect(() => {
     const token = localStorage.getItem('sm_token');
+    const inTelegram = !!window.Telegram?.WebApp?.initData;
+    if (inTelegram) { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }
+
     if (token) {
       api.get('/api/auth/me').then(({ user: fresh }) => {
         setUser(fresh);
@@ -1165,10 +1168,12 @@ export default function App() {
       }).catch(() => {
         localStorage.removeItem('sm_token');
         setUser(null);
-        setPage('login');
+        setPage(inTelegram ? 'telegram-auth' : 'login');
       });
       return;
     }
+    // Token yo'q — Telegram ichida bo'lsa rol tanlash
+    if (inTelegram) setPage('telegram-auth');
   }, []);
 
   // Fetch user-specific data when user changes
@@ -1198,7 +1203,7 @@ export default function App() {
   const handleLogout = () => {
     setUser(null); setOrders([]); setCards([]);
     localStorage.removeItem('sm_token');
-    setPage('login');
+    setPage(window.Telegram?.WebApp?.initData ? 'telegram-auth' : 'login');
   };
   const handleSellerLogin = (sellerData) => {
     setSeller(sellerData);
@@ -1207,7 +1212,7 @@ export default function App() {
   const handleSellerLogout = () => {
     setSeller(null);
     localStorage.removeItem('sm_seller_token');
-    setPage('seller-login');
+    setPage(window.Telegram?.WebApp?.initData ? 'telegram-auth' : 'seller-login');
   };
   const handleAddToOrder = async (items, total, bakery, address = '') => {
     try {
@@ -1241,6 +1246,7 @@ export default function App() {
   const clearCart = () => setCart([]);
 
   const renderPage = () => {
+    if (page === 'telegram-auth') return <TelegramAuthPage onBack={null} onAuthSuccess={handleTelegramAuth} C={C} isDesktop={isDesktop} />;
     if (page === 'seller-login') return <SellerLoginPage onLogin={handleSellerLogin} goUserLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
     if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} />;
     if (page === 'login') return <LoginPage onLogin={handleLogin} goSignup={() => setPage('signup')} goSellerLogin={() => setPage('seller-login')} C={C} isDesktop={isDesktop} setPage={setPage} />;
@@ -1253,7 +1259,7 @@ export default function App() {
     return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;
   };
 
-  const showNav = user && !['login','signup','seller-login','seller'].includes(page);
+  const showNav = user && !['login','signup','seller-login','seller','telegram-auth'].includes(page);
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, color:C.text, transition:'background .3s,color .3s', display: showNav && isDesktop ? 'flex' : 'block' }}>
