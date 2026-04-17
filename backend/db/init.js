@@ -126,6 +126,24 @@ async function initDB() {
   await pool.query(`ALTER TABLE chat_messages ALTER COLUMN order_id TYPE TEXT USING order_id::TEXT`).catch(() => {});
   await pool.query(`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT ''`).catch(() => {});
 
+  // Migrate: foreign key constraints ON DELETE CASCADE qo'shish
+  // (users o'chirilganda bog'liq yozuvlar avtomatik o'chadi)
+  const cascadeTables = [
+    { table: 'birthdays',     fk: 'birthdays_user_id_fkey',     col: 'user_id' },
+    { table: 'orders',        fk: 'orders_user_id_fkey',         col: 'user_id' },
+    { table: 'cards',         fk: 'cards_user_id_fkey',          col: 'user_id' },
+    { table: 'notifications', fk: 'notifications_user_id_fkey',  col: 'user_id' },
+  ];
+  for (const { table, fk, col } of cascadeTables) {
+    await pool.query(
+      `ALTER TABLE ${table} DROP CONSTRAINT IF EXISTS ${fk}`
+    ).catch(() => {});
+    await pool.query(
+      `ALTER TABLE ${table} ADD CONSTRAINT ${fk}
+       FOREIGN KEY (${col}) REFERENCES users(id) ON DELETE CASCADE`
+    ).catch(() => {});
+  }
+
   console.log('✅ PostgreSQL jadvallar tayyor');
 }
 
