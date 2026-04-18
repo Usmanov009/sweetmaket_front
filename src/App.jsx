@@ -7,6 +7,7 @@ import {
   PencilSimple, House, Gift, UserCircle, Phone,
 } from '@phosphor-icons/react';
 import api from './api';
+import { useLocale } from './locale.jsx';
 import { THEMES, injectGlobal } from './constants/themes';
 import { useBreakpoint } from './hooks/useBreakpoint';
 import { sum, pluralRu, daysUntil, formatPhone, rawDigits, isValidPhone } from './utils/format';
@@ -131,6 +132,7 @@ function BakeryPickerMap({ C, selected, onSelect, bakeries = [] }) {
    EXPLORE PAGE
 ═══════════════════════════════════════════════════════ */
 function ExplorePage({ C, isDesktop, toast, user }) {
+  const { t } = useLocale();
   const [search,   setSearch]   = useState('');
   const [likedIds, setLikedIds] = useState([]);
   const [allPosts, setAllPosts] = useState([]);
@@ -175,11 +177,11 @@ function ExplorePage({ C, isDesktop, toast, user }) {
 
       {/* header + search */}
       <div style={{padding:'0 16px 14px'}}>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:C.dark,marginBottom:4}}>Qidiruv</div>
-        <div style={{fontSize:13,color:C.muted,marginBottom:14}}>Foydalanuvchilar tomonidan joylashtirilgan shirinliklar</div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:C.dark,marginBottom:4}}>{t('navExplore')}</div>
+        <div style={{fontSize:13,color:C.muted,marginBottom:14}}>{t('exploreSubtitle')}</div>
         <div style={{position:'relative'}}>
           <input value={search} onChange={e=>setSearch(e.target.value)}
-            placeholder="Tort, keks, ism..."
+            placeholder={t('searchPlaceholder')}
             style={{width:'100%',background:C.s2,border:`1.5px solid ${search?C.navy:C.border}`,borderRadius:14,
               padding:'11px 40px 11px 42px',color:C.dark,fontSize:14,boxSizing:'border-box'}}/>
           <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',fontSize:18,pointerEvents:'none'}}>🔍</span>
@@ -195,14 +197,14 @@ function ExplorePage({ C, isDesktop, toast, user }) {
 
       {/* section label */}
       <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.6,padding:'0 16px 12px'}}>
-        {q ? `"${search}" bo'yicha natijalar` : 'Barcha e\'lonlar'}
+        {q ? `"${search}" ${t('searchByQuery')}` : t('allPosts')}
       </div>
 
       {/* loading */}
       {loading && (
         <div style={{textAlign:'center',padding:'60px 16px',color:C.muted}}>
           <div style={{fontSize:32,marginBottom:12,opacity:.4}}>🔄</div>
-          <div style={{fontSize:14}}>Yuklanmoqda...</div>
+          <div style={{fontSize:14}}>{t('loadingText')}</div>
         </div>
       )}
 
@@ -210,17 +212,15 @@ function ExplorePage({ C, isDesktop, toast, user }) {
       {!loading && allPosts.length === 0 && (
         <div style={{textAlign:'center',padding:'70px 24px',color:C.muted}}>
           <div style={{fontSize:64,marginBottom:16}}>🎂</div>
-          <div style={{fontSize:17,fontWeight:700,color:C.dark,marginBottom:8}}>Hali e'lon yo'q</div>
-          <div style={{fontSize:13,lineHeight:1.7}}>
-            Birinchi bo'ling! Shirinlik yarating va uni «Ha, e'lon qilish» tugmasi orqali joylashtiring.
-          </div>
+          <div style={{fontSize:17,fontWeight:700,color:C.dark,marginBottom:8}}>{t('noPosts')}</div>
+          <div style={{fontSize:13,lineHeight:1.7}}>{t('noPostsHint')}</div>
         </div>
       )}
       {!loading && allPosts.length > 0 && matchedPosts.length === 0 && (
         <div style={{textAlign:'center',padding:'60px 16px',color:C.muted}}>
           <div style={{fontSize:48,marginBottom:12}}>😔</div>
-          <div style={{fontSize:16,fontWeight:600,color:C.dark}}>Hech narsa topilmadi</div>
-          <div style={{fontSize:13,marginTop:6}}>Boshqa so'rov bilan urinib ko'ring</div>
+          <div style={{fontSize:16,fontWeight:600,color:C.dark}}>{t('nothingFound')}</div>
+          <div style={{fontSize:13,marginTop:6}}>{t('tryOtherQuery')}</div>
         </div>
       )}
 
@@ -249,7 +249,7 @@ function ExplorePage({ C, isDesktop, toast, user }) {
                 </div>
                 <span style={{fontSize:10,fontWeight:700,color:C.navy,background:C.s2,
                   padding:'3px 8px',borderRadius:20,border:`1px solid ${C.border}`,flexShrink:0}}>
-                  ✅ Tekshirilgan
+                  {t('verified')}
                 </span>
               </div>
 
@@ -261,7 +261,7 @@ function ExplorePage({ C, isDesktop, toast, user }) {
                 <div style={{position:'absolute',bottom:10,right:12,background:'rgba(0,0,0,.45)',
                   borderRadius:20,padding:'5px 12px',color:'#fff',fontSize:12,fontWeight:700,
                   backdropFilter:'blur(4px)',pointerEvents:'none'}}>
-                  🛒 Savatchaga
+                  {t('addToCartShort')}
                 </div>
               </div>
 
@@ -298,47 +298,49 @@ function ExplorePage({ C, isDesktop, toast, user }) {
 /* ═══════════════════════════════════════════════════════
    CREATE PAGE
 ═══════════════════════════════════════════════════════ */
-const CREATE_OPTIONS = {
-  type: [
-    {id:'tort',  category:'tort', emoji:'🎂', label:'Oddiy tort',  desc:'Klassik ko\'p qavatli tort', basePrice:89000, color:'#fce4ec'},
-    {id:'bento', category:'tort', emoji:'🎁', label:'Bento tort',  desc:'Kichik, bezakli mini tort',  basePrice:69000, color:'#e8f5e9'},
-  ],
-  shape: [
-    {id:'round',  emoji:'⭕', label:'Doira',    desc:'Klassik doiraviy shakl',   color:'#fce4ec'},
-    {id:'square', emoji:'◼️', label:'Kvadrat',  desc:'Zamonaviy kvadrat tort', color:'#e8f5e9'},
-    {id:'heart',  emoji:'❤️', label:'Yurak',    desc:'Romantik yurak shakli',   color:'#ffe4e1'},
-  ],
-  size: [
-    {id:'mini', emoji:'🫐', label:'Мини',     sub:'1 кг',  desc:'до 6 порций',   priceAdd:0,     color:'#e3f2fd'},
-    {id:'std',  emoji:'🍓', label:'Стандарт', sub:'2 кг',  desc:'до 12 порций',  priceAdd:20000, color:'#fff8e1'},
-    {id:'big',  emoji:'🍒', label:'Большой',  sub:'3 кг',  desc:'до 20 порций',  priceAdd:40000, color:'#fce4ec'},
-    {id:'xl',   emoji:'🎉', label:'Юбилейный',sub:'4+ кг', desc:'до 35 порций',  priceAdd:80000, color:'#f9fbe7'},
-  ],
-  flavor: [
-    {id:'velvet', emoji:'🍷', label:'Красный Вельвет', desc:'Бархат + маскарпоне', priceAdd:10000, color:'#fce4ec'},
-    {id:'choco',  emoji:'🍫', label:'Шоколадный',      desc:'Тёмный шоколад 72%',  priceAdd:5000,  color:'#efebe9'},
-    {id:'pista',  emoji:'🌿', label:'Фисташковый',     desc:'Натуральный крем',     priceAdd:15000, color:'#e8f5e9'},
-    {id:'rasp',   emoji:'🍓', label:'Малиновый',       desc:'Свежая малина, мусс',  priceAdd:10000, color:'#fce4ec'},
-    {id:'lemon',  emoji:'🍋', label:'Лимонный',        desc:'Лимонный курд',        priceAdd:5000,  color:'#fffde7'},
-  ],
-  decoration: [
-    {id:'flower',   emoji:'🌸', label:'Цветочный',    desc:'Съедобные цветы',       priceAdd:15000, color:'#fce4ec'},
-    {id:'chocoDec', emoji:'🍫', label:'Шоколадный',   desc:'Бельгийский шоколад',   priceAdd:10000, color:'#efebe9'},
-    {id:'fruit',    emoji:'🍇', label:'Фруктовый',    desc:'Свежие ягоды',          priceAdd:12000, color:'#e8f5e9'},
-    {id:'minimal',  emoji:'✨', label:'Минимализм',   desc:'Гладкий крем',          priceAdd:0,     color:'#f5f5f5'},
-    {id:'kids',     emoji:'🎠', label:'Детский',      desc:'Яркие фигурки',         priceAdd:20000, color:'#fffde7'},
-  ],
-};
-
-const CREATE_STEPS = [
-  {key:'type',       question:'Что хотите заказать?',   hint:'Выберите вид выпечки'},
-  {key:'shape',      question:'Qaysi shakl yoqadi?',      hint:'Oddiy tort uchun shakl tanlang'},
-  {key:'size',       question:'Какой размер нужен?',    hint:'Зависит от числа гостей'},
-  {key:'flavor',     question:'Какой вкус предпочитаете?', hint:'Самые популярные вкусы'},
-  {key:'decoration', question:'Как украсить?',          hint:'Выберите стиль декора'},
-];
-
 function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) {
+  const { t } = useLocale();
+
+  const CREATE_OPTIONS = {
+    type: [
+      {id:'tort',  category:'tort', emoji:'🎂', label:t('cTortLabel'),  desc:t('cTortDesc'), basePrice:89000, color:'#fce4ec'},
+      {id:'bento', category:'tort', emoji:'🎁', label:t('cBentoLabel'), desc:t('cBentoDesc'), basePrice:69000, color:'#e8f5e9'},
+    ],
+    shape: [
+      {id:'round',  emoji:'⭕', label:t('cRoundLabel'),  desc:t('cRoundDesc'),  color:'#fce4ec'},
+      {id:'square', emoji:'◼️', label:t('cSquareLabel'), desc:t('cSquareDesc'), color:'#e8f5e9'},
+      {id:'heart',  emoji:'❤️', label:t('cHeartLabel'),  desc:t('cHeartDesc'),  color:'#ffe4e1'},
+    ],
+    size: [
+      {id:'mini', emoji:'🫐', label:t('cMiniLabel'), sub:t('cMiniSub'), desc:t('cMiniDesc'), priceAdd:0,     color:'#e3f2fd'},
+      {id:'std',  emoji:'🍓', label:t('cStdLabel'),  sub:t('cStdSub'),  desc:t('cStdDesc'),  priceAdd:20000, color:'#fff8e1'},
+      {id:'big',  emoji:'🍒', label:t('cBigLabel'),  sub:t('cBigSub'),  desc:t('cBigDesc'),  priceAdd:40000, color:'#fce4ec'},
+      {id:'xl',   emoji:'🎉', label:t('cXlLabel'),   sub:t('cXlSub'),   desc:t('cXlDesc'),   priceAdd:80000, color:'#f9fbe7'},
+    ],
+    flavor: [
+      {id:'velvet', emoji:'🍷', label:t('cVelvetLabel'), desc:t('cVelvetDesc'), priceAdd:10000, color:'#fce4ec'},
+      {id:'choco',  emoji:'🍫', label:t('cChocoLabel'),  desc:t('cChocoDesc'),  priceAdd:5000,  color:'#efebe9'},
+      {id:'pista',  emoji:'🌿', label:t('cPistaLabel'),  desc:t('cPistaDesc'),  priceAdd:15000, color:'#e8f5e9'},
+      {id:'rasp',   emoji:'🍓', label:t('cRaspLabel'),   desc:t('cRaspDesc'),   priceAdd:10000, color:'#fce4ec'},
+      {id:'lemon',  emoji:'🍋', label:t('cLemonLabel'),  desc:t('cLemonDesc'),  priceAdd:5000,  color:'#fffde7'},
+    ],
+    decoration: [
+      {id:'flower',   emoji:'🌸', label:t('cFlowerLabel'),   desc:t('cFlowerDesc'),   priceAdd:15000, color:'#fce4ec'},
+      {id:'chocoDec', emoji:'🍫', label:t('cChocoDecLabel'), desc:t('cChocoDecDesc'), priceAdd:10000, color:'#efebe9'},
+      {id:'fruit',    emoji:'🍇', label:t('cFruitLabel'),    desc:t('cFruitDesc'),    priceAdd:12000, color:'#e8f5e9'},
+      {id:'minimal',  emoji:'✨', label:t('cMinimalLabel'),  desc:t('cMinimalDesc'),  priceAdd:0,     color:'#f5f5f5'},
+      {id:'kids',     emoji:'🎠', label:t('cKidsLabel'),     desc:t('cKidsDesc'),     priceAdd:20000, color:'#fffde7'},
+    ],
+  };
+
+  const CREATE_STEPS = [
+    {key:'type',       question:t('createStep0Q'), hint:t('createStep0H')},
+    {key:'shape',      question:t('createStep1Q'), hint:t('createStep1H')},
+    {key:'size',       question:t('createStep2Q'), hint:t('createStep2H')},
+    {key:'flavor',     question:t('createStep3Q'), hint:t('createStep3H')},
+    {key:'decoration', question:t('createStep4Q'), hint:t('createStep4H')},
+  ];
+
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({type:null,shape:null,size:null,flavor:null,decoration:null,bakery:null,note:'',image:null});
   const [publishing, setPublishing] = useState(false);
@@ -449,9 +451,9 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
       <div style={{maxWidth:520,margin:'0 auto',padding:'24px 20px 120px'}}>
 
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:900,color:C.dark,marginBottom:4}}>
-          Buyurtmangiz
+          {t('orderHeader')}
         </div>
-        <div style={{color:C.muted,fontSize:13,marginBottom:24}}>Filial tanlang va izoh qoldiring</div>
+        <div style={{color:C.muted,fontSize:13,marginBottom:24}}>{t('chooseBranch')}</div>
 
         {/* selection chips */}
         <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:28}}>
@@ -466,7 +468,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
         {/* Bakery picker */}
         <div style={{marginBottom:20}}>
           <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:12}}>
-            Filial tanlang
+            {t('selectBranch')}
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:10}}>
             {bakeries.filter(b => b.isSeller).map(b => {
@@ -504,7 +506,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
         {/* Image upload */}
         <div style={{marginBottom:20}}>
           <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:12}}>
-            Rasm (ixtiyoriy)
+            {t('photoLabel')}
           </div>
           <div
             onDragOver={e=>{e.preventDefault();setImgDrag(true);}}
@@ -534,8 +536,8 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             ) : (
               <div style={{textAlign:'center',color:C.muted}}>
                 <div style={{fontSize:28,marginBottom:6}}>📸</div>
-                <div style={{fontSize:13,fontWeight:600}}>Rasm yuklash</div>
-                <div style={{fontSize:11,marginTop:2}}>Tort uchun dizayn rasmi</div>
+                <div style={{fontSize:13,fontWeight:600}}>{t('uploadPhoto')}</div>
+                <div style={{fontSize:11,marginTop:2}}>{t('uploadHint')}</div>
               </div>
             )}
           </div>
@@ -544,10 +546,10 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
         {/* Note */}
         <div style={{marginBottom:20}}>
           <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:12}}>
-            Izoh (ixtiyoriy)
+            {t('noteLabel')}
           </div>
           <textarea value={form.note} onChange={e=>setF('note',e.target.value)}
-            placeholder="Tortga yozuv, allergiya yoki maxsus xohishlarni yozing..."
+            placeholder={t('notePlaceholder')}
             rows={3} style={{width:'100%',background:C.s1,border:`1.5px solid ${C.border}`,borderRadius:16,
               padding:'14px 16px',color:C.dark,fontSize:14,resize:'none',lineHeight:1.6,
               boxSizing:'border-box',outline:'none',transition:'border-color .2s'}}
@@ -560,7 +562,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
           overflow:'hidden',marginBottom:20,boxShadow:`0 2px 12px rgba(0,0,0,.04)`}}>
           <div style={{padding:'12px 18px',borderBottom:`1px solid ${C.border}`,
             fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase'}}>
-            Narx tafsiloti
+            {t('priceDetails')}
           </div>
           {[
             {label:form.type?.label,      price:form.type?.basePrice,      emoji:form.type?.emoji,      base:true},
@@ -578,7 +580,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
           ))}
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',
             padding:'14px 18px',background:`linear-gradient(135deg,${C.navy}08,${C.mid}08)`}}>
-            <span style={{fontSize:15,fontWeight:800,color:C.dark}}>Jami</span>
+            <span style={{fontSize:15,fontWeight:800,color:C.dark}}>{t('orderTotal')}</span>
             <span style={{fontSize:18,fontWeight:900,color:C.navy}}>{totalPrice.toLocaleString('ru-RU')} so'm</span>
           </div>
         </div>
@@ -591,7 +593,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             fontWeight:700,fontSize:16,
             boxShadow: form.bakery ? `0 6px 24px ${C.navy}44` : 'none',
             transition:'all .25s'}}>
-          {form.bakery ? `Savatga qo'shish — ${totalPrice.toLocaleString('ru-RU')} so'm` : 'Avval filial tanlang'}
+          {form.bakery ? `${t('addToCart')} — ${totalPrice.toLocaleString('ru-RU')} so'm` : t('selectBranchFirst')}
         </button>
       </div>
     </div>
@@ -608,10 +610,10 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
         </div>
 
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:C.dark,marginBottom:10,lineHeight:1.2}}>
-          Shirinligingizni boshqalar bilan ulashing?
+          {t('publishPrompt')}
         </div>
         <div style={{color:C.muted,fontSize:14,lineHeight:1.8,marginBottom:32}}>
-          Qidiruv bo'limida e'lon qilinsa, boshqa foydalanuvchilar ham ko'rishi mumkin.
+          {t('publishHint')}
         </div>
 
         <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:32}}>
@@ -634,13 +636,13 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
               background:`linear-gradient(135deg,${C.navy},${C.mid})`,
               color:'#fff',cursor:publishing?'default':'pointer',fontWeight:700,fontSize:15,
               boxShadow:`0 6px 20px ${C.navy}44`,opacity:publishing?.6:1,transition:'opacity .2s'}}>
-            {publishing?'Joylashtirilmoqda...':'🌟 Ha, e\'lon qilish'}
+            {publishing ? t('publishing') : t('publishYes')}
           </button>
           <button onClick={()=>handlePublish(false)} disabled={publishing}
             style={{width:'100%',padding:'15px',borderRadius:16,
               border:`1.5px solid ${C.border}`,background:'transparent',
               color:C.muted,cursor:'pointer',fontWeight:600,fontSize:15}}>
-            Yo'q, faqat savatga
+            {t('publishNo')}
           </button>
         </div>
       </div>
@@ -663,17 +665,17 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
       </div>
 
       <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:900,color:C.dark,marginBottom:8}}>
-        Buyurtma qabul qilindi!
+        {t('orderAccepted')}
       </div>
       <div style={{color:C.muted,fontSize:14,lineHeight:1.8,marginBottom:28,maxWidth:300}}>
-        Konditer <b style={{color:C.dark}}>30 daqiqa</b> ichida siz bilan bog'lanadi.
+        {t('orderDoneDesc')}
       </div>
 
       <div style={{width:'100%',maxWidth:360,background:C.s1,borderRadius:24,border:`1px solid ${C.border}`,
         overflow:'hidden',marginBottom:28,boxShadow:`0 4px 20px rgba(0,0,0,.06)`}}>
         <div style={{background:`linear-gradient(135deg,${C.navy},${C.mid})`,padding:'16px 20px',
           display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <span style={{color:'rgba(255,255,255,.8)',fontSize:13,fontWeight:600}}>Jami summa</span>
+          <span style={{color:'rgba(255,255,255,.8)',fontSize:13,fontWeight:600}}>{t('orderSummary')}</span>
           <span style={{color:'#fff',fontSize:20,fontWeight:900}}>{totalPrice.toLocaleString('ru-RU')} so'm</span>
         </div>
         <div style={{padding:'16px 20px',display:'flex',flexWrap:'wrap',gap:8}}>
@@ -701,7 +703,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
           background:`linear-gradient(135deg,${C.navy},${C.mid})`,
           color:'#fff',cursor:'pointer',fontWeight:700,fontSize:15,
           boxShadow:`0 6px 20px ${C.navy}44`}}>
-        Bosh sahifaga →
+        {t('backToHome')}
       </button>
     </div>
   );
@@ -765,7 +767,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
                   {addPrice != null && (
                     <div style={{marginTop:8,display:'inline-block',background:active?`${C.navy}18`:C.s2,
                       borderRadius:50,padding:'3px 10px',fontSize:11,fontWeight:700,color:active?C.navy:C.muted}}>
-                      {opt.basePrice ? opt.basePrice.toLocaleString('ru-RU')+' so\'m' : addPrice>0?'+'+addPrice.toLocaleString('ru-RU')+' so\'m':'Bepul'}
+                      {opt.basePrice ? opt.basePrice.toLocaleString('ru-RU')+' so\'m' : addPrice>0?'+'+addPrice.toLocaleString('ru-RU')+' so\'m':t('cFree')}
                     </div>
                   )}
                 </div>
@@ -797,7 +799,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
               border:'none',background:`linear-gradient(135deg,${C.navy},${C.mid})`,
               color:'#fff',cursor:'pointer',fontWeight:700,fontSize:15,
               boxShadow:`0 6px 20px ${C.navy}44`}}>
-            Davom etish →
+            {t('continueBtn')}
           </button>
         )}
       </div>
@@ -826,15 +828,16 @@ function BottomModal({ onClose, title, children, C }) {
 /* ═══════════════════════════════════════════════════════
    PROFILE PAGE
 ═══════════════════════════════════════════════════════ */
-const ORDER_STATUS = {
-  pending:   { label: 'Kutilmoqda',    color: '#d97706', bg: 'rgba(217,119,6,.1)'   },
-  confirmed: { label: 'Tasdiqlandi',   color: '#2563eb', bg: 'rgba(37,99,235,.1)'   },
-  ready:     { label: 'Tayyor',        color: '#059669', bg: 'rgba(5,150,105,.12)'  },
-  delivered: { label: 'Yetkazildi',    color: '#7c3aed', bg: 'rgba(124,58,237,.1)'  },
-  cancelled: { label: 'Bekor qilindi', color: '#dc2626', bg: 'rgba(220,38,38,.1)'   },
-};
-
 function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, setUser, setPage }) {
+  const { t } = useLocale();
+
+  const ORDER_STATUS = {
+    pending:   { label: t('orderPending'),   color: '#d97706', bg: 'rgba(217,119,6,.1)'   },
+    confirmed: { label: t('orderConfirmed'), color: '#2563eb', bg: 'rgba(37,99,235,.1)'   },
+    ready:     { label: t('orderReady'),     color: '#059669', bg: 'rgba(5,150,105,.12)'  },
+    delivered: { label: t('orderDelivered'), color: '#7c3aed', bg: 'rgba(124,58,237,.1)'  },
+    cancelled: { label: t('orderCancelled'), color: '#dc2626', bg: 'rgba(220,38,38,.1)'   },
+  };
   const [activeTab, setActiveTab] = useState('orders');
   const [bdays,     setBdays]     = useState([]);
   const [bdayModal, setBdayModal] = useState(false);
@@ -861,16 +864,16 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
   };
 
   const TABS = [
-    { id: 'orders',   icon: <Package size={20} />, label: "Buyurtmalar" },
-    { id: 'bdays',    icon: <Gift size={20} />,    label: "Tug'ilgan kun" },
-    { id: 'settings', icon: <Gear size={20} />,    label: "Sozlamalar" },
+    { id: 'orders',   icon: <Package size={20} />, label: t('tabOrders') },
+    { id: 'bdays',    icon: <Gift size={20} />,    label: t('tabBirthdays') },
+    { id: 'settings', icon: <Gear size={20} />,    label: t('tabSettings') },
   ];
 
   return (
     <>
       {/* Birthday Modal */}
       {bdayModal && (
-        <BottomModal C={C} onClose={() => setBdayModal(false)} title="Tug'ilgan kun qo'shish">
+        <BottomModal C={C} onClose={() => setBdayModal(false)} title={t('addBirthdayTitle')}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             {['🎂','🎉','🎈','🎁','🌸','⭐'].map(e => (
               <button key={e} onClick={() => setNewBday(b => ({ ...b, emoji: e }))}
@@ -879,14 +882,14 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
               </button>
             ))}
           </div>
-          <input value={newBday.name} onChange={e => setNewBday(b => ({ ...b, name: e.target.value }))} placeholder="Ism" style={inp} />
-          <input value={newBday.date} onChange={e => setNewBday(b => ({ ...b, date: e.target.value }))} placeholder="Sana (mas. 12 May)" style={{ ...inp, marginBottom: 20 }} />
+          <input value={newBday.name} onChange={e => setNewBday(b => ({ ...b, name: e.target.value }))} placeholder={t('firstName')} style={inp} />
+          <input value={newBday.date} onChange={e => setNewBday(b => ({ ...b, date: e.target.value }))} placeholder={t('dateExample')} style={{ ...inp, marginBottom: 20 }} />
           <div style={{ display:'flex', gap:10 }}>
-            <button onClick={() => setBdayModal(false)} style={{ flex:1, padding:14, borderRadius:12, border:'1.5px solid '+C.border, background:'none', color:C.muted, cursor:'pointer', fontWeight:600 }}>Bekor</button>
+            <button onClick={() => setBdayModal(false)} style={{ flex:1, padding:14, borderRadius:12, border:'1.5px solid '+C.border, background:'none', color:C.muted, cursor:'pointer', fontWeight:600 }}>{t('cancel')}</button>
             <button disabled={!newBday.name||!newBday.date}
               onClick={async () => { if(newBday.name&&newBday.date){ try{ const b=await api.post('/api/birthdays',newBday); setBdays(p=>[...p,b]); }catch{} setBdayModal(false); setNewBday({emoji:'🎂',name:'',date:''}); } }}
               style={{ flex:2, padding:14, borderRadius:12, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontWeight:700, opacity:(!newBday.name||!newBday.date)?.45:1 }}>
-              Qo'shish
+              {t('addBirthday')}
             </button>
           </div>
         </BottomModal>
@@ -894,15 +897,15 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
 
       {/* Name Modal */}
       {nameModal && (
-        <BottomModal C={C} onClose={() => setNameModal(false)} title="Ismni o'zgartirish">
-          <input value={nameForm.firstName} onChange={e => setNameForm(f => ({ ...f, firstName: e.target.value }))} placeholder="Ism" style={inp} />
-          <input value={nameForm.lastName} onChange={e => setNameForm(f => ({ ...f, lastName: e.target.value }))} placeholder="Familiya" style={{ ...inp, marginBottom: 20 }} />
+        <BottomModal C={C} onClose={() => setNameModal(false)} title={t('changeNameTitle')}>
+          <input value={nameForm.firstName} onChange={e => setNameForm(f => ({ ...f, firstName: e.target.value }))} placeholder={t('firstName')} style={inp} />
+          <input value={nameForm.lastName} onChange={e => setNameForm(f => ({ ...f, lastName: e.target.value }))} placeholder={t('lastName')} style={{ ...inp, marginBottom: 20 }} />
           <div style={{ display:'flex', gap:10 }}>
-            <button onClick={() => setNameModal(false)} style={{ flex:1, padding:14, borderRadius:12, border:'1.5px solid '+C.border, background:'none', color:C.muted, cursor:'pointer', fontWeight:600 }}>Bekor</button>
+            <button onClick={() => setNameModal(false)} style={{ flex:1, padding:14, borderRadius:12, border:'1.5px solid '+C.border, background:'none', color:C.muted, cursor:'pointer', fontWeight:600 }}>{t('cancel')}</button>
             <button disabled={!nameForm.firstName.trim()||nameLoading}
               onClick={async () => { setNameLoading(true); try{ const res=await api.patch('/api/auth/me',{firstName:nameForm.firstName.trim(),lastName:nameForm.lastName.trim()}); setUser(res.user); setNameModal(false); }catch{}finally{ setNameLoading(false); } }}
               style={{ flex:2, padding:14, borderRadius:12, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontWeight:700, opacity:(!nameForm.firstName.trim()||nameLoading)?.45:1 }}>
-              {nameLoading ? 'Saqlanmoqda...' : 'Saqlash'}
+              {nameLoading ? t('successSave') : t('save')}
             </button>
           </div>
         </BottomModal>
@@ -913,11 +916,11 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
         <div style={{ maxWidth:600, margin:'0 auto', padding:'0 20px', position:'relative' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
             <button onClick={() => setPage('home')} style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:8, padding:'6px 11px', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600 }}>
-              <House size={14} /> Bosh sahifa
+              <House size={14} /> {t('home')}
             </button>
             <button onClick={() => { setNameForm({firstName:user?.firstName||'',lastName:user?.lastName||''}); setNameModal(true); }}
               style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:8, padding:'6px 11px', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600 }}>
-              <PencilSimple size={14} /> Tahrirlash
+              <PencilSimple size={14} /> {t('profileEdit')}
             </button>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:14 }}>
@@ -938,8 +941,8 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
       <div style={{ maxWidth:600, margin:'12px auto 0', padding:'0 16px' }}>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8 }}>
           {[
-            { icon:<Package size={16} weight="duotone"/>, color:'#4f46e5', val:orders.length, label:'Buyurtmalar' },
-            { icon:<TrendUp size={16} weight="duotone"/>, color:'#059669', val:sum(totalSpent), label:'Sarflangan', small:totalSpent>999999 },
+            { icon:<Package size={16} weight="duotone"/>, color:'#4f46e5', val:orders.length, label:t('ordersStat') },
+            { icon:<TrendUp size={16} weight="duotone"/>, color:'#059669', val:sum(totalSpent), label:t('spentStat'), small:totalSpent>999999 },
           ].map(s => (
             <div key={s.label} style={{ background:C.s1, borderRadius:14, padding:'12px 8px', textAlign:'center', border:'1px solid '+C.border, boxShadow:'0 2px 10px rgba(0,0,0,.06)' }}>
               <div style={{ width:30, height:30, borderRadius:9, background:s.color+'15', margin:'0 auto 6px', display:'flex', alignItems:'center', justifyContent:'center', color:s.color }}>
@@ -971,8 +974,8 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
           orders.length===0 ? (
             <div style={{ textAlign:'center', padding:'64px 0', color:C.muted }}>
               <Package size={60} weight="duotone" style={{ opacity:.25, marginBottom:16 }} />
-              <div style={{ fontSize:18, fontWeight:700, color:C.dark, marginBottom:8 }}>Buyurtmalar yo'q</div>
-              <div style={{ fontSize:14 }}>Birinchi buyurtmangizni bering!</div>
+              <div style={{ fontSize:18, fontWeight:700, color:C.dark, marginBottom:8 }}>{t('noOrders')}</div>
+              <div style={{ fontSize:14 }}>{t('firstOrder')}</div>
             </div>
           ) : orders.slice().reverse().map((order, i) => {
             const st = ORDER_STATUS[order.status] || ORDER_STATUS.pending;
@@ -988,7 +991,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
                       <Package size={16} />
                     </div>
                     <div>
-                      <div style={{ fontSize:13, fontWeight:800, color:C.dark }}>Buyurtma #{String(order.id||'').slice(-6)||orders.length-i}</div>
+                      <div style={{ fontSize:13, fontWeight:800, color:C.dark }}>{t('orderNo')}{String(order.id||'').slice(-6)||orders.length-i}</div>
                       <div style={{ fontSize:11, color:C.muted }}>{order.date || (order.createdAt ? new Date(order.createdAt).toLocaleDateString('uz-UZ') : '')}</div>
                     </div>
                   </div>
@@ -1039,16 +1042,16 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
         {activeTab==='bdays' && (
           <div>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-              <div style={{ fontSize:16, fontWeight:800, color:C.dark }}>Tug'ilgan kunlar</div>
+              <div style={{ fontSize:16, fontWeight:800, color:C.dark }}>{t('birthdaysTitle')}</div>
               <button onClick={() => setBdayModal(true)} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:50, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, boxShadow:'0 4px 14px '+C.navy+'44' }}>
-                <Plus size={15} /> Qo'shish
+                <Plus size={15} /> {t('addBirthday')}
               </button>
             </div>
             {bdays.length===0 && (
               <div style={{ textAlign:'center', padding:'48px 0' }}>
                 <Gift size={56} weight="duotone" color={C.muted} style={{ opacity:.3, marginBottom:12 }} />
-                <div style={{ fontSize:16, fontWeight:700, color:C.dark, marginBottom:6 }}>Tug'ilgan kunlar yo'q</div>
-                <div style={{ fontSize:13, color:C.muted }}>Yaqinlaringizning tug'ilgan kunini qo'shing</div>
+                <div style={{ fontSize:16, fontWeight:700, color:C.dark, marginBottom:6 }}>{t('noBirthdays')}</div>
+                <div style={{ fontSize:13, color:C.muted }}>{t('noBirthdaysHint')}</div>
               </div>
             )}
             {bdays.map((b,i) => {
@@ -1082,7 +1085,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
           <div>
             <div style={{ background:C.s1, borderRadius:20, overflow:'hidden', border:'1px solid '+C.border, marginBottom:12 }}>
               <div style={{ padding:'10px 18px', borderBottom:'1px solid '+C.border }}>
-                <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>Ko'rinish</span>
+                <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>{t('appearanceSection')}</span>
               </div>
               <div style={{ padding:'16px 18px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -1090,8 +1093,8 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
                     {isDark ? <Moon size={22} weight="duotone"/> : <Sun size={22} weight="duotone"/>}
                   </div>
                   <div>
-                    <div style={{ fontSize:15, fontWeight:700, color:C.dark }}>{isDark?"Qorong'u tema":"Yorug' tema"}</div>
-                    <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>Ko'rinishni o'zgartirish</div>
+                    <div style={{ fontSize:15, fontWeight:700, color:C.dark }}>{isDark ? t('darkTheme') : t('lightTheme')}</div>
+                    <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>{t('changeTheme')}</div>
                   </div>
                 </div>
                 <Toggle on={isDark} onToggle={() => setIsDark(d=>!d)} C={C} />
@@ -1099,11 +1102,11 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
             </div>
             <div style={{ background:C.s1, borderRadius:20, overflow:'hidden', border:'1px solid '+C.border, marginBottom:16 }}>
               <div style={{ padding:'10px 18px', borderBottom:'1px solid '+C.border }}>
-                <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>Hisob</span>
+                <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>{t('accountSection')}</span>
               </div>
               {[
-                { icon:<UserCircle size={20} weight="duotone"/>, color:'#4f46e5', label:'Ism Familiya',  val:user?.name||'—' },
-                { icon:<Phone size={20} weight="duotone"/>,      color:'#059669', label:'Telefon raqam', val:user?.phone||'—' },
+                { icon:<UserCircle size={20} weight="duotone"/>, color:'#4f46e5', label:t('yourName'),    val:user?.name||'—' },
+                { icon:<Phone size={20} weight="duotone"/>,      color:'#059669', label:t('phoneNumber'), val:user?.phone||'—' },
               ].map((row,i,arr) => (
                 <div key={row.label} style={{ padding:'14px 18px', display:'flex', alignItems:'center', gap:12, borderBottom:i<arr.length-1?'1px solid '+C.border:'none' }}>
                   <div style={{ width:40, height:40, borderRadius:12, background:row.color+'15', display:'flex', alignItems:'center', justifyContent:'center', color:row.color, flexShrink:0 }}>
@@ -1117,7 +1120,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
               ))}
             </div>
             <button onClick={onLogout} style={{ width:'100%', padding:16, borderRadius:18, border:'1.5px solid rgba(239,68,68,.25)', background:'rgba(239,68,68,.05)', color:'#ef4444', cursor:'pointer', fontWeight:700, fontSize:15, display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}>
-              <SignOut size={18} /> Hisobdan chiqish
+              <SignOut size={18} /> {t('logout')}
             </button>
           </div>
         )}
