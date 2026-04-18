@@ -149,40 +149,6 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             </div>
           )}
 
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
-              {t('phoneNumber')}
-            </label>
-            <div style={{ position: 'relative' }}>
-              <span style={iconWrap}><Phone size={18} weight="duotone" /></span>
-              <input
-                className="input-focus"
-                type="tel"
-                value={phone}
-                onChange={e => setPhone(formatPhone(e.target.value))}
-                onKeyDown={e => {
-                  if (['Backspace','Delete'].includes(e.key) && rawDigits(phone).length <= 3) e.preventDefault();
-                  if (e.key === 'Enter') handleLogin();
-                }}
-                placeholder="+998 90 123 45 67"
-                style={inputStyle}
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div style={{
-              color: C.danger || '#ef4444',
-              fontSize: 13,
-              marginBottom: 16,
-              background: 'rgba(239,68,68,.08)',
-              padding: '10px 14px',
-              borderRadius: 10,
-            }}>
-              {error}
-            </div>
-          )}
-
           <button className="btn-hover" onClick={handleLogin} disabled={loading} style={primaryBtn(loading)}>
             {loading
               ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} />
