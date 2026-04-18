@@ -58,9 +58,27 @@ if (require.main === module) {
     app.use(express.static(distPath));
     app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
   }
-  const server = app.listen(PORT, '0.0.0.0', () =>
-    console.log(`✅ SweetMarket backend: http://0.0.0.0:${PORT}`)
-  );
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ SweetMarket backend: http://0.0.0.0:${PORT}`);
+    if (isProd && process.env.BOT_TOKEN) {
+      const backendUrl = process.env.BACKEND_URL || 'https://sweetmaket-front-1.onrender.com';
+      const https = require('https');
+      const body = JSON.stringify({ url: `${backendUrl}/api/bot/webhook` });
+      const req = https.request({
+        hostname: 'api.telegram.org',
+        path: `/bot${process.env.BOT_TOKEN}/setWebhook`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+      }, res => {
+        let buf = '';
+        res.on('data', c => buf += c);
+        res.on('end', () => console.log('[bot] Webhook natija:', buf));
+      });
+      req.on('error', e => console.error('[bot] Webhook xato:', e.message));
+      req.write(body);
+      req.end();
+    }
+  });
   server.on('error', err => {
     if (err.code === 'EADDRINUSE') { console.error(`❌ Port ${PORT} band!`); process.exit(1); }
   });

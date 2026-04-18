@@ -33,9 +33,12 @@ function sendMessage(chatId, text, extra = {}) {
 
 /* ── POST /api/bot/webhook ── */
 router.post('/webhook', async (req, res) => {
-  res.sendStatus(200); // answer Telegram immediately
+  res.sendStatus(200);
 
-  if (!BOT_TOKEN) return;
+  if (!BOT_TOKEN) {
+    console.error('[bot] BOT_TOKEN sozlanmagan — webhook ishlayotgan emas');
+    return;
+  }
 
   const update = req.body;
   const msg    = update.message;
