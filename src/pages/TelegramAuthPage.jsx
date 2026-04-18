@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { User, Storefront, ArrowLeft, CircleNotch } from '@phosphor-icons/react';
+import { useLocale } from '../locale.jsx';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
 export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }) {
+  const { t } = useLocale();
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState('');
   // seller link form (when telegram_id not in sellers yet)
@@ -97,7 +99,7 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
             <ArrowLeft size={24} />
           </button>
         )}
-        <div style={{ fontSize: 18, fontWeight: 700, color: C.dark }}>Telegram orqali kirish</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: C.dark }}>{t('telegramLogin')}</div>
       </div>
 
       {/* Content */}
@@ -110,9 +112,9 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
 
         {!linkMode ? (
           <>
-            <div style={{ fontSize: 22, fontWeight: 800, color: C.dark, textAlign: 'center', marginBottom: 8 }}>Xush kelibsiz!</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: C.dark, textAlign: 'center', marginBottom: 8 }}>{t('welcome')}!</div>
             <div style={{ fontSize: 14, color: C.muted, textAlign: 'center', marginBottom: 32, lineHeight: 1.6 }}>
-              Kim sifatida kirishni tanlang
+              {t('chooseRole')}
             </div>
 
             {error && (
@@ -130,7 +132,7 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
               marginBottom: 12, boxShadow: `0 4px 20px ${C.navy}40`,
             }}>
               {loading ? <CircleNotch size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <User size={20} />}
-              Foydalanuvchi sifatida kirish
+              {t('loginAsUser')}
             </button>
 
             {/* Qandolatchi */}
@@ -141,14 +143,14 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
             }}>
               <Storefront size={20} color="#059669" />
-              Qandolatchi sifatida kirish
+              {t('loginAsSeller')}
             </button>
           </>
         ) : (
           <>
             {/* Seller link form */}
             <div style={{ fontSize: 18, fontWeight: 800, color: C.dark, textAlign: 'center', marginBottom: 8 }}>
-              Hisobingizni ulang
+              {t('linkAccount')}
             </div>
             <div style={{ fontSize: 13, color: C.muted, textAlign: 'center', marginBottom: 24, lineHeight: 1.5 }}>
               Qandolatchi hisobingiz telefon raqami va paroli bilan kiring — Telegram hisobingiz avtomatik bog'lanadi
@@ -183,14 +185,14 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
               marginBottom: 10,
             }}>
               {linkLoading ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Storefront size={18} />}
-              {linkLoading ? 'Kirilmoqda...' : 'Kirish va ulash'}
+              {linkLoading ? t('loggingIn') : t('loginAndLink')}
             </button>
 
             <button onClick={() => { setLinkMode(false); setError(''); }} style={{
               width: '100%', padding: '12px', borderRadius: 14, border: `1px solid ${C.border}`,
               background: 'transparent', color: C.muted, fontSize: 14, cursor: 'pointer',
             }}>
-              Orqaga
+              {t('back')}
             </button>
           </>
         )}

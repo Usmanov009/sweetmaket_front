@@ -3,8 +3,10 @@ import { Package, ChatCircle, X, CheckCircle } from '@phosphor-icons/react';
 import { sum } from '../utils/format';
 import ChatModal from '../components/ChatModal';
 import api from '../api';
+import { useLocale } from '../locale.jsx';
 
 export default function UserOrdersPage({ user, C, isDesktop, setPage }) {
+  const { t } = useLocale();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
@@ -30,11 +32,12 @@ export default function UserOrdersPage({ user, C, isDesktop, setPage }) {
     setShowChat(true);
   };
 
-  const STATUS_LABELS = { 
-    pending:'Kutilmoqda', 
-    confirmed:'Tasdiqlandi', 
-    cancelled:"Bekor qilindi",
-    ready:'Tayyor'
+  const STATUS_LABELS = {
+    pending: t('orderPending'),
+    confirmed: t('orderConfirmed'),
+    cancelled: t('orderCancelled'),
+    ready: t('orderReady'),
+    delivered: t('orderDelivered'),
   };
   
   const STATUS_COLORS = { 
@@ -51,25 +54,25 @@ export default function UserOrdersPage({ user, C, isDesktop, setPage }) {
       {/* Header */}
       <div style={{ background:'linear-gradient(135deg,#3b82f6,#1d4ed8)', padding:`${topPad+20}px 20px 24px` }}>
         <div style={{ maxWidth:700, margin:'0 auto' }}>
-          <div style={{ fontSize:12, color:'rgba(255,255,255,.6)', fontWeight:600, marginBottom:4 }}>Mening buyurtmalarim</div>
-          <div style={{ fontSize:22, fontWeight:900, color:'#fff' }}>Buyurtmalar tarixi</div>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,.6)', fontWeight:600, marginBottom:4 }}>{t('myOrders')}</div>
+          <div style={{ fontSize:22, fontWeight:900, color:'#fff' }}>{t('orderHistory')}</div>
         </div>
       </div>
 
       {/* Orders List */}
       <div style={{ maxWidth:700, margin:'0 auto', padding:'16px 16px 100px' }}>
         {loading ? (
-          <div style={{ textAlign:'center', padding:'60px 20px', color:C.muted }}>Yuklanmoqda...</div>
+          <div style={{ textAlign:'center', padding:'60px 20px', color:C.muted }}>{t('loadingText')}</div>
         ) : orders.length === 0 ? (
           <div style={{ textAlign:'center', padding:'60px 20px' }}>
             <div style={{ fontSize:60, marginBottom:12, opacity:.3 }}>📦</div>
-            <div style={{ fontWeight:700, color:C.dark, marginBottom:6 }}>Buyurtmalar yo'q</div>
-            <div style={{ color:C.muted, fontSize:13 }}>Siz hali buyurtma bermagansiz</div>
-            <button 
+            <div style={{ fontWeight:700, color:C.dark, marginBottom:6 }}>{t('noOrders')}</div>
+            <div style={{ color:C.muted, fontSize:13 }}>{t('notYetOrdered')}</div>
+            <button
               onClick={() => setPage('home')}
               style={{ marginTop:16, padding:'10px 20px', borderRadius:10, border:'none', background:C.navy, color:'#fff', cursor:'pointer', fontSize:14, fontWeight:600 }}
             >
-              Asosiy sahifa
+              {t('mainPage')}
             </button>
           </div>
         ) : orders.map(order => (
@@ -109,7 +112,7 @@ export default function UserOrdersPage({ user, C, isDesktop, setPage }) {
                 {order.status === 'ready' && (
                   <div style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:10, background:'#16a34a15', color:'#16a34a', fontSize:12, fontWeight:700 }}>
                     <CheckCircle size={14} />
-                    Tayyor
+                    {t('readyStatus')}
                   </div>
                 )}
               </div>

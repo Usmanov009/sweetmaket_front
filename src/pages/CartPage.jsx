@@ -6,10 +6,12 @@ import {
 import CakeVisual from '../components/CakeVisual';
 import { sum } from '../utils/format';
 import api from '../api';
+import { useLocale } from '../locale.jsx';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
 export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, onClear, onOrder, toast, setPage }) {
+  const { t } = useLocale();
   const [ordering,  setOrdering]  = useState(false);
   const [done,      setDone]      = useState(false);
   const [address,   setAddress]   = useState('');
@@ -28,8 +30,8 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
 
   const handleOrder = async () => {
     if (!cart.length) return;
-    if (!selected) { toast("Qandolatchini tanlang"); return; }
-    if (!address.trim()) { toast("Manzilingizni kiriting"); return; }
+    if (!selected) { toast(t('selectBakery')); return; }
+    if (!address.trim()) { toast(t('enterAddress')); return; }
     setOrdering(true);
     try {
       await onOrder(cart, total, selected, address.trim());
@@ -41,8 +43,8 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
       }, 2200);
     } catch (e) {
       const msg = e?.message === 'Failed to fetch'
-        ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta urinib ko'ring."
-        : (e?.message || "Xatolik yuz berdi.");
+        ? t('serverError')
+        : (e?.message || t('genericError'));
       toast(msg);
     } finally {
       setOrdering(false);
@@ -60,10 +62,10 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
           <ShoppingCart size={44} color={C.border} weight="duotone" />
         </div>
         <div style={{ fontSize: 20, fontWeight: 700, color: C.dark, marginBottom: 8 }}>
-          Savatcha bo'sh
+          {t('cartEmpty')}
         </div>
         <div style={{ fontSize: 14, color: C.muted, marginBottom: 32, lineHeight: 1.6 }}>
-          Mahsulot qo'shish uchun bosh sahifaga qayting
+          {t('addProducts')}
         </div>
         <button onClick={() => setPage('home')} style={{
           padding: '13px 28px', borderRadius: 14, border: 'none', cursor: 'pointer',
@@ -71,7 +73,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
           color: '#fff', fontWeight: 700, fontSize: 14,
           display: 'inline-flex', alignItems: 'center', gap: 8,
         }}>
-          Mahsulotlarga qaytish <ArrowRight size={16} />
+          {t('returnToProducts')} <ArrowRight size={16} />
         </button>
       </div>
     </div>
@@ -83,8 +85,8 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
       <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <CheckCircle size={44} color="#059669" weight="fill" />
       </div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: C.dark }}>Buyurtma qabul qilindi!</div>
-      <div style={{ fontSize: 13, color: C.muted }}>Profilingizdan kuzatishingiz mumkin</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: C.dark }}>{t('orderAccepted')}</div>
+      <div style={{ fontSize: 13, color: C.muted }}>{t('trackProfile')}</div>
     </div>
   );
 
@@ -95,10 +97,10 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
       <div style={{ padding: '0 20px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 900, color: C.dark }}>
-            Savatcha
+            {t('navCart')}
           </div>
           <div style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>
-            {cart.length} ta mahsulot
+            {cart.length} {t('itemsCount')}
           </div>
         </div>
         <button onClick={onClear} style={{
@@ -106,7 +108,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
           background: 'transparent', cursor: 'pointer', color: '#ef4444',
           fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          <Trash size={14} /> Tozalash
+          <Trash size={14} /> {t('clear')}
         </button>
       </div>
 
@@ -153,10 +155,10 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
       {/* Seller selector */}
       <div style={{ padding: '20px 20px 0' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Storefront size={16} color={C.navy} /> Qandolatchini tanlang
+          <Storefront size={16} color={C.navy} /> {t('selectBakery')}
         </div>
         {sellers.length === 0 ? (
-          <div style={{ fontSize: 13, color: C.muted, padding: '12px 0' }}>Qandolatchilar topilmadi</div>
+          <div style={{ fontSize: 13, color: C.muted, padding: '12px 0' }}>{t('noBakeries')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {sellers.map(b => {
@@ -196,7 +198,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
       {/* Address input */}
       <div style={{ padding: '16px 20px 0' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <MapPin size={16} color={C.navy} /> Sizning manzilingiz
+          <MapPin size={16} color={C.navy} /> {t('yourAddress')}
         </div>
         <div style={{ position: 'relative' }}>
           <MapPin size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
@@ -225,7 +227,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
           padding: '18px 20px', boxShadow: '0 8px 32px rgba(0,0,0,.12)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{ fontSize: 14, color: C.muted, fontWeight: 500 }}>Jami</span>
+            <span style={{ fontSize: 14, color: C.muted, fontWeight: 500 }}>{t('orderSummary')}</span>
             <span style={{ fontSize: 22, fontWeight: 900, color: C.dark, fontFamily: "'Playfair Display',serif" }}>
               {sum(total)}
             </span>
@@ -246,7 +248,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
             opacity: ordering ? 0.75 : 1, transition: 'all .25s',
           }}>
             {ordering ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Package size={18} />}
-            {ordering ? 'Yuborilmoqda...' : 'Buyurtma berish'}
+            {ordering ? t('sending') : t('placeOrder')}
             {!ordering && <ArrowRight size={16} />}
           </button>
         </div>

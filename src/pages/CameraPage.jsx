@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Camera, X, ArrowLeft } from '@phosphor-icons/react';
+import { useLocale } from '../locale.jsx';
 
 export default function CameraPage({ onBack, onPhotoTaken, C }) {
+  const { t } = useLocale();
   const videoRef = useRef(null);
   const [stream, setStream]   = useState(null);
   const [error,  setError]    = useState('');
@@ -10,7 +12,7 @@ export default function CameraPage({ onBack, onPhotoTaken, C }) {
   useEffect(() => {
     navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'environment' } })
       .then(s => { setStream(s); if (videoRef.current) videoRef.current.srcObject = s; })
-      .catch(() => setError('Камера недоступна'));
+      .catch(() => setError(t('cameraError')));
     return () => stream?.getTracks().forEach(t => t.stop());
   }, []); // eslint-disable-line
 
@@ -29,7 +31,7 @@ export default function CameraPage({ onBack, onPhotoTaken, C }) {
     setPhoto(null);
     navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'environment' } })
       .then(s => { setStream(s); if (videoRef.current) videoRef.current.srcObject = s; })
-      .catch(() => setError('Камера недоступна'));
+      .catch(() => setError(t('cameraError')));
   };
 
   return (
@@ -39,7 +41,7 @@ export default function CameraPage({ onBack, onPhotoTaken, C }) {
         <button onClick={onBack} style={{ background: 'rgba(0,0,0,.4)', border: 'none', borderRadius: 12, width: 40, height: 40, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <ArrowLeft size={20}/>
         </button>
-        <span style={{ fontWeight: 700, fontSize: 16 }}>Камера</span>
+        <span style={{ fontWeight: 700, fontSize: 16 }}>{t('navCreate')}</span>
       </div>
 
       {/* Viewfinder */}

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Bell, CheckCircle } from '@phosphor-icons/react';
 import api from '../api';
+import { useLocale } from '../locale.jsx';
 
 export default function NotificationsPage({ onClose, C, isDesktop }) {
+  const { t } = useLocale();
   const [notifs, setNotifs] = useState([]);
   const unread = notifs.filter(n => !n.read).length;
   const topPad = isDesktop ? 32 : 56;
@@ -31,7 +33,7 @@ export default function NotificationsPage({ onClose, C, isDesktop }) {
         )}
         <Bell size={22} fill={C.navy} color={C.navy} style={{ flexShrink:0 }}/>
         <div style={{ fontFamily:"'Playfair Display',serif", fontSize:isDesktop?30:22, fontWeight:900, color:C.dark, flex:1 }}>
-          Уведомления
+          {t('notifications')}
         </div>
         {unread > 0 && (
           <button onClick={markAllRead} style={{
@@ -41,7 +43,7 @@ export default function NotificationsPage({ onClose, C, isDesktop }) {
             borderRadius:50, padding:'7px 14px', cursor:'pointer',
           }}>
             <CheckCircle size={14}/>
-            Прочитать всё
+            {t('readAll')}
           </button>
         )}
       </div>
@@ -49,7 +51,7 @@ export default function NotificationsPage({ onClose, C, isDesktop }) {
       {unread === 0 && notifs.length > 0 && (
         <div style={{ textAlign:'center', padding:'12px 20px 0', color:C.muted }}>
           <div style={{ fontSize:11, background:C.s2, borderRadius:50, padding:'6px 18px', display:'inline-block' }}>
-            ✅ Все уведомления прочитаны
+            {t('allRead')}
           </div>
         </div>
       )}
@@ -58,7 +60,7 @@ export default function NotificationsPage({ onClose, C, isDesktop }) {
         {notifs.length === 0 && (
           <div style={{ textAlign:'center', padding:'80px 20px', color:C.muted }}>
             <Bell size={56} color={C.border} style={{ marginBottom:16 }}/>
-            <div style={{ fontSize:16, fontWeight:600, color:C.dark }}>Уведомлений нет</div>
+            <div style={{ fontSize:16, fontWeight:600, color:C.dark }}>{t('noNotifications')}</div>
           </div>
         )}
         {notifs.map(notif => (
