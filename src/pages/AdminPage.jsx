@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendUp, Users, Package, ArrowLeft, Lock } from '@phosphor-icons/react';
+import { TrendUp, Users, Package, ArrowLeft, Lock, ArrowCounterClockwise } from '@phosphor-icons/react';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 const ADMIN_SECRET = 'usmanov009';
@@ -9,14 +9,16 @@ function sum(n) {
 }
 
 export default function AdminPage({ C, onBack }) {
-  const [authed,  setAuthed]  = useState(() => sessionStorage.getItem('sm_admin') === '1');
-  const [pass,    setPass]    = useState('');
-  const [passErr, setPassErr] = useState('');
-  const [tab,     setTab]     = useState('plans');
-  const [sellers, setSellers] = useState([]);
-  const [users,   setUsers]   = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
+  const [authed,      setAuthed]      = useState(() => sessionStorage.getItem('sm_admin') === '1');
+  const [pass,        setPass]        = useState('');
+  const [passErr,     setPassErr]     = useState('');
+  const [tab,         setTab]         = useState('plans');
+  const [sellers,     setSellers]     = useState([]);
+  const [users,       setUsers]       = useState([]);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState('');
+  const [resetting,   setResetting]   = useState(null); // seller id being reset
+  const [resetMsg,    setResetMsg]    = useState('');
 
   const headers = { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET };
 
@@ -38,6 +40,25 @@ export default function AdminPage({ C, onBack }) {
   };
 
   useEffect(() => { if (authed) loadData(); }, [authed]);
+
+  const resetPlan = async (seller) => {
+    if (!window.confirm(`${seller.shopName} — ${sum(seller.planEarnings)} nollamoqchimisiz?`)) return;
+    setResetting(seller.id);
+    try {
+      const r = await fetch(`${BASE}/api/admin/sellers/${seller.id}/reset-plan`, {
+        method: 'POST', headers,
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+      setSellers(prev => prev.map(s => s.id === seller.id ? { ...s, planEarnings: 0 } : s));
+      setResetMsg(`✅ ${seller.shopName}: ${sum(data.amount)} nollandi`);
+      setTimeout(() => setResetMsg(''), 4000);
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setResetting(null);
+    }
+  };
 
   const handleLogin = () => {
     if (pass === ADMIN_SECRET) {
@@ -146,6 +167,12 @@ export default function AdminPage({ C, onBack }) {
         {/* PLANS TAB */}
         {!loading && tab === 'plans' && (
           <>
+            {resetMsg && (
+              <div style={{ padding: '12px 16px', borderRadius: 12, background: '#d1fae5', border: '1px solid #6ee7b7', color: '#065f46', fontSize: 14, fontWeight: 600, marginBottom: 12 }}>
+                {resetMsg}
+              </div>
+            )}
+
             {/* Summary */}
             <div style={{ background: C.s1, borderRadius: 16, padding: '14px 18px', border: `1px solid ${C.border}`, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -189,10 +216,35 @@ export default function AdminPage({ C, onBack }) {
                   ))}
                 </div>
 
-                {/* Revenue */}
-                <div style={{ padding: '10px 16px', background: `linear-gradient(135deg,${C.navy}06,${C.mid}06)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, color: C.muted }}>Topshirilgan buyurtmalar jami:</span>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#059669' }}>{sum(s.stats.revenue)}</span>
+                {/* Revenue + Reset */}
+                <div style={{ padding: '10px 16px', background: `linear-gradient(135deg,${C.navy}06,${C.mid}06)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: C.muted }}>Jami daromad:</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#059669' }}>{sum(s.stats.revenue)}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 11, color: C.muted }}>Komissiya (plan):</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: C.navy }}>{sum(s.planEarnings)}</div>
+                    </div>
+                    {s.planEarnings > 0 && (
+                      <button
+                        onClick={() => resetPlan(s)}
+                        disabled={resetting === s.id}
+                        title="Planini nollash va botdan xabar yuborish"
+                        style={{
+                          padding: '8px 12px', borderRadius: 10, border: 'none',
+                          background: resetting === s.id ? '#e5e7eb' : '#fee2e2',
+                          color: resetting === s.id ? '#9ca3af' : '#dc2626',
+                          cursor: resetting === s.id ? 'default' : 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
+                          flexShrink: 0,
+                        }}>
+                        <ArrowCounterClockwise size={14} />
+                        {resetting === s.id ? '...' : 'Nollash'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

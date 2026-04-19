@@ -55,6 +55,42 @@ router.get('/plans', adminAuth, async (req, res) => {
   }
 });
 
+// POST /api/admin/sellers/:id/reset-plan — planini nollash va botdan xabar
+router.post('/sellers/:id/reset-plan', adminAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, name, shop_name, telegram_id, COALESCE(plan_earnings, 0) as plan_earnings FROM sellers WHERE id = $1',
+      [req.params.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Sotuvchi topilmadi' });
+
+    const seller = rows[0];
+    const amount = Number(seller.plan_earnings);
+    const now = new Date().toLocaleString('uz-UZ', {
+      day: 'numeric', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent',
+    });
+
+    await pool.query('UPDATE sellers SET plan_earnings = 0 WHERE id = $1', [seller.id]);
+
+    if (seller.telegram_id) {
+      const { sendTelegramMessage } = require('../utils/telegram');
+      sendTelegramMessage(
+        seller.telegram_id,
+        `💸 <b>Plan to'ldirildi!</b>\n\n` +
+        `🏪 Do'kon: <b>${seller.shop_name}</b>\n` +
+        `💰 To'langan summa: <b>${amount.toLocaleString('ru-RU')} so'm</b>\n` +
+        `🕐 Sana: <b>${now}</b>\n\n` +
+        `Keyingi oyda ham omad! 🎂`
+      );
+    }
+
+    res.json({ ok: true, amount, resetAt: new Date().toISOString() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /api/admin/users — barcha foydalanuvchilar
 router.get('/users', adminAuth, async (req, res) => {
   try {
