@@ -111,22 +111,13 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
           )}
 
           {order.status === 'confirmed' && (
-            <>
-              <button onClick={() => onReady(order.id)} style={{
-                padding: '7px 14px', borderRadius: 10, border: 'none',
-                background: 'rgba(5,150,105,.12)', color: '#059669',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
-              }}>
-                <CheckCircle size={14} /> Tayyor
-              </button>
-              <button onClick={() => onCancel(order.id)} style={{
-                padding: '7px 14px', borderRadius: 10, border: 'none',
-                background: 'rgba(220,38,38,.08)', color: '#dc2626',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
-              }}>
-                <XCircle size={14} /> Rad
-              </button>
-            </>
+            <button onClick={() => onReady(order.id)} style={{
+              padding: '7px 14px', borderRadius: 10, border: 'none',
+              background: 'rgba(5,150,105,.12)', color: '#059669',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
+            }}>
+              <CheckCircle size={14} /> Tayyor
+            </button>
           )}
 
           {order.status === 'ready' && (
