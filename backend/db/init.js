@@ -153,6 +153,20 @@ async function initDB() {
     )
   `);
 
+  // Seed: admin seller (usmanov009)
+  const bcrypt = require('bcryptjs');
+  const { genId } = require('../utils/db');
+  const adminPhone = '998902021051';
+  const existing = (await pool.query('SELECT id FROM sellers WHERE phone = $1', [adminPhone])).rows[0];
+  if (!existing) {
+    const hash = await bcrypt.hash('usmanov009', 10);
+    await pool.query(
+      `INSERT INTO sellers (id, name, shop_name, phone, password, address) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [genId(), 'Usmanov', 'SweetMarket Admin', adminPhone, hash, 'Toshkent']
+    );
+    console.log('✅ Admin seller yaratildi');
+  }
+
   console.log('✅ PostgreSQL jadvallar tayyor');
 }
 
