@@ -95,9 +95,13 @@ async function initDB() {
       created_at   TIMESTAMPTZ DEFAULT NOW()
     )
   `);
-  // Migrate: mavjud sellers jadvaliga products va plan_earnings ustunlarini qo'shish
+  // Migrate: mavjud sellers jadvaliga ustunlar qo'shish
   await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS products JSONB DEFAULT '[]'`).catch(() => {});
   await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS plan_earnings NUMERIC DEFAULT 0`).catch(() => {});
+  await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS telegram_id TEXT`).catch(() => {});
+
+  // Migrate: mavjud users jadvaliga telegram_id qo'shish
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_id TEXT`).catch(() => {});
 
   // Chat messages jadvali
   await pool.query(`
