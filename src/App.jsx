@@ -1153,7 +1153,9 @@ export default function App() {
   const [page, setPage] = useState('login');
   const [orders, setOrders] = useState([]);
   const [cards, setCards] = useState([]);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('sm_cart') || '[]'); } catch { return []; }
+  });
   const [cakeCards, setCakeCards] = useState([]);
   const [bakeries, setBakeries] = useState([]);
   const [user, setUser] = useState(null);
@@ -1268,6 +1270,8 @@ export default function App() {
       }];
     });
   };
+  useEffect(() => { localStorage.setItem('sm_cart', JSON.stringify(cart)); }, [cart]);
+
   const updateCartQty = (id, qty) => setCart(prev => prev.map(i => i.id === id ? { ...i, qty } : i));
   const removeFromCart = (id) => setCart(prev => prev.filter(i => i.id !== id));
   const clearCart = () => setCart([]);
