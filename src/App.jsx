@@ -1273,7 +1273,7 @@ export default function App() {
   const clearCart = () => setCart([]);
 
   const renderPage = () => {
-    if (page === 'admin') return <AdminPage C={C} onBack={() => setPage('home')} />;
+    if (page === 'admin' && seller?.phone?.replace(/\D/g,'').endsWith('998902021051')) return <AdminPage C={C} onBack={() => setPage('seller')} />;
     if (page === 'telegram-auth') return <TelegramAuthPage onBack={null} onAuthSuccess={handleTelegramAuth} C={C} isDesktop={isDesktop} />;
     if (page === 'seller-login') return <SellerLoginPage onLogin={handleSellerLogin} goUserLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
     if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} setPage={setPage} />;
