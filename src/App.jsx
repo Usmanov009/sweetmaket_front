@@ -23,6 +23,9 @@ import SellerLoginPage from './pages/SellerLoginPage';
 import SellerDashboardPage from './pages/SellerDashboardPage';
 import CartPage from './pages/CartPage';
 import ChatModal from './components/ChatModal';
+import TelegramAuthPage from './pages/TelegramAuthPage';
+import CameraPage from './pages/CameraPage';
+import UserOrdersPage from './pages/UserOrdersPage';
 
 
 
