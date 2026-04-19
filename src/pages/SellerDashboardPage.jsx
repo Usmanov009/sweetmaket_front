@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Package, SignOut, Storefront, Phone, X,
   ChatCircle, CheckCircle, XCircle, UserCircle, MapPin, ClipboardText,
-  CircleNotch, CurrencyDollar, Star, TrendUp, Clock,
+  CircleNotch, CurrencyDollar, Star, TrendUp, Clock, Plus, Trash,
 } from '@phosphor-icons/react';
 
 const ADMIN_PHONE = '998902021051';
@@ -167,6 +167,12 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
   const [showChat,     setShowChat]     = useState(false);
   const [chatData,     setChatData]     = useState(null);
 
+  // Products state
+  const [products,     setProducts]     = useState([]);
+  const [showAddForm,  setShowAddForm]  = useState(false);
+  const [prodLoading,  setProdLoading]  = useState(false);
+  const [newProd, setNewProd] = useState({ name:'', emoji:'🎂', price:'', desc:'', category:'tort', ingredients:'' });
+
   const loadOrders = () => {
     setLoading(true);
     setOrdersError('');
@@ -180,12 +186,39 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
       .finally(() => setLoading(false));
   };
 
+  const loadProducts = () => {
+    sellerFetch('GET', '/api/seller/products').then(data => setProducts(Array.isArray(data) ? data : [])).catch(() => {});
+  };
+
   useEffect(() => {
     loadOrders();
-    sellerFetch('GET', '/api/seller/plan')
-      .then(data => setPlan(data || { totalEarnings: 0, orders: [] }))
-      .catch(() => {});
+    sellerFetch('GET', '/api/seller/plan').then(data => setPlan(data || { totalEarnings: 0, orders: [] })).catch(() => {});
+    loadProducts();
   }, []);
+
+  const addProduct = async () => {
+    if (!newProd.name.trim() || !newProd.price || !newProd.ingredients.trim()) return;
+    setProdLoading(true);
+    try {
+      const p = await sellerFetch('POST', '/api/seller/products', {
+        name: newProd.name.trim(),
+        emoji: newProd.emoji || '🎂',
+        price: Number(newProd.price),
+        desc: newProd.desc.trim(),
+        category: newProd.category,
+        ingredients: newProd.ingredients.trim(),
+      });
+      setProducts(prev => [...prev, p]);
+      setNewProd({ name:'', emoji:'🎂', price:'', desc:'', category:'tort', ingredients:'' });
+      setShowAddForm(false);
+    } catch(e) { alert(e.message); }
+    finally { setProdLoading(false); }
+  };
+
+  const deleteProduct = async (id) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+    sellerFetch('DELETE', `/api/seller/products/${id}`).catch(() => loadProducts());
+  };
 
   const updateStatus = async (orderId, status) => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
@@ -216,9 +249,10 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
   const topPad = isDesktop ? 0 : 52;
 
   const TABS = [
-    { id: 'orders',  icon: <Package size={20} />,    label: 'Buyurtmalar', badge: pendingCount },
-    { id: 'plan',    icon: <TrendUp size={20} />,    label: 'Plan' },
-    { id: 'profile', icon: <UserCircle size={20} />, label: 'Profil' },
+    { id: 'orders',   icon: <Package size={20} />,    label: 'Buyurtmalar', badge: pendingCount },
+    { id: 'products', icon: <Plus size={20} />,       label: 'Mahsulotlar' },
+    { id: 'plan',     icon: <TrendUp size={20} />,    label: 'Plan' },
+    { id: 'profile',  icon: <UserCircle size={20} />, label: 'Profil' },
   ];
 
   return (
@@ -400,6 +434,95 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Products tab ── */}
+          {tab === 'products' && (
+            <div>
+              {/* Add button */}
+              <button onClick={() => setShowAddForm(v => !v)} style={{
+                width: '100%', padding: '13px', borderRadius: 14, border: 'none', marginBottom: 16,
+                background: showAddForm ? C.border : 'linear-gradient(135deg,#059669,#047857)',
+                color: showAddForm ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}>
+                <Plus size={18} /> {showAddForm ? 'Bekor qilish' : 'Yangi mahsulot qo\'shish'}
+              </button>
+
+              {/* Add form */}
+              {showAddForm && (
+                <div style={{ background: C.s1, borderRadius: 18, border: `1px solid ${C.border}`, padding: 18, marginBottom: 18 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.dark, marginBottom: 14 }}>Yangi mahsulot</div>
+
+                  {/* Emoji + Name row */}
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                    <input value={newProd.emoji} onChange={e => setNewProd(p => ({ ...p, emoji: e.target.value }))}
+                      style={{ width: 56, textAlign: 'center', fontSize: 22, background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 0', outline: 'none' }} />
+                    <input value={newProd.name} onChange={e => setNewProd(p => ({ ...p, name: e.target.value }))}
+                      placeholder="Mahsulot nomi *" style={{ flex: 1, background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 14px', color: C.dark, fontSize: 14, outline: 'none' }} />
+                  </div>
+
+                  {/* Category */}
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                    {[['tort','🎂 Tort'],['bento','🎁 Bento'],['cupcake','🧁 Keks']].map(([val, label]) => (
+                      <button key={val} onClick={() => setNewProd(p => ({ ...p, category: val }))} style={{
+                        flex: 1, padding: '8px 4px', borderRadius: 10, border: `1.5px solid ${newProd.category === val ? '#059669' : C.border}`,
+                        background: newProd.category === val ? 'rgba(5,150,105,.1)' : C.s2,
+                        color: newProd.category === val ? '#059669' : C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      }}>{label}</button>
+                    ))}
+                  </div>
+
+                  {/* Price */}
+                  <input value={newProd.price} onChange={e => setNewProd(p => ({ ...p, price: e.target.value }))}
+                    type="number" placeholder="Narx (so'm) *"
+                    style={{ width: '100%', background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 14px', color: C.dark, fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+
+                  {/* Ingredients */}
+                  <input value={newProd.ingredients} onChange={e => setNewProd(p => ({ ...p, ingredients: e.target.value }))}
+                    placeholder="Tarkibi * (masalan: un, qand, tuxum)"
+                    style={{ width: '100%', background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 14px', color: C.dark, fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+
+                  {/* Description */}
+                  <textarea value={newProd.desc} onChange={e => setNewProd(p => ({ ...p, desc: e.target.value }))}
+                    placeholder="Tavsif (ixtiyoriy)" rows={2}
+                    style={{ width: '100%', background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 14px', color: C.dark, fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 14 }} />
+
+                  <button onClick={addProduct} disabled={prodLoading || !newProd.name.trim() || !newProd.price || !newProd.ingredients.trim()} style={{
+                    width: '100%', padding: '13px', borderRadius: 12, border: 'none',
+                    background: (!newProd.name.trim() || !newProd.price || !newProd.ingredients.trim()) ? C.border : 'linear-gradient(135deg,#059669,#047857)',
+                    color: (!newProd.name.trim() || !newProd.price || !newProd.ingredients.trim()) ? C.muted : '#fff',
+                    fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  }}>
+                    {prodLoading ? 'Qo\'shilmoqda...' : '✓ Saqlash'}
+                  </button>
+                </div>
+              )}
+
+              {/* Products list */}
+              {products.length === 0 && !showAddForm && (
+                <div style={{ textAlign: 'center', padding: '48px 16px', color: C.muted }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>🎂</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: C.dark, marginBottom: 6 }}>Mahsulotlar yo'q</div>
+                  <div style={{ fontSize: 13 }}>Yuqoridagi tugma orqali qo'shing</div>
+                </div>
+              )}
+              {products.map(p => (
+                <div key={p.id} style={{ background: C.s1, borderRadius: 16, border: `1px solid ${C.border}`, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, border: `1px solid ${C.border}` }}>
+                    {p.emoji}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.dark, marginBottom: 2 }}>{p.name}</div>
+                    {p.desc && <div style={{ fontSize: 12, color: C.muted, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.desc}</div>}
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#059669' }}>{Number(p.price).toLocaleString('ru-RU')} so'm</div>
+                  </div>
+                  <button onClick={() => deleteProduct(p.id)} style={{ background: 'rgba(220,38,38,.08)', border: 'none', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Trash size={16} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
