@@ -15,7 +15,7 @@ router.get('/plans', adminAuth, async (req, res) => {
   try {
     const { rows: sellers } = await pool.query(
       `SELECT id, name, shop_name, phone, address, COALESCE(plan_earnings, 0) as plan_earnings, created_at
-       FROM sellers ORDER BY plan_earnings DESC`
+       FROM sellers WHERE phone != '998902021051' ORDER BY plan_earnings DESC`
     );
 
     const result = await Promise.all(sellers.map(async s => {

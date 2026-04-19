@@ -239,10 +239,14 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>
                 Sotuvchi kabineti
               </div>
-              <div onClick={handleSecretTap} style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 2, cursor: 'default', userSelect: 'none' }}>{seller?.shopName}</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,.65)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <UserCircle size={13} /> {seller?.name}
+              <div onClick={handleSecretTap} style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 2, cursor: 'default', userSelect: 'none' }}>
+                {isAdmin ? 'Sotuvchi kabineti' : seller?.shopName}
               </div>
+              {!isAdmin && (
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,.65)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <UserCircle size={13} /> {seller?.name}
+                </div>
+              )}
             </div>
             <button onClick={onLogout} style={{
               display: 'flex', alignItems: 'center', gap: 6,
