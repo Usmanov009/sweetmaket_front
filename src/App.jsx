@@ -444,8 +444,16 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
     </div>
   );
 
-  const goBack = () => setStep(s => Math.max(0, s - 1));
-  const goNext = () => setStep(s => Math.min(7, s + 1));
+  const lastChoiceStep = activeSteps.length - 1; // 4 for tort, 3 for bento
+
+  const goBack = () => setStep(s => {
+    if (s === 5) return lastChoiceStep;
+    return Math.max(0, s - 1);
+  });
+  const goNext = () => setStep(s => {
+    if (s === lastChoiceStep) return 5;
+    return Math.min(7, s + 1);
+  });
 
   /* ── STEP 5: DETAILS ── */
   if (step === 5) return (
