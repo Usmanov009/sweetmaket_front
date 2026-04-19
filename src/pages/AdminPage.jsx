@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { TrendUp, Users, Package, ArrowLeft, Lock } from '@phosphor-icons/react';
 
 const BASE = import.meta.env.VITE_API_URL || '';
-const ADMIN_SECRET = 'sweetmarket_admin_2024';
+const ADMIN_SECRET = 'usmanov009';
 
 function sum(n) {
   return Number(n || 0).toLocaleString('ru-RU') + ' so\'m';

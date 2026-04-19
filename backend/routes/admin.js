@@ -2,7 +2,7 @@ const router = require('express').Router();
 const pool = require('../db/pool');
 const { genId } = require('../utils/db');
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'sweetmarket_admin_2024';
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'usmanov009';
 
 function adminAuth(req, res, next) {
   const secret = req.headers['x-admin-secret'] || req.query.secret;
