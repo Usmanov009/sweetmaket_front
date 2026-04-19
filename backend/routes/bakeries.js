@@ -15,6 +15,7 @@ router.get('/', async (req, res) => {
              END as emoji,
              '09:00–21:00' as hours, '4.8' as rating
       FROM sellers
+      WHERE phone != '998902021051'
       ORDER BY created_at DESC
     `);
     
