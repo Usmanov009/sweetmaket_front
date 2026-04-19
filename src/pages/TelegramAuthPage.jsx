@@ -1,26 +1,20 @@
 import { useState } from 'react';
-import { User, Storefront, ArrowLeft, CircleNotch } from '@phosphor-icons/react';
+import { User, Storefront, ArrowLeft, CircleNotch, MapPin, Lock } from '@phosphor-icons/react';
 import { useLocale } from '../locale.jsx';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
 export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }) {
   const { t } = useLocale();
-  const [loading,      setLoading]      = useState(false);
-  const [error,        setError]        = useState('');
-  // seller link form (when telegram_id not in sellers yet)
-  const [linkMode,     setLinkMode]     = useState(false);
-  const [phone,        setPhone]        = useState('');
-  const [password,     setPassword]     = useState('');
-  const [linkLoading,  setLinkLoading]  = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState('');
+  const [setupMode,   setSetupMode]   = useState(false);
+  const [tgName,      setTgName]      = useState('');
+  const [address,     setAddress]     = useState('');
+  const [password,    setPassword]    = useState('');
+  const [setupLoading,setSetupLoading]= useState(false);
 
-  const getTelegramId = () => {
-    try {
-      const params = new URLSearchParams(window.Telegram?.WebApp?.initData || '');
-      const u = JSON.parse(params.get('user') || '{}');
-      return u.id ? String(u.id) : null;
-    } catch { return null; }
-  };
+  const getInitData = () => window.Telegram?.WebApp?.initData || '';
 
   const handleAuth = async (userType) => {
     const tg = window.Telegram?.WebApp;
@@ -34,16 +28,15 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
       });
       const data = await r.json();
       if (!r.ok) {
-        if (data.needRegistration) {
-          // Seller topilmadi — inline forma ko'rsat
-          setLinkMode(true);
+        if (data.needSetup) {
+          setTgName(data.tgName || '');
+          setSetupMode(true);
           setError('');
         } else {
           setError(data.error || 'Xatolik yuz berdi');
         }
         return;
       }
-      // Muvaffaqiyatli login
       if (data.userType === 'seller') {
         localStorage.setItem('sm_seller_token', data.token);
         onAuthSuccess(data.seller, 'seller');
@@ -60,16 +53,14 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
     }
   };
 
-  // Seller — telefon/parol bilan bog'lash
-  const handleLink = async () => {
-    if (!phone.trim() || !password.trim()) { setError("Telefon va parol kiriting"); return; }
-    setLinkLoading(true); setError('');
+  const handleSetup = async () => {
+    if (!address.trim() || !password.trim()) { setError("Manzil va parol kiriting"); return; }
+    setSetupLoading(true); setError('');
     try {
-      const telegramId = getTelegramId();
-      const r = await fetch(`${BASE}/api/seller/login`, {
+      const r = await fetch(`${BASE}/api/auth/telegram`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phone.trim(), password: password.trim(), telegramId }),
+        body: JSON.stringify({ initData: getInitData(), userType: 'seller', address: address.trim(), password: password.trim() }),
       });
       const data = await r.json();
       if (!r.ok) { setError(data.error || 'Xatolik'); return; }
@@ -80,7 +71,7 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
         ? "Server bilan bog'lanib bo'lmadi. Biroz kuting va qayta urinib ko'ring."
         : "Xatolik yuz berdi.");
     } finally {
-      setLinkLoading(false);
+      setSetupLoading(false);
     }
   };
 
@@ -110,7 +101,7 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
           📱
         </div>
 
-        {!linkMode ? (
+        {!setupMode ? (
           <>
             <div style={{ fontSize: 22, fontWeight: 800, color: C.dark, textAlign: 'center', marginBottom: 8 }}>{t('welcome')}!</div>
             <div style={{ fontSize: 14, color: C.muted, textAlign: 'center', marginBottom: 32, lineHeight: 1.6 }}>
@@ -123,7 +114,6 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
               </div>
             )}
 
-            {/* Foydalanuvchi */}
             <button onClick={() => handleAuth('user')} disabled={loading} style={{
               width: '100%', padding: '16px 20px', borderRadius: 16, border: 'none',
               background: loading ? C.border : `linear-gradient(135deg,${C.navy},${C.mid})`,
@@ -135,7 +125,6 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
               {t('loginAsUser')}
             </button>
 
-            {/* Qandolatchi */}
             <button onClick={() => handleAuth('seller')} disabled={loading} style={{
               width: '100%', padding: '16px 20px', borderRadius: 16,
               border: `2px solid ${C.border}`, background: C.s1,
@@ -148,12 +137,11 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
           </>
         ) : (
           <>
-            {/* Seller link form */}
-            <div style={{ fontSize: 18, fontWeight: 800, color: C.dark, textAlign: 'center', marginBottom: 8 }}>
-              {t('linkAccount')}
+            <div style={{ fontSize: 18, fontWeight: 800, color: C.dark, textAlign: 'center', marginBottom: 6 }}>
+              Sotuvchi sifatida ro'yxatdan o'tish
             </div>
             <div style={{ fontSize: 13, color: C.muted, textAlign: 'center', marginBottom: 24, lineHeight: 1.5 }}>
-              Qandolatchi hisobingiz telefon raqami va paroli bilan kiring — Telegram hisobingiz avtomatik bog'lanadi
+              Telegram orqali avtomatik aniqlandingiz
             </div>
 
             {error && (
@@ -162,33 +150,57 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
               </div>
             )}
 
-            <input
-              type="tel"
-              placeholder="+998 90 123 45 67"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              style={{ ...inp, marginBottom: 12 }}
-            />
-            <input
-              type="password"
-              placeholder="Parol"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              style={{ ...inp, marginBottom: 20 }}
-            />
+            {/* Name (readonly, from Telegram) */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 4, paddingLeft: 4 }}>Ism (Telegramdan)</div>
+              <div style={{ ...inp, background: C.s1, color: C.muted, border: `1.5px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <User size={16} color={C.muted} />
+                {tgName || 'Sotuvchi'}
+              </div>
+            </div>
 
-            <button onClick={handleLink} disabled={linkLoading} style={{
+            {/* Address */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 4, paddingLeft: 4 }}>Do'kon manzili</div>
+              <div style={{ position: 'relative' }}>
+                <MapPin size={16} color={C.muted} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                <input
+                  type="text"
+                  placeholder="Toshkent, Chilonzor..."
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  style={{ ...inp, paddingLeft: 38 }}
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 4, paddingLeft: 4 }}>Parol o'rnating</div>
+              <div style={{ position: 'relative' }}>
+                <Lock size={16} color={C.muted} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                <input
+                  type="password"
+                  placeholder="Kamida 6 ta belgi"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  style={{ ...inp, paddingLeft: 38 }}
+                />
+              </div>
+            </div>
+
+            <button onClick={handleSetup} disabled={setupLoading} style={{
               width: '100%', padding: '15px', borderRadius: 14, border: 'none',
-              background: linkLoading ? C.border : 'linear-gradient(135deg,#059669,#047857)',
-              color: '#fff', fontSize: 15, fontWeight: 700, cursor: linkLoading ? 'not-allowed' : 'pointer',
+              background: setupLoading ? C.border : 'linear-gradient(135deg,#059669,#047857)',
+              color: '#fff', fontSize: 15, fontWeight: 700, cursor: setupLoading ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
               marginBottom: 10,
             }}>
-              {linkLoading ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Storefront size={18} />}
-              {linkLoading ? t('loggingIn') : t('loginAndLink')}
+              {setupLoading ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Storefront size={18} />}
+              {setupLoading ? 'Ro\'yxatdan o\'tilmoqda...' : 'Ro\'yxatdan o\'tish'}
             </button>
 
-            <button onClick={() => { setLinkMode(false); setError(''); }} style={{
+            <button onClick={() => { setSetupMode(false); setError(''); }} style={{
               width: '100%', padding: '12px', borderRadius: 14, border: `1px solid ${C.border}`,
               background: 'transparent', color: C.muted, fontSize: 14, cursor: 'pointer',
             }}>

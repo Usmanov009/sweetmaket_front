@@ -151,20 +151,34 @@ router.post('/telegram', async (req, res) => {
   const telegramId = String(tgUser.id);
   
   if (userType === 'seller') {
-    // Check if already registered as user
     const existingUser = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])).rows[0];
     if (existingUser) {
-      return res.status(400).json({ error: 'Siz allaqachon foydalanuvchi sifatida ro\'yxatdan o\'tgansiz. Iltimos, boshqa Telegram hisobidan foydalaning.' });
+      return res.status(400).json({ error: 'Siz allaqachon foydalanuvchi sifatida ro\'yxatdan o\'tgansiz.' });
     }
-    
+
     let sellerRow = (await pool.query('SELECT * FROM sellers WHERE telegram_id = $1', [telegramId])).rows[0];
+
     if (!sellerRow) {
-      return res.status(400).json({ 
-        error: 'Sotuvchi sifatida ro\'yxatdan o\'tish uchun avval veb-saytdan ro\'yxatdan o\'ting',
-        needRegistration: true 
-      });
+      const { address, password } = req.body;
+      const fn = tgUser.first_name || '';
+      const ln = tgUser.last_name  || '';
+      const tgName = [fn, ln].filter(Boolean).join(' ') || tgUser.username || 'Sotuvchi';
+
+      if (!address || !password) {
+        return res.status(400).json({ needSetup: true, tgName });
+      }
+
+      // Auto-register new seller
+      const id = genId();
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await pool.query(
+        `INSERT INTO sellers (id, name, shop_name, phone, password, address, telegram_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [id, tgName, tgName, `tg_${telegramId}`, hashedPassword, address, telegramId]
+      );
+      sellerRow = (await pool.query('SELECT * FROM sellers WHERE id = $1', [id])).rows[0];
     }
-    
+
     const seller = rowToSeller(sellerRow);
     const token = jwt.sign({ id: seller.id, role: 'seller', phone: seller.phone }, JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, seller, userType: 'seller' });
