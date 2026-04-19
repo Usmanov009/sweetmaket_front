@@ -26,6 +26,7 @@ import ChatModal from './components/ChatModal';
 import TelegramAuthPage from './pages/TelegramAuthPage';
 import CameraPage from './pages/CameraPage';
 import UserOrdersPage from './pages/UserOrdersPage';
+import AdminPage from './pages/AdminPage';
 
 
 
@@ -1272,6 +1273,7 @@ export default function App() {
   const clearCart = () => setCart([]);
 
   const renderPage = () => {
+    if (page === 'admin') return <AdminPage C={C} onBack={() => setPage('home')} />;
     if (page === 'telegram-auth') return <TelegramAuthPage onBack={null} onAuthSuccess={handleTelegramAuth} C={C} isDesktop={isDesktop} />;
     if (page === 'seller-login') return <SellerLoginPage onLogin={handleSellerLogin} goUserLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
     if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} />;
