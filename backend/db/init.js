@@ -162,13 +162,15 @@ async function initDB() {
     const hash = crypto.createHash('sha256').update('usmanov009' + 'sweetmarket_salt').digest('hex');
     await pool.query(
       `INSERT INTO sellers (id, name, shop_name, phone, password, address) VALUES ($1,$2,$3,$4,$5,$6)`,
-      [genId(), 'Usmanov', 'SweetMarket Admin', adminPhone, hash, 'Toshkent']
+      [genId(), 'Usmanov', 'Usmanov Qandolat', adminPhone, hash, 'Toshkent']
     );
     console.log('✅ Admin seller yaratildi');
   } else {
-    // Update password hash to SHA256 in case it was previously set with bcrypt
     const hash = crypto.createHash('sha256').update('usmanov009' + 'sweetmarket_salt').digest('hex');
-    await pool.query('UPDATE sellers SET password = $1 WHERE phone = $2', [hash, adminPhone]);
+    await pool.query(
+      `UPDATE sellers SET password = $1, shop_name = 'Usmanov Qandolat', name = 'Usmanov' WHERE phone = $2`,
+      [hash, adminPhone]
+    );
   }
 
   console.log('✅ PostgreSQL jadvallar tayyor');
