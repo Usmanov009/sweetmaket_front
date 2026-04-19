@@ -154,17 +154,21 @@ async function initDB() {
   `);
 
   // Seed: admin seller (usmanov009)
-  const bcrypt = require('bcryptjs');
+  const crypto = require('crypto');
   const { genId } = require('../utils/db');
   const adminPhone = '998902021051';
   const existing = (await pool.query('SELECT id FROM sellers WHERE phone = $1', [adminPhone])).rows[0];
   if (!existing) {
-    const hash = await bcrypt.hash('usmanov009', 10);
+    const hash = crypto.createHash('sha256').update('usmanov009' + 'sweetmarket_salt').digest('hex');
     await pool.query(
       `INSERT INTO sellers (id, name, shop_name, phone, password, address) VALUES ($1,$2,$3,$4,$5,$6)`,
       [genId(), 'Usmanov', 'SweetMarket Admin', adminPhone, hash, 'Toshkent']
     );
     console.log('✅ Admin seller yaratildi');
+  } else {
+    // Update password hash to SHA256 in case it was previously set with bcrypt
+    const hash = crypto.createHash('sha256').update('usmanov009' + 'sweetmarket_salt').digest('hex');
+    await pool.query('UPDATE sellers SET password = $1 WHERE phone = $2', [hash, adminPhone]);
   }
 
   console.log('✅ PostgreSQL jadvallar tayyor');
