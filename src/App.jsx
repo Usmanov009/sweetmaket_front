@@ -1276,7 +1276,7 @@ export default function App() {
     if (page === 'admin') return <AdminPage C={C} onBack={() => setPage('home')} />;
     if (page === 'telegram-auth') return <TelegramAuthPage onBack={null} onAuthSuccess={handleTelegramAuth} C={C} isDesktop={isDesktop} />;
     if (page === 'seller-login') return <SellerLoginPage onLogin={handleSellerLogin} goUserLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
-    if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} />;
+    if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} setPage={setPage} />;
     if (page === 'login') return <LoginPage onLogin={handleLogin} goSignup={() => setPage('signup')} goSellerLogin={() => setPage('seller-login')} C={C} isDesktop={isDesktop} setPage={setPage} />;
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;

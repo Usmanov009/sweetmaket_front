@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Package, SignOut, Storefront, Phone, X,
   ChatCircle, CheckCircle, XCircle, UserCircle, MapPin, ClipboardText,
-  CircleNotch, CurrencyDollar, Star, TrendUp, Clock,
+  CircleNotch, CurrencyDollar, Star, TrendUp, Clock, ShieldStar,
 } from '@phosphor-icons/react';
+
+const ADMIN_PHONE = '998902021051';
 import { sum } from '../utils/format';
 import ChatModal from '../components/ChatModal';
 
@@ -144,7 +146,8 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
 }
 
 /* ─── Main component ─────────────────────────────────── */
-export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) {
+export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, setPage }) {
+  const isAdmin = (seller?.phone || '').replace(/\D/g, '').endsWith(ADMIN_PHONE.replace(/\D/g, ''));
   const [orders,       setOrders]       = useState([]);
   const [plan,         setPlan]         = useState({ totalEarnings: 0, orders: [] });
   const [loading,      setLoading]      = useState(true);
@@ -202,9 +205,10 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
   const topPad = isDesktop ? 0 : 52;
 
   const TABS = [
-    { id: 'orders',  icon: <Package size={20} />, label: 'Buyurtmalar', badge: pendingCount },
-    { id: 'plan',    icon: <TrendUp size={20} />,  label: 'Plan' },
+    { id: 'orders',  icon: <Package size={20} />,    label: 'Buyurtmalar', badge: pendingCount },
+    { id: 'plan',    icon: <TrendUp size={20} />,    label: 'Plan' },
     { id: 'profile', icon: <UserCircle size={20} />, label: 'Profil' },
+    ...(isAdmin ? [{ id: 'admin', icon: <ShieldStar size={20} />, label: 'Admin' }] : []),
   ];
 
   return (
@@ -382,6 +386,23 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop }) 
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Admin tab ── */}
+          {tab === 'admin' && isAdmin && setPage && (
+            <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🛡️</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: C.dark, marginBottom: 8 }}>Admin Panel</div>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 28 }}>Barcha qandolatchilar va foydalanuvchilar ma'lumotlari</div>
+              <button onClick={() => setPage('admin')} style={{
+                padding: '14px 32px', borderRadius: 14, border: 'none',
+                background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)',
+                color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(29,78,216,.35)',
+              }}>
+                Admin sahifasiga o'tish
+              </button>
             </div>
           )}
 
