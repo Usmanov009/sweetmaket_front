@@ -122,10 +122,11 @@ async function initDB() {
   // Migrate: foreign key constraints ON DELETE CASCADE qo'shish
   // (users o'chirilganda bog'liq yozuvlar avtomatik o'chadi)
   const cascadeTables = [
-    { table: 'birthdays',     fk: 'birthdays_user_id_fkey',     col: 'user_id' },
-    { table: 'orders',        fk: 'orders_user_id_fkey',         col: 'user_id' },
-    { table: 'cards',         fk: 'cards_user_id_fkey',          col: 'user_id' },
-    { table: 'notifications', fk: 'notifications_user_id_fkey',  col: 'user_id' },
+    { table: 'birthdays',     fk: 'birthdays_user_id_fkey',      col: 'user_id' },
+    { table: 'orders',        fk: 'orders_user_id_fkey',          col: 'user_id' },
+    { table: 'cards',         fk: 'cards_user_id_fkey',           col: 'user_id' },
+    { table: 'notifications', fk: 'notifications_user_id_fkey',   col: 'user_id' },
+    { table: 'explore_posts', fk: 'explore_posts_user_id_fkey',   col: 'user_id' },
   ];
   for (const { table, fk, col } of cascadeTables) {
     await pool.query(
