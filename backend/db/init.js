@@ -153,6 +153,11 @@ async function initDB() {
     )
   `);
 
+  // Migrate: explore_posts ga seller_id qo'shish
+  await pool.query(`ALTER TABLE explore_posts ADD COLUMN IF NOT EXISTS seller_id TEXT REFERENCES sellers(id) ON DELETE CASCADE`).catch(() => {});
+  await pool.query(`ALTER TABLE explore_posts ADD COLUMN IF NOT EXISTS likes INT DEFAULT 0`).catch(() => {});
+  await pool.query(`ALTER TABLE explore_posts ADD COLUMN IF NOT EXISTS liked_by JSONB DEFAULT '[]'`).catch(() => {});
+
   // Seed: admin seller (usmanov009)
   const crypto = require('crypto');
   const { genId } = require('../utils/db');

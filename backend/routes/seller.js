@@ -394,6 +394,60 @@ router.delete('/products/:id', sellerAuth, async (req, res) => {
   }
 });
 
+// POST /api/seller/publish — explore + home sahifaga mahsulot qo'shish
+router.post('/publish', sellerAuth, async (req, res) => {
+  try {
+    const { name, emoji, bg, price, tags, desc, note } = req.body;
+    if (!name) return res.status(400).json({ error: 'Nom kerak' });
+
+    const sellerRow = (await pool.query('SELECT * FROM sellers WHERE id = $1', [req.seller.id])).rows[0];
+    if (!sellerRow) return res.status(404).json({ error: 'Sotuvchi topilmadi' });
+
+    const { genId } = require('../utils/db');
+    const postId = genId();
+    const fullDesc = [desc, note].filter(Boolean).join(' — ');
+
+    await pool.query(
+      `INSERT INTO explore_posts (id, seller_id, user_name, name, description, emoji, bg, price, tags, public)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,TRUE)`,
+      [postId, sellerRow.id, sellerRow.shop_name,
+       name, fullDesc, emoji || '🎂', bg || '#fce4ec',
+       price || 0, JSON.stringify(Array.isArray(tags) ? tags : [])]
+    );
+
+    res.json({ ok: true, postId });
+  } catch(e) {
+    console.error('Seller publish error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DELETE /api/seller/publish/:postId — o'z postini o'chirish
+router.delete('/publish/:postId', sellerAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM explore_posts WHERE id = $1 AND seller_id = $2', [req.params.postId, req.seller.id]);
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/seller/posts — o'z postlari
+router.get('/posts', sellerAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM explore_posts WHERE seller_id = $1 ORDER BY created_at DESC`,
+      [req.seller.id]
+    );
+    res.json(rows.map(r => ({
+      id: r.id, name: r.name, desc: r.description, emoji: r.emoji,
+      bg: r.bg, price: Number(r.price), tags: r.tags || [], createdAt: r.created_at,
+    })));
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 function rowToSeller(r) {
   return {
     id: r.id,
