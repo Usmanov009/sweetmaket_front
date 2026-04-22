@@ -14,7 +14,6 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
   const { t } = useLocale();
   const [ordering,  setOrdering]  = useState(false);
   const [done,      setDone]      = useState(false);
-  const [address,   setAddress]   = useState('');
   const [sellers,   setSellers]   = useState([]);
   const [selected,  setSelected]  = useState(null); // selected bakery/seller
 
@@ -31,10 +30,9 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
   const handleOrder = async () => {
     if (!cart.length) return;
     if (!selected) { toast(t('selectBakery')); return; }
-    if (!address.trim()) { toast(t('enterAddress')); return; }
     setOrdering(true);
     try {
-      await onOrder(cart, total, selected, address.trim());
+      await onOrder(cart, total, selected, '');
       setDone(true);
       setTimeout(() => {
         onClear();
@@ -193,28 +191,6 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
             })}
           </div>
         )}
-      </div>
-
-      {/* Address input */}
-      <div style={{ padding: '16px 20px 0' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <MapPin size={16} color={C.navy} /> {t('yourAddress')}
-        </div>
-        <div style={{ position: 'relative' }}>
-          <MapPin size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
-          <input
-            className="input-focus"
-            type="text"
-            value={address}
-            onChange={e => setAddress(e.target.value)}
-            placeholder="Toshkent, Chilonzor, 5-uy..."
-            style={{
-              width: '100%', background: C.s2, border: `1.5px solid ${C.border}`,
-              borderRadius: 12, padding: '13px 16px 13px 40px',
-              color: C.dark, fontSize: 14, outline: 'none', boxSizing: 'border-box',
-            }}
-          />
-        </div>
       </div>
 
       {/* Sticky bottom */}
