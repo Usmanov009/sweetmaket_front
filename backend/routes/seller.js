@@ -394,6 +394,17 @@ router.delete('/products/:id', sellerAuth, async (req, res) => {
   }
 });
 
+// PATCH /api/seller/location — region va city saqlash
+router.patch('/location', sellerAuth, async (req, res) => {
+  try {
+    const { region, city } = req.body;
+    if (!region || !city) return res.status(400).json({ error: 'Region va city kerak' });
+    await pool.query('UPDATE sellers SET region=$1, city=$2 WHERE id=$3', [region, city, req.seller.id]);
+    const row = (await pool.query('SELECT * FROM sellers WHERE id=$1', [req.seller.id])).rows[0];
+    res.json({ seller: rowToSeller(row) });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // POST /api/seller/publish — explore + home sahifaga mahsulot qo'shish
 router.post('/publish', sellerAuth, async (req, res) => {
   try {
@@ -456,6 +467,8 @@ function rowToSeller(r) {
     phone: r.phone,
     address: r.address,
     description: r.description,
+    region: r.region || '',
+    city: r.city || '',
     createdAt: r.created_at,
   };
 }

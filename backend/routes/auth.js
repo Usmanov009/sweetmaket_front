@@ -221,16 +221,17 @@ router.get('/me', auth, async (req, res) => {
 
 // PATCH /api/auth/me
 router.patch('/me', auth, async (req, res) => {
-  const { firstName, lastName } = req.body;
-  if (!firstName && !lastName) return res.status(400).json({ error: 'Ism yoki familiya kerak' });
+  const { firstName, lastName, region, city } = req.body;
   const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
   if (!rows[0]) return res.status(404).json({ error: 'Foydalanuvchi topilmadi' });
   const fn = firstName !== undefined ? firstName : rows[0].first_name;
   const ln = lastName  !== undefined ? lastName  : rows[0].last_name;
   const nm = [fn, ln].filter(Boolean).join(' ');
+  const rg = region !== undefined ? region : (rows[0].region || '');
+  const ct = city   !== undefined ? city   : (rows[0].city   || '');
   await pool.query(
-    `UPDATE users SET first_name=$1, last_name=$2, name=$3 WHERE id=$4`,
-    [fn, ln, nm, req.user.id]
+    `UPDATE users SET first_name=$1, last_name=$2, name=$3, region=$4, city=$5 WHERE id=$6`,
+    [fn, ln, nm, rg, ct, req.user.id]
   );
   const updated = (await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id])).rows[0];
   res.json({ user: rowToUser(updated) });
@@ -245,6 +246,8 @@ function rowToUser(r) {
     lastName: r.last_name,
     name: r.name,
     username: r.username || undefined,
+    region: r.region || '',
+    city: r.city || '',
     createdAt: r.created_at,
   };
 }

@@ -10,7 +10,7 @@ import { useLocale } from '../locale.jsx';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
-export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, onClear, onOrder, toast, setPage }) {
+export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, onClear, onOrder, toast, setPage, user }) {
   const { t } = useLocale();
   const [ordering,  setOrdering]  = useState(false);
   const [done,      setDone]      = useState(false);
@@ -155,11 +155,17 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
         <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
           <Storefront size={16} color={C.navy} /> {t('selectBakery')}
         </div>
-        {sellers.length === 0 ? (
-          <div style={{ fontSize: 13, color: C.muted, padding: '12px 0' }}>{t('noBakeries')}</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {sellers.map(b => {
+        {(() => {
+          const filtered = (user?.region && user?.city)
+            ? sellers.filter(b => b.region === user.region && b.city === user.city)
+            : sellers;
+          return filtered.length === 0 ? (
+            <div style={{ fontSize: 13, color: C.muted, padding: '12px 0' }}>
+              {sellers.length === 0 ? t('noBakeries') : `${user?.city || user?.region} da qandolatchilar topilmadi`}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {filtered.map(b => {
               const active = selected?.id === b.id;
               return (
                 <div key={b.id} onClick={() => setSelected(b)} style={{
@@ -189,8 +195,9 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
                 </div>
               );
             })}
-          </div>
-        )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Sticky bottom */}

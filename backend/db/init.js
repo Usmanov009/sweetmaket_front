@@ -153,6 +153,12 @@ async function initDB() {
     )
   `);
 
+  // Migrate: region va city ustunlari
+  await pool.query(`ALTER TABLE users   ADD COLUMN IF NOT EXISTS region TEXT DEFAULT ''`).catch(() => {});
+  await pool.query(`ALTER TABLE users   ADD COLUMN IF NOT EXISTS city   TEXT DEFAULT ''`).catch(() => {});
+  await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS region TEXT DEFAULT ''`).catch(() => {});
+  await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS city   TEXT DEFAULT ''`).catch(() => {});
+
   // Migrate: explore_posts ga seller_id qo'shish
   await pool.query(`ALTER TABLE explore_posts ADD COLUMN IF NOT EXISTS seller_id TEXT REFERENCES sellers(id) ON DELETE CASCADE`).catch(() => {});
   await pool.query(`ALTER TABLE explore_posts ADD COLUMN IF NOT EXISTS likes INT DEFAULT 0`).catch(() => {});

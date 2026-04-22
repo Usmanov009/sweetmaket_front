@@ -7,6 +7,7 @@ router.get('/', async (req, res) => {
     // Sellers ma'lumotlarini olish
     const { rows } = await pool.query(`
       SELECT id, COALESCE(shop_name, name) as name, address, phone,
+             region, city,
              CASE
                WHEN COALESCE(shop_name, name) ILIKE '%sweet%' THEN '🎂'
                WHEN COALESCE(shop_name, name) ILIKE '%шири%' THEN '🧁'
@@ -27,7 +28,9 @@ router.get('/', async (req, res) => {
       hours: seller.hours,
       rating: parseFloat(seller.rating) || 4.8,
       emoji: seller.emoji,
-      lat: null, // Sellers uchun kordinatalar hozircha yo'q
+      region: seller.region || '',
+      city: seller.city || '',
+      lat: null,
       lng: null,
       isSeller: true
     }));

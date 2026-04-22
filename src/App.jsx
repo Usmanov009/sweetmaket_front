@@ -27,6 +27,7 @@ import TelegramAuthPage from './pages/TelegramAuthPage';
 import CameraPage from './pages/CameraPage';
 import UserOrdersPage from './pages/UserOrdersPage';
 import AdminPage from './pages/AdminPage';
+import RegionPicker from './components/RegionPicker';
 
 
 
@@ -1171,6 +1172,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [seller, setSeller] = useState(null);
 
+  const [showRegionPicker, setShowRegionPicker] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [toastId, setToastId] = useState(0);
   const [showNotifs, setShowNotifs] = useState(false);
@@ -1190,7 +1192,7 @@ export default function App() {
     const BASE = import.meta.env.VITE_API_URL || '';
     fetch(BASE + '/api/seller/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(({ seller: s }) => { setSeller(s); setPage('seller'); })
+      .then(({ seller: s }) => { setSeller(s); setPage('seller'); if (!s.region) setShowRegionPicker(true); })
       .catch(() => localStorage.removeItem('sm_seller_token'));
   }, []);
 
@@ -1204,6 +1206,7 @@ export default function App() {
       api.get('/api/auth/me').then(({ user: fresh }) => {
         setUser(fresh);
         setPage('home');
+        if (!fresh.region) setShowRegionPicker(true);
       }).catch(() => {
         localStorage.removeItem('sm_token');
         setUser(null);
@@ -1227,15 +1230,18 @@ export default function App() {
   const handleLogin = (userData) => {
     setUser(userData);
     setPage('home');
+    if (!userData.region) setShowRegionPicker(true);
   };
 
   const handleTelegramAuth = (userData, userType) => {
     if (userType === 'seller') {
       setSeller(userData);
       setPage('seller');
+      if (!userData.region) setShowRegionPicker(true);
     } else {
       setUser(userData);
       setPage('home');
+      if (!userData.region) setShowRegionPicker(true);
     }
   };
 
@@ -1247,6 +1253,20 @@ export default function App() {
   const handleSellerLogin = (sellerData) => {
     setSeller(sellerData);
     setPage('seller');
+    if (!sellerData.region) setShowRegionPicker(true);
+  };
+
+  const handleRegionSave = async (region, city) => {
+    setShowRegionPicker(false);
+    try {
+      if (seller) {
+        await api.patch('/api/seller/location', { region, city });
+        setSeller(s => ({ ...s, region, city }));
+      } else if (user) {
+        const res = await api.patch('/api/auth/me', { region, city });
+        setUser(res.user);
+      }
+    } catch {}
   };
   const handleSellerLogout = () => {
     setSeller(null);
@@ -1296,7 +1316,7 @@ export default function App() {
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} addToCart={addToCart} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} addToCart={addToCart} />;
-    if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={(items, total, bakery, address) => handleAddToOrder(items, total, bakery, address)} toast={toast} setPage={setPage} />;
+    if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={(items, total, bakery, address) => handleAddToOrder(items, total, bakery, address)} toast={toast} setPage={setPage} user={user} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} />;
     return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;
   };
@@ -1306,6 +1326,10 @@ export default function App() {
   return (
     <div style={{ minHeight:'100vh', background:C.bg, color:C.text, transition:'background .3s,color .3s', display: showNav && isDesktop ? 'flex' : 'block' }}>
       <Toast msg={toastMsg} id={toastId} C={C} isDesktop={isDesktop}/>
+
+      {showRegionPicker && (
+        <RegionPicker C={C} onSave={handleRegionSave} />
+      )}
 
       {showNotifs && (
         <div style={{ position:'fixed', inset:0, zIndex:2000, background:C.bg, overflowY:'auto' }}>
