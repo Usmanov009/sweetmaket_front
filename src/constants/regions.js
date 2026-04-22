@@ -17,7 +17,7 @@ export const REGIONS = [
   {
     id: 'fergana',
     name: "Farg'ona viloyati",
-    cities: ["Farg'ona", "Marg'ilon", "Qo'qon", 'Quvasoy', 'Rishton', 'Beshariq', 'Dang'ara', "Qo'qon", 'Oltiariq', 'Toshloq'],
+    cities: ["Farg'ona", "Marg'ilon", "Qo'qon", 'Quvasoy', 'Rishton', 'Beshariq', "Dang'ara", 'Oltiariq', 'Toshloq'],
   },
   {
     id: 'namangan',
@@ -27,7 +27,7 @@ export const REGIONS = [
   {
     id: 'samarkand',
     name: 'Samarqand viloyati',
-    cities: ['Samarqand', "Kattaqo'rg'on", 'Ishtixon', 'Jomboy', 'Urgut', 'Payariq', 'Pastdarg'om', 'Oqdaryo'],
+    cities: ['Samarqand', "Kattaqo'rg'on", 'Ishtixon', 'Jomboy', 'Urgut', 'Payariq', "Pastdarg'om", 'Oqdaryo'],
   },
   {
     id: 'bukhara',
@@ -62,11 +62,11 @@ export const REGIONS = [
   {
     id: 'navoi',
     name: 'Navoiy viloyati',
-    cities: ['Navoiy', 'Karmana', 'Nurota', 'Zarafshon', "Uchquduq"],
+    cities: ['Navoiy', 'Karmana', 'Nurota', 'Zarafshon', 'Uchquduq'],
   },
   {
     id: 'karakalpakstan',
     name: "Qoraqalpog'iston",
-    cities: ['Nukus', 'Beruniy', 'Chimboy', 'Xo'jayli', "Qo'ng'irot", "To'rtko'l"],
+    cities: ['Nukus', 'Beruniy', 'Chimboy', "Xo'jayli", "Qo'ng'irot", "To'rtko'l"],
   },
 ];
