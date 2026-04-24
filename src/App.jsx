@@ -851,7 +851,7 @@ function BottomModal({ onClose, title, children, C }) {
 /* ═══════════════════════════════════════════════════════
    PROFILE PAGE
 ═══════════════════════════════════════════════════════ */
-function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, setUser, setPage }) {
+function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, setUser, setPage, onChangeLocation }) {
   const { t } = useLocale();
 
   const ORDER_STATUS = {
@@ -1130,8 +1130,8 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
               {[
                 { icon:<UserCircle size={20} weight="duotone"/>, color:'#4f46e5', label:t('yourName'),    val:user?.name||'—' },
                 { icon:<Phone size={20} weight="duotone"/>,      color:'#059669', label:t('phoneNumber'), val:user?.phone||'—' },
-              ].map((row,i,arr) => (
-                <div key={row.label} style={{ padding:'14px 18px', display:'flex', alignItems:'center', gap:12, borderBottom:i<arr.length-1?'1px solid '+C.border:'none' }}>
+              ].map((row,i) => (
+                <div key={row.label} style={{ padding:'14px 18px', display:'flex', alignItems:'center', gap:12, borderBottom:'1px solid '+C.border }}>
                   <div style={{ width:40, height:40, borderRadius:12, background:row.color+'15', display:'flex', alignItems:'center', justifyContent:'center', color:row.color, flexShrink:0 }}>
                     {row.icon}
                   </div>
@@ -1141,6 +1141,21 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
                   </div>
                 </div>
               ))}
+              {/* Location row */}
+              <div style={{ padding:'14px 18px', display:'flex', alignItems:'center', gap:12 }}>
+                <div style={{ width:40, height:40, borderRadius:12, background:'#0891b215', display:'flex', alignItems:'center', justifyContent:'center', color:'#0891b2', flexShrink:0 }}>
+                  <MapPin size={20} weight="duotone"/>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:11, color:C.muted, fontWeight:600, marginBottom:2 }}>Yashash joyi</div>
+                  <div style={{ fontSize:14, fontWeight:700, color:C.dark }}>
+                    {user?.region ? `${user.region}${user.city ? ', '+user.city : ''}` : 'Belgilanmagan'}
+                  </div>
+                </div>
+                <button onClick={onChangeLocation} style={{ padding:'7px 14px', borderRadius:10, border:'1px solid '+C.border, background:C.s2, color:C.navy, cursor:'pointer', fontSize:12, fontWeight:700 }}>
+                  O'zgartirish
+                </button>
+              </div>
             </div>
             <button onClick={onLogout} style={{ width:'100%', padding:16, borderRadius:18, border:'1.5px solid rgba(239,68,68,.25)', background:'rgba(239,68,68,.05)', color:'#ef4444', cursor:'pointer', fontWeight:700, fontSize:15, display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}>
               <SignOut size={18} /> {t('logout')}
@@ -1317,7 +1332,7 @@ export default function App() {
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} addToCart={addToCart} />;
     if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} addToCart={addToCart} />;
     if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={(items, total, bakery, address) => handleAddToOrder(items, total, bakery, address)} toast={toast} setPage={setPage} user={user} />;
-    if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} />;
+    if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} onChangeLocation={() => setShowRegionPicker(true)} />;
     return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;
   };
 
