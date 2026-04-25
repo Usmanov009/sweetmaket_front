@@ -316,48 +316,91 @@ function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
 function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) {
   const { t } = useLocale();
 
+  const DETAILS = 50; const PUBLISH = 51; const DONE = 52;
+
   const CREATE_OPTIONS = {
     type: [
-      {id:'tort',  category:'tort', emoji:'🎂', label:t('cTortLabel'),  desc:t('cTortDesc'), basePrice:89000, color:'#fce4ec'},
-      {id:'bento', category:'tort', emoji:'🎁', label:t('cBentoLabel'), desc:t('cBentoDesc'), basePrice:69000, color:'#e8f5e9'},
+      {id:'tort',  category:'tort', emoji:'🎂', label:'Klassik tort',  desc:'An\'anaviy yarusli tort', basePrice:89000, color:'#fce4ec'},
+      {id:'bento', category:'tort', emoji:'🎁', label:'Bento tort',    desc:'Mini formatlı bento tort', basePrice:69000, color:'#e8f5e9'},
     ],
     shape: [
-      {id:'round',  emoji:'⭕', label:t('cRoundLabel'),  desc:t('cRoundDesc'),  color:'#fce4ec'},
-      {id:'square', emoji:'◼️', label:t('cSquareLabel'), desc:t('cSquareDesc'), color:'#e8f5e9'},
-      {id:'heart',  emoji:'❤️', label:t('cHeartLabel'),  desc:t('cHeartDesc'),  color:'#ffe4e1'},
+      {id:'round',  emoji:'⭕', label:'Dumaloq',       desc:'Klassik dumaloq shakl',    color:'#fce4ec'},
+      {id:'square', emoji:'◼️', label:'To\'rtburchak', desc:'Zamonaviy to\'rtburchak',  color:'#e8f5e9'},
+      {id:'heart',  emoji:'❤️', label:'Yurak',         desc:'Sevgi uchun yurak shakl',  color:'#ffe4e1'},
+    ],
+    layers: [
+      {id:'1', emoji:'1️⃣', label:'1 qavat', desc:'Oddiy bir qavatli',        priceAdd:0,     color:'#e3f2fd'},
+      {id:'2', emoji:'2️⃣', label:'2 qavat', desc:'Keng tarqalgan format',    priceAdd:20000, color:'#fce4ec'},
+      {id:'3', emoji:'3️⃣', label:'3 qavat', desc:'Bayramlar uchun',          priceAdd:40000, color:'#e8f5e9'},
+      {id:'4', emoji:'4️⃣', label:'4 qavat', desc:'To\'y va katta tadbirlar', priceAdd:70000, color:'#fff8e1'},
     ],
     size: [
-      {id:'mini', emoji:'🫐', label:t('cMiniLabel'), sub:t('cMiniSub'), desc:t('cMiniDesc'), priceAdd:0,     color:'#e3f2fd'},
-      {id:'std',  emoji:'🍓', label:t('cStdLabel'),  sub:t('cStdSub'),  desc:t('cStdDesc'),  priceAdd:20000, color:'#fff8e1'},
-      {id:'big',  emoji:'🍒', label:t('cBigLabel'),  sub:t('cBigSub'),  desc:t('cBigDesc'),  priceAdd:40000, color:'#fce4ec'},
-      {id:'xl',   emoji:'🎉', label:t('cXlLabel'),   sub:t('cXlSub'),   desc:t('cXlDesc'),   priceAdd:80000, color:'#f9fbe7'},
+      {id:'mini', emoji:'🫐', label:'Mini',     sub:'1–3 kishi',  desc:'Kichik davra uchun',  priceAdd:0,     color:'#e3f2fd'},
+      {id:'std',  emoji:'🍓', label:'Standart', sub:'4–8 kishi',  desc:'Oilaviy format',       priceAdd:20000, color:'#fff8e1'},
+      {id:'big',  emoji:'🍒', label:'Katta',    sub:'9–15 kishi', desc:'Mehmonlar uchun',      priceAdd:40000, color:'#fce4ec'},
+      {id:'xl',   emoji:'🎉', label:'XL',       sub:'16+ kishi',  desc:'Katta bayram uchun',   priceAdd:80000, color:'#f9fbe7'},
     ],
-    flavor: [
-      {id:'velvet', emoji:'🍷', label:t('cVelvetLabel'), desc:t('cVelvetDesc'), priceAdd:10000, color:'#fce4ec'},
-      {id:'choco',  emoji:'🍫', label:t('cChocoLabel'),  desc:t('cChocoDesc'),  priceAdd:5000,  color:'#efebe9'},
-      {id:'pista',  emoji:'🌿', label:t('cPistaLabel'),  desc:t('cPistaDesc'),  priceAdd:15000, color:'#e8f5e9'},
-      {id:'rasp',   emoji:'🍓', label:t('cRaspLabel'),   desc:t('cRaspDesc'),   priceAdd:10000, color:'#fce4ec'},
-      {id:'lemon',  emoji:'🍋', label:t('cLemonLabel'),  desc:t('cLemonDesc'),  priceAdd:5000,  color:'#fffde7'},
+    biscuit: [
+      {id:'klassik',  emoji:'🍞', label:'Klassik',      desc:'Oddiy yorqin biskvit',      priceAdd:0,     color:'#fff8e1'},
+      {id:'shokolad', emoji:'🍫', label:'Shokoladli',   desc:'Kakao qoʻshilgan biskvit',  priceAdd:5000,  color:'#efebe9'},
+      {id:'limon',    emoji:'🍋', label:'Limonli',      desc:'Nordon-shirin biskvit',      priceAdd:5000,  color:'#fffde7'},
+      {id:'kadifa',   emoji:'🌹', label:'Qizil kadifa', desc:'Red velvet biskvit',         priceAdd:10000, color:'#fce4ec'},
+    ],
+    propitka: [
+      {id:'shakar', emoji:'🍬', label:'Shakar siropi', desc:'Klassik shirin propitka',  priceAdd:0,    color:'#fff8e1'},
+      {id:'limonp', emoji:'🍋', label:'Limon siropi',  desc:'Nordon-shirin propitka',   priceAdd:3000, color:'#fffde7'},
+      {id:'kofe',   emoji:'☕', label:'Qahva',          desc:'Qahva aromali propitka',   priceAdd:5000, color:'#efebe9'},
+      {id:'mevap',  emoji:'🍓', label:'Meva shirasi',  desc:'Tabiiy meva shirasi',      priceAdd:5000, color:'#fce4ec'},
+    ],
+    fillingType: [
+      {id:'mevali',   emoji:'🍓', label:'Mevali',     desc:'Ichida yangi mevalar',        priceAdd:15000, color:'#fce4ec'},
+      {id:'yongoqli', emoji:'🥜', label:'Yong\'oqli', desc:'Yong\'oq va quruq mevalar',   priceAdd:20000, color:'#fff8e1'},
+      {id:'oddiy',    emoji:'🍦', label:'Oddiy krem', desc:'Klassik krem to\'ldirish',    priceAdd:0,     color:'#e8f5e9'},
+    ],
+    fillingDetail_mevali: [
+      {id:'qulupnay', emoji:'🍓', label:'Qulupnay', desc:'Yangi qulupnay', priceAdd:5000, color:'#fce4ec'},
+      {id:'shaftoli', emoji:'🍑', label:'Shaftoli', desc:'Shirin shaftoli', priceAdd:5000, color:'#fff8e1'},
+      {id:'gilos',    emoji:'🍒', label:'Gilos',    desc:'Qoʻngʻir gilos',  priceAdd:5000, color:'#fce4ec'},
+      {id:'kivi',     emoji:'🥝', label:'Kivi',     desc:'Nordon kivi',     priceAdd:7000, color:'#e8f5e9'},
+      {id:'ananas',   emoji:'🍍', label:'Ananas',   desc:'Tropik ananas',   priceAdd:8000, color:'#fffde7'},
+      {id:'banan',    emoji:'🍌', label:'Banan',    desc:'Shirin banan',    priceAdd:5000, color:'#fffde7'},
+    ],
+    fillingDetail_yongoqli: [
+      {id:'yongoq', emoji:'🌰', label:'Yong\'oq', desc:'Klassik yong\'oq',  priceAdd:10000, color:'#efebe9'},
+      {id:'bodom',  emoji:'🥜', label:'Bodom',    desc:'Mayda bodom',        priceAdd:12000, color:'#fff8e1'},
+      {id:'pista',  emoji:'🌿', label:'Pista',    desc:'Yashil pista',       priceAdd:15000, color:'#e8f5e9'},
+      {id:'findiq', emoji:'🍂', label:'Findiq',   desc:'Xazonrang findiq',   priceAdd:12000, color:'#fffde7'},
+    ],
+    fillingDetail_oddiy: [
+      {id:'qaymoq',    emoji:'🥛', label:'Qaymoq',    desc:'Slivochni krem',        priceAdd:0,    color:'#e3f2fd'},
+      {id:'sgushonka', emoji:'🥫', label:'Sgushonka', desc:'Qaynatilgan qand suti', priceAdd:3000, color:'#fff8e1'},
+      {id:'margarin',  emoji:'🧈', label:'Margarin',  desc:'Klassik margarin krem', priceAdd:0,    color:'#fffde7'},
     ],
     decoration: [
-      {id:'flower',   emoji:'🌸', label:t('cFlowerLabel'),   desc:t('cFlowerDesc'),   priceAdd:15000, color:'#fce4ec'},
-      {id:'chocoDec', emoji:'🍫', label:t('cChocoDecLabel'), desc:t('cChocoDecDesc'), priceAdd:10000, color:'#efebe9'},
-      {id:'fruit',    emoji:'🍇', label:t('cFruitLabel'),    desc:t('cFruitDesc'),    priceAdd:12000, color:'#e8f5e9'},
-      {id:'minimal',  emoji:'✨', label:t('cMinimalLabel'),  desc:t('cMinimalDesc'),  priceAdd:0,     color:'#f5f5f5'},
-      {id:'kids',     emoji:'🎠', label:t('cKidsLabel'),     desc:t('cKidsDesc'),     priceAdd:20000, color:'#fffde7'},
+      {id:'flower',   emoji:'🌸', label:'Gul bezak',      desc:'Chiroyli gul kompozitsiya',   priceAdd:15000, color:'#fce4ec'},
+      {id:'chocoDec', emoji:'🍫', label:'Shokolad bezak', desc:'Shokolad drip va figuralar',  priceAdd:10000, color:'#efebe9'},
+      {id:'macaroon', emoji:'🧁', label:'Makarunlar',     desc:'Rangli makarun bezagi',        priceAdd:18000, color:'#e8f5e9'},
+      {id:'fondant',  emoji:'🎨', label:'Fondant',        desc:'Plastik fondant qoplamasi',   priceAdd:25000, color:'#f3e5f5'},
+      {id:'minimal',  emoji:'✨', label:'Minimalist',     desc:'Ozoda va zamonaviy dizayn',   priceAdd:0,     color:'#f5f5f5'},
+      {id:'kids',     emoji:'🎠', label:'Bolalar uchun',  desc:'Yorqin multfilm figuralar',   priceAdd:20000, color:'#fffde7'},
+      {id:'letters',  emoji:'✍️', label:'Yozuv bezak',    desc:'Ism yoki tabrik yozuvi',     priceAdd:8000,  color:'#e3f2fd'},
     ],
   };
 
   const CREATE_STEPS = [
-    {key:'type',       question:t('createStep0Q'), hint:t('createStep0H')},
-    {key:'shape',      question:t('createStep1Q'), hint:t('createStep1H')},
-    {key:'size',       question:t('createStep2Q'), hint:t('createStep2H')},
-    {key:'flavor',     question:t('createStep3Q'), hint:t('createStep3H')},
-    {key:'decoration', question:t('createStep4Q'), hint:t('createStep4H')},
+    {key:'type',         question:'Qanday tort buyurtma qilasiz?',   hint:'Sizga mos formatni tanlang'},
+    {key:'shape',        question:'Tortingiz shakli?',               hint:'Faqat klassik tortlar uchun'},
+    {key:'layers',       question:'Nechta qavat bo\'lsin?',          hint:'Qavat soni tortning balandligini belgilaydi'},
+    {key:'size',         question:'Qancha kishiga mo\'ljallangan?',  hint:'Mehmonlar soni asosida tanlang'},
+    {key:'biscuit',      question:'Biskvit turi?',                   hint:'Tortning asosini tanlang'},
+    {key:'propitka',     question:'Propitka qanday bo\'lsin?',       hint:'Biskvitni ho\'llash uchun suyuqlik'},
+    {key:'fillingType',  question:'Ichki krem qanday bo\'lsin?',     hint:'Qavat orasidagi to\'ldirish turini tanlang'},
+    {key:'fillingDetail',question:'',                                 hint:''},
+    {key:'decoration',   question:'Bezak qanday bo\'lsin?',          hint:'Tortingizning tashqi ko\'rinishi'},
   ];
 
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({type:null,shape:null,size:null,flavor:null,decoration:null,bakery:null,note:'',image:null});
+  const [form, setForm] = useState({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,note:'',image:null});
   const [publishing, setPublishing] = useState(false);
   const [imgDrag, setImgDrag] = useState(false);
   const setF = (k,v) => setForm(f=>({...f,[k]:v}));
@@ -371,26 +414,16 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
 
   const activeSteps = form.type?.id === 'tort'
     ? CREATE_STEPS
-    : CREATE_STEPS.filter(s => s.key !== 'shape');
+    : CREATE_STEPS.filter(s => s.key !== 'shape' && s.key !== 'layers');
   const currentStepCfg = activeSteps[step];
   const currentVal     = currentStepCfg ? form[currentStepCfg.key] : null;
-  const selections     = [form.type, form.shape, form.size, form.flavor, form.decoration].filter(Boolean);
-  const progress       = step / (activeSteps.length + 1); // 0→1
+  const selections     = [form.type,form.shape,form.layers,form.size,form.biscuit,form.propitka,form.fillingType,form.fillingDetail,form.decoration].filter(Boolean);
+  const progress       = step >= DETAILS ? 1 : step / (activeSteps.length + 1);
 
-  const totalPrice = (form.type?.basePrice||0)+(form.shape?.priceAdd||0)+(form.size?.priceAdd||0)+(form.flavor?.priceAdd||0)+(form.decoration?.priceAdd||0);
-
-  const selectOption = (key, opt) => {
-    setF(key, opt);
-    if (key === 'type') {
-      if (opt.id !== 'tort') setF('shape', null);
-      setStep(opt.id === 'tort' ? 1 : 2);
-      return;
-    }
-    setStep(s => Math.min(activeSteps.length - 1, s + 1));
-  };
+  const totalPrice = (form.type?.basePrice||0)+(form.shape?.priceAdd||0)+(form.layers?.priceAdd||0)+(form.size?.priceAdd||0)+(form.biscuit?.priceAdd||0)+(form.propitka?.priceAdd||0)+(form.fillingType?.priceAdd||0)+(form.fillingDetail?.priceAdd||0)+(form.decoration?.priceAdd||0);
 
   const handleOrder = () => {
-    const name = [form.type?.label, form.shape?.label, form.flavor?.label].filter(Boolean).join(' · ') || 'Buyurtma tort';
+    const name = [form.type?.label, form.shape?.label, form.layers?.label, form.biscuit?.label].filter(Boolean).join(' · ') || 'Buyurtma tort';
     if (addToCart) {
       addToCart({
         id: 'custom_' + Date.now(),
@@ -403,7 +436,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
       }, 1);
     }
     toast('Savatga qo\'shildi!');
-    setStep(6);
+    setStep(PUBLISH);
   };
 
   const handlePublish = async (publish) => {
@@ -412,22 +445,22 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
       try {
         await api.post('/api/explore/posts', {
           name: form.type?.label||'Mening shirinligim',
-          desc: [form.size?.label,form.flavor?.label,form.decoration?.label].filter(Boolean).join(' · ')+(form.note?' — '+form.note:''),
+          desc: [form.layers?.label,form.biscuit?.label,form.fillingType?.label,form.fillingDetail?.label,form.decoration?.label].filter(Boolean).join(' · ')+(form.note?' — '+form.note:''),
           emoji: form.type?.emoji||'🎂',
           bg: form.type?.color||'#fce4ec',
           price: totalPrice,
-          tags: [form.type?.id,form.flavor?.id].filter(Boolean),
+          tags: [form.type?.id,form.fillingType?.id].filter(Boolean),
         });
         toast('🌟 Shirinligingiz e\'lon qilindi!');
       } catch { toast('Xatolik yuz berdi'); }
       finally { setPublishing(false); }
     }
-    setStep(7);
+    setStep(DONE);
   };
 
   const resetAndHome = () => {
     setStep(0);
-    setForm({type:null,size:null,flavor:null,decoration:null,bakery:null,note:''});
+    setForm({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,note:'',image:null});
     setPage('home');
   };
 
@@ -450,25 +483,25 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             width:`${Math.max(progress*100,4)}%`,transition:'width .4s cubic-bezier(.4,0,.2,1)'}}/>
         </div>
         <div style={{fontSize:12,fontWeight:700,color:C.muted,minWidth:36,textAlign:'right'}}>
-          {step < CREATE_STEPS.length ? `${step+1} / ${CREATE_STEPS.length}` : ''}
+          {step < DETAILS ? `${step+1} / ${activeSteps.length}` : ''}
         </div>
       </div>
     </div>
   );
 
-  const lastChoiceStep = activeSteps.length - 1; // 4 for tort, 3 for bento
+  const lastChoiceStep = activeSteps.length - 1;
 
   const goBack = () => setStep(s => {
-    if (s === 5) return lastChoiceStep;
+    if (s === DETAILS) return lastChoiceStep;
     return Math.max(0, s - 1);
   });
   const goNext = () => setStep(s => {
-    if (s === lastChoiceStep) return 5;
-    return Math.min(7, s + 1);
+    if (s === lastChoiceStep) return DETAILS;
+    return Math.min(lastChoiceStep, s + 1);
   });
 
-  /* ── STEP 5: DETAILS ── */
-  if (step === 5) return (
+  /* ── DETAILS ── */
+  if (step === DETAILS) return (
     <div style={{minHeight:'100vh',background:C.bg}}>
       <Header onBack={goBack}/>
       <div style={{maxWidth:520,margin:'0 auto',padding:'24px 20px 120px'}}>
@@ -588,10 +621,15 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             {t('priceDetails')}
           </div>
           {[
-            {label:form.type?.label,      price:form.type?.basePrice,      emoji:form.type?.emoji,      base:true},
-            {label:form.size?.label,      price:form.size?.priceAdd,       emoji:form.size?.emoji},
-            {label:form.flavor?.label,    price:form.flavor?.priceAdd,     emoji:form.flavor?.emoji},
-            {label:form.decoration?.label,price:form.decoration?.priceAdd, emoji:form.decoration?.emoji},
+            {label:form.type?.label,         price:form.type?.basePrice,         emoji:form.type?.emoji,         base:true},
+            {label:form.shape?.label,        price:form.shape?.priceAdd,         emoji:form.shape?.emoji},
+            {label:form.layers?.label,       price:form.layers?.priceAdd,        emoji:form.layers?.emoji},
+            {label:form.size?.label,         price:form.size?.priceAdd,          emoji:form.size?.emoji},
+            {label:form.biscuit?.label,      price:form.biscuit?.priceAdd,       emoji:form.biscuit?.emoji},
+            {label:form.propitka?.label,     price:form.propitka?.priceAdd,      emoji:form.propitka?.emoji},
+            {label:form.fillingType?.label,  price:form.fillingType?.priceAdd,   emoji:form.fillingType?.emoji},
+            {label:form.fillingDetail?.label,price:form.fillingDetail?.priceAdd, emoji:form.fillingDetail?.emoji},
+            {label:form.decoration?.label,   price:form.decoration?.priceAdd,    emoji:form.decoration?.emoji},
           ].filter(r=>r.label).map((row,i)=>(
             <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',
               padding:'11px 18px',borderBottom:`1px solid ${C.border}`}}>
@@ -622,10 +660,10 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
     </div>
   );
 
-  /* ── STEP 6: PUBLISH PROMPT ── */
-  if (step === 6) return (
+  /* ── PUBLISH PROMPT ── */
+  if (step === PUBLISH) return (
     <div style={{minHeight:'100vh',background:C.bg}}>
-      <Header onBack={()=>setStep(5)}/>
+      <Header onBack={()=>setStep(DETAILS)}/>
       <div style={{maxWidth:440,margin:'0 auto',padding:'40px 24px 100px',textAlign:'center'}}>
         <div style={{width:140,height:140,borderRadius:40,margin:'0 auto 28px',overflow:'hidden',
           boxShadow:`0 12px 40px ${C.navy}22`,border:`2px solid ${C.border}`}}>
@@ -672,8 +710,8 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
     </div>
   );
 
-  /* ── STEP 7: DONE ── */
-  if (step === 7) return (
+  /* ── DONE ── */
+  if (step === DONE) return (
     <div style={{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 24px 100px',textAlign:'center'}}>
       <div style={{position:'relative',marginBottom:28}}>
         <div style={{width:130,height:130,borderRadius:'50%',overflow:'hidden',
@@ -731,11 +769,25 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
     </div>
   );
 
-  /* ── STEPS 0–4: CHOICE ── */
-  let opts = CREATE_OPTIONS[currentStepCfg.key];
+  /* ── CHOICE STEPS ── */
+  let opts = CREATE_OPTIONS[currentStepCfg.key] || [];
+  if (currentStepCfg.key === 'fillingDetail') {
+    const ft = form.fillingType?.id;
+    opts = ft === 'mevali'   ? CREATE_OPTIONS.fillingDetail_mevali
+         : ft === 'yongoqli' ? CREATE_OPTIONS.fillingDetail_yongoqli
+         : CREATE_OPTIONS.fillingDetail_oddiy;
+  }
   if (currentStepCfg.key === 'size' && form.type?.id === 'bento') {
     opts = opts.filter(o => o.id === 'mini' || o.id === 'std');
   }
+  const fillingDetailQ = form.fillingType?.id === 'mevali' ? 'Qaysi meva bo\'lsin?'
+    : form.fillingType?.id === 'yongoqli' ? 'Qaysi yong\'oq bo\'lsin?'
+    : 'Krem turi qanday bo\'lsin?';
+  const fillingDetailH = form.fillingType?.id === 'mevali' ? 'Eng yoqtirgan mevaingizni tanlang'
+    : form.fillingType?.id === 'yongoqli' ? 'Yong\'oq turini tanlang'
+    : 'Ichki krem turini tanlang';
+  const displayQ = currentStepCfg.key === 'fillingDetail' ? fillingDetailQ : currentStepCfg.question;
+  const displayH = currentStepCfg.key === 'fillingDetail' ? fillingDetailH : currentStepCfg.hint;
 
   return (
     <div style={{minHeight:'100vh',background:C.bg}}>
@@ -745,9 +797,9 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
         {/* question */}
         <div style={{marginBottom:28}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:C.dark,marginBottom:6,lineHeight:1.2}}>
-            {currentStepCfg.question}
+            {displayQ}
           </div>
-          <div style={{fontSize:14,color:C.muted}}>{currentStepCfg.hint}</div>
+          <div style={{fontSize:14,color:C.muted}}>{displayH}</div>
         </div>
 
         {/* options grid */}
@@ -758,7 +810,8 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             return (
               <button key={opt.id} onClick={()=>{
                   setF(currentStepCfg.key,opt);
-                  if (currentStepCfg.key === 'type' && opt.id !== 'tort') setF('shape', null);
+                  if (currentStepCfg.key === 'type' && opt.id !== 'tort') { setF('shape', null); setF('layers', null); }
+                  if (currentStepCfg.key === 'fillingType') setF('fillingDetail', null);
                   goNext();
                 }}
                 style={{borderRadius:22,border:`2px solid ${active?C.navy:C.border}`,
