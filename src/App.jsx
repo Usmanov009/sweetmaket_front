@@ -1278,6 +1278,14 @@ export default function App() {
     api.get('/api/bakeries').then(setBakeries).catch(() => {});
   }, []);
 
+  // Show RegionPicker whenever a logged-in user/seller has no region set
+  useEffect(() => {
+    if (seller?.id && !seller.region) setShowRegionPicker(true);
+  }, [seller?.id]);
+  useEffect(() => {
+    if (user?.id && !user.region) setShowRegionPicker(true);
+  }, [user?.id]);
+
   // Restore seller session
   useEffect(() => {
     const token = localStorage.getItem('sm_seller_token');
@@ -1285,7 +1293,7 @@ export default function App() {
     const BASE = import.meta.env.VITE_API_URL || '';
     fetch(BASE + '/api/seller/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(({ seller: s }) => { setSeller(s); setPage('seller'); if (!s.region) setShowRegionPicker(true); })
+      .then(({ seller: s }) => { setSeller(s); setPage('seller'); })
       .catch(() => localStorage.removeItem('sm_seller_token'));
   }, []);
 
@@ -1299,7 +1307,6 @@ export default function App() {
       api.get('/api/auth/me').then(({ user: fresh }) => {
         setUser(fresh);
         setPage('home');
-        if (!fresh.region) setShowRegionPicker(true);
       }).catch(() => {
         localStorage.removeItem('sm_token');
         setUser(null);
@@ -1323,18 +1330,15 @@ export default function App() {
   const handleLogin = (userData) => {
     setUser(userData);
     setPage('home');
-    if (!userData.region) setShowRegionPicker(true);
   };
 
   const handleTelegramAuth = (userData, userType) => {
     if (userType === 'seller') {
       setSeller(userData);
       setPage('seller');
-      if (!userData.region) setShowRegionPicker(true);
     } else {
       setUser(userData);
       setPage('home');
-      if (!userData.region) setShowRegionPicker(true);
     }
   };
 
@@ -1346,7 +1350,6 @@ export default function App() {
   const handleSellerLogin = (sellerData) => {
     setSeller(sellerData);
     setPage('seller');
-    if (!sellerData.region) setShowRegionPicker(true);
   };
 
   const handleRegionSave = async (region, city) => {
