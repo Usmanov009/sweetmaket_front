@@ -852,7 +852,7 @@ function BottomModal({ onClose, title, children, C }) {
    PROFILE PAGE
 ═══════════════════════════════════════════════════════ */
 function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, setUser, setPage, onChangeLocation }) {
-  const { t } = useLocale();
+  const { t, lang, setLang } = useLocale();
 
   const ORDER_STATUS = {
     pending:   { label: t('orderPending'),   color: '#d97706', bg: 'rgba(217,119,6,.1)'   },
@@ -1110,7 +1110,8 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
               <div style={{ padding:'10px 18px', borderBottom:'1px solid '+C.border }}>
                 <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>{t('appearanceSection')}</span>
               </div>
-              <div style={{ padding:'16px 18px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              {/* Theme toggle */}
+              <div style={{ padding:'16px 18px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid '+C.border }}>
                 <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                   <div style={{ width:44, height:44, borderRadius:14, background:isDark?'linear-gradient(135deg,#1e293b,#334155)':'linear-gradient(135deg,#fef3c7,#fde68a)', display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid '+C.border, color:isDark?'#93c5fd':'#d97706' }}>
                     {isDark ? <Moon size={22} weight="duotone"/> : <Sun size={22} weight="duotone"/>}
@@ -1121,6 +1122,30 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
                   </div>
                 </div>
                 <Toggle on={isDark} onToggle={() => setIsDark(d=>!d)} C={C} />
+              </div>
+              {/* Language switcher */}
+              <div style={{ padding:'16px 18px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                  <div style={{ width:44, height:44, borderRadius:14, background:'linear-gradient(135deg,#f0fdf4,#dcfce7)', display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid '+C.border, fontSize:22 }}>
+                    🌐
+                  </div>
+                  <div>
+                    <div style={{ fontSize:15, fontWeight:700, color:C.dark }}>Til</div>
+                    <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>{lang === 'uz' ? "O'zbek tili" : 'Русский язык'}</div>
+                  </div>
+                </div>
+                <div style={{ display:'flex', gap:6 }}>
+                  {['uz','ru'].map(l => (
+                    <button key={l} onClick={() => setLang(l)} style={{
+                      padding:'8px 16px', borderRadius:10, border:'2px solid '+(lang===l ? C.navy : C.border),
+                      background: lang===l ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.s2,
+                      color: lang===l ? '#fff' : C.muted,
+                      cursor:'pointer', fontWeight:700, fontSize:13, transition:'all .18s',
+                    }}>
+                      {l.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <div style={{ background:C.s1, borderRadius:20, overflow:'hidden', border:'1px solid '+C.border, marginBottom:16 }}>
