@@ -1247,12 +1247,65 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
 }
 
 /* ═══════════════════════════════════════════════════════
+   LANGUAGE PICKER
+═══════════════════════════════════════════════════════ */
+function LangPickerPage({ onPick }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9000,
+      background: 'linear-gradient(145deg,#1e1b4b 0%,#4f46e5 55%,#7c3aed 100%)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: '40px 28px',
+    }}>
+      {/* Logo */}
+      <div style={{ marginBottom: 16, fontSize: 52 }}>🎂</div>
+      <div style={{
+        fontFamily: "'Playfair Display',serif", fontSize: 36, fontWeight: 900,
+        color: '#fff', marginBottom: 8, letterSpacing: -1,
+      }}>SweetMarket</div>
+      <div style={{ fontSize: 14, color: 'rgba(255,255,255,.6)', marginBottom: 56 }}>
+        Shirin hayot platformasi
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {[
+          { code: 'uz', label: "O'zbek tili", sub: 'Davom etish uchun bosing', flag: '🇺🇿' },
+          { code: 'ru', label: 'Русский язык', sub: 'Нажмите для продолжения',  flag: '🇷🇺' },
+        ].map(({ code, label, sub, flag }) => (
+          <button key={code} onClick={() => onPick(code)} style={{
+            width: '100%', padding: '20px 24px', borderRadius: 20,
+            border: '2px solid rgba(255,255,255,.18)',
+            background: 'rgba(255,255,255,.1)',
+            backdropFilter: 'blur(12px)',
+            cursor: 'pointer', textAlign: 'left',
+            display: 'flex', alignItems: 'center', gap: 16,
+            transition: 'all .18s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.2)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.4)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.18)'; }}
+          >
+            <span style={{ fontSize: 36, flexShrink: 0 }}>{flag}</span>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', marginBottom: 3 }}>{label}</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)' }}>{sub}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
    APP ROOT
 ═══════════════════════════════════════════════════════ */
 export default function App() {
   const { isDesktop } = useBreakpoint();
   const [isDark, setIsDark] = useState(false);
   const C = isDark ? THEMES.dark : THEMES.light;
+  const { setLang } = useLocale();
+
+  const [langChosen, setLangChosen] = useState(() => !!localStorage.getItem('sm_lang'));
 
   const [page, setPage] = useState('login');
   const [orders, setOrders] = useState([]);
@@ -1421,6 +1474,13 @@ export default function App() {
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, color:C.text, transition:'background .3s,color .3s', display: showNav && isDesktop ? 'flex' : 'block' }}>
+      {!langChosen && (
+        <LangPickerPage onPick={(code) => {
+          setLang(code);
+          setLangChosen(true);
+        }} />
+      )}
+
       <Toast msg={toastMsg} id={toastId} C={C} isDesktop={isDesktop}/>
 
       {showRegionPicker && (
