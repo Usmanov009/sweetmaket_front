@@ -34,7 +34,7 @@ function sellerAuth(req, res, next) {
 // POST /api/seller/register
 router.post('/register', async (req, res) => {
   try {
-    const { name, shopName, phone, password, address, description } = req.body;
+    const { name, shopName, phone, password, address, description, region, city } = req.body;
     if (!name || !shopName || !phone || !password)
       return res.status(400).json({ error: 'Ism, do\'kon nomi, telefon va parol kerak' });
 
@@ -47,11 +47,10 @@ router.post('/register', async (req, res) => {
 
     const id = genId();
     const hash = hashPassword(password);
-    // Store phone in normalized digits-only form for consistent lookup
     await pool.query(
-      `INSERT INTO sellers (id, name, shop_name, phone, password, address, description)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [id, name, shopName, normPhone, hash, address||'', description||'']
+      `INSERT INTO sellers (id, name, shop_name, phone, password, address, description, region, city)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [id, name, shopName, normPhone, hash, address||'', description||'', region||'', city||'']
     );
     const row = (await pool.query('SELECT * FROM sellers WHERE id=$1', [id])).rows[0];
     const token = jwt.sign({ id: row.id, phone: row.phone, role: 'seller' }, JWT_SECRET, { expiresIn: '30d' });

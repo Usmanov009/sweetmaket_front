@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import {
   Phone, Lock, Storefront, User, Eye, EyeSlash,
-  ArrowRight, CircleNotch, MapPin, Package, TrendUp, Buildings,
+  ArrowRight, CircleNotch, MapPin, Package, TrendUp, Buildings, ArrowLeft, Check,
 } from '@phosphor-icons/react';
 import api from '../api';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
+import { REGIONS } from '../constants/regions.js';
 
 export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) {
   const [mode,      setMode]      = useState('login');
+  // register steps: 'region' → 'city' → 'form'
+  const [regStep,   setRegStep]   = useState('region');
+  const [selRegion, setSelRegion] = useState(null);
+  const [selCity,   setSelCity]   = useState('');
   const [name,      setName]      = useState('');
   const [shopName,  setShopName]  = useState('');
   const [phone,     setPhone]     = useState('+998');
@@ -18,6 +23,19 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
   const [error,     setError]     = useState('');
   const [showPass,  setShowPass]  = useState(false);
   const [showPass2, setShowPass2] = useState(false);
+
+  const switchMode = (m) => {
+    setMode(m); setError('');
+    if (m === 'register') { setRegStep('region'); setSelRegion(null); setSelCity(''); }
+  };
+
+  const pickRegion = (r) => {
+    setSelRegion(r);
+    if (r.cities.length === 1) { setSelCity(r.cities[0]); setRegStep('form'); }
+    else setRegStep('city');
+  };
+
+  const pickCity = (c) => { setSelCity(c); setRegStep('form'); };
 
   const handleLogin = async () => {
     if (!isValidPhone(phone)) { setError("To'g'ri telefon raqam kiriting"); return; }
@@ -37,10 +55,13 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
     if (!isValidPhone(phone)) { setError("To'g'ri telefon raqam kiriting"); return; }
     if (password.length < 6)  { setError("Parol kamida 6 ta belgi bo'lishi kerak"); return; }
     if (password !== password2) { setError('Parollar mos kelmadi'); return; }
+    if (!address.trim()) { setError("Ko'cha va uy raqamini kiriting"); return; }
     setError(''); setLoading(true);
+    const fullAddress = `${selRegion?.name || ''}, ${selCity}, ${address.trim()}`;
     try {
       const { token, seller } = await api.post('/api/seller/register', {
-        name: name.trim(), shopName: shopName.trim(), phone, password, address: address.trim(),
+        name: name.trim(), shopName: shopName.trim(), phone, password,
+        address: fullAddress, region: selRegion?.name || '', city: selCity,
       });
       localStorage.setItem('sm_seller_token', token);
       onLogin(seller);
@@ -68,6 +89,70 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
   const passFieldStyle = { ...iStyle, paddingRight: 46 };
   const eyeBtnStyle = { position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 0, display: 'flex' };
 
+  /* ── Region step (register only) ── */
+  const regionStep = (
+    <div>
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
+        <div style={{ width:40, height:40, borderRadius:12, background:`linear-gradient(135deg,${DARK_ACCENT},${ACCENT})`,
+          display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <MapPin size={20} color="#fff" weight="fill" />
+        </div>
+        <div>
+          <div style={{ fontSize:17, fontWeight:800, color:C.dark }}>
+            {regStep === 'region' ? 'Viloyatni tanlang' : selRegion?.name}
+          </div>
+          <div style={{ fontSize:12, color:C.muted, marginTop:1 }}>
+            {regStep === 'region' ? "Do'koningiz joylashgan viloyat" : 'Shahar yoki tumanni tanlang'}
+          </div>
+        </div>
+      </div>
+
+      {regStep === 'city' && (
+        <button onClick={() => setRegStep('region')} style={{
+          display:'flex', alignItems:'center', gap:6, background:'none', border:'none',
+          cursor:'pointer', color:C.muted, fontSize:13, fontWeight:600, marginBottom:14, padding:0,
+        }}>
+          <ArrowLeft size={16} /> Viloyatga qaytish
+        </button>
+      )}
+
+      <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:340, overflowY:'auto' }}>
+        {regStep === 'region' && REGIONS.map(r => (
+          <button key={r.id} onClick={() => pickRegion(r)} style={{
+            width:'100%', padding:'13px 16px', borderRadius:12,
+            border:`1.5px solid ${C.border}`, background:C.s2,
+            cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', justifyContent:'space-between',
+            transition:'all .15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = ACCENT}
+          onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
+            <div>
+              <div style={{ fontSize:14, fontWeight:700, color:C.dark }}>{r.name}</div>
+              <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{r.cities.length} ta shahar</div>
+            </div>
+            <span style={{ color:C.muted, fontSize:18 }}>›</span>
+          </button>
+        ))}
+        {regStep === 'city' && selRegion?.cities.map(c => (
+          <button key={c} onClick={() => pickCity(c)} style={{
+            width:'100%', padding:'13px 16px', borderRadius:12,
+            border:`1.5px solid ${C.border}`, background:C.s2,
+            cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:12,
+            transition:'all .15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = ACCENT}
+          onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
+            <div style={{ width:32, height:32, borderRadius:9, background:`${ACCENT}18`,
+              display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <MapPin size={16} color={ACCENT} />
+            </div>
+            <span style={{ fontSize:14, fontWeight:600, color:C.dark }}>{c}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   const formContent = (
     <div style={{
       flex: 1,
@@ -92,7 +177,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
         {[['login', 'Kirish'], ['register', "Ro'yxatdan o'tish"]].map(([m, label]) => (
           <button
             key={m}
-            onClick={() => { setMode(m); setError(''); }}
+            onClick={() => switchMode(m)}
             style={{
               flex: 1,
               padding: '11px 8px',
@@ -123,91 +208,95 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           color: C.dark,
           marginBottom: 6,
         }}>
-          {mode === 'login' ? 'Sotuvchi kabineti' : 'Yangi sotuvchi'}
+          {mode === 'login' ? 'Sotuvchi kabineti' : regStep === 'form' ? "Hisob ma'lumotlari" : 'Yangi sotuvchi'}
         </div>
         <div style={{ fontSize: 14, color: C.muted }}>
           {mode === 'login'
             ? "Do'koningizni boshqaring"
-            : "Yangi sotuvchi hisobi yarating"}
+            : regStep === 'form' ? `📍 ${selRegion?.name}, ${selCity}` : "Avval joylashuvni tanlang"}
         </div>
       </div>
 
-      {/* Register fields */}
-      {mode === 'register' && (
+      {/* Register: region/city steps */}
+      {mode === 'register' && regStep !== 'form' && regionStep}
+
+      {/* Register: form step */}
+      {mode === 'register' && regStep === 'form' && (
         <>
+          {/* Location badge */}
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16,
+            padding:'10px 14px', borderRadius:12, background:`${ACCENT}10`, border:`1px solid ${ACCENT}30` }}>
+            <MapPin size={16} color={ACCENT} weight="fill"/>
+            <span style={{ fontSize:13, fontWeight:700, color:ACCENT }}>{selRegion?.name}, {selCity}</span>
+            <button onClick={() => setRegStep('region')} style={{
+              marginLeft:'auto', background:'none', border:'none', cursor:'pointer',
+              fontSize:11, color:C.muted, fontWeight:600,
+            }}>O'zgartirish</button>
+          </div>
           {[
             { label: 'Ism Familiya', icon: <User size={18} weight="duotone" />, value: name, set: v => setName(v.replace(/[0-9]/g, '')), placeholder: 'Aziz Karimov' },
             { label: "Do'kon nomi",  icon: <Storefront size={18} weight="duotone" />, value: shopName, set: setShopName, placeholder: 'Aziz Shirinliklari' },
-            { label: 'Manzil (ixtiyoriy)', icon: <MapPin size={18} weight="duotone" />, value: address, set: setAddress, placeholder: 'Toshkent, Chilonzor' },
+            { label: "Ko'cha va uy raqami", icon: <MapPin size={18} weight="duotone" />, value: address, set: setAddress, placeholder: "Mustaqillik ko'chasi, 12-uy" },
           ].map(({ label, icon, value, set, placeholder }) => (
             <div key={label} style={{ marginBottom: 12 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>{label}</label>
               <div style={{ position: 'relative' }}>
                 <span style={iconPos}>{icon}</span>
-                <input
-                  className="input-focus"
-                  type="text"
-                  value={value}
-                  onChange={e => set(e.target.value)}
-                  placeholder={placeholder}
-                  style={iStyle}
-                />
+                <input className="input-focus" type="text" value={value}
+                  onChange={e => set(e.target.value)} placeholder={placeholder} style={iStyle} />
               </div>
             </div>
           ))}
         </>
       )}
 
-      {/* Phone */}
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Telefon raqam</label>
-        <div style={{ position: 'relative' }}>
-          <span style={iconPos}><Phone size={18} weight="duotone" /></span>
-          <input
-            className="input-focus"
-            type="tel"
-            value={phone}
-            onChange={e => setPhone(formatPhone(e.target.value))}
-            onKeyDown={e => {
-              if (['Backspace','Delete'].includes(e.key) && rawDigits(phone).length <= 3) e.preventDefault();
-            }}
-            placeholder="+998 90 123 45 67"
-            style={iStyle}
-          />
+      {/* Phone — only show for login or register form step */}
+      {(mode === 'login' || regStep === 'form') && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Telefon raqam</label>
+          <div style={{ position: 'relative' }}>
+            <span style={iconPos}><Phone size={18} weight="duotone" /></span>
+            <input
+              className="input-focus" type="tel" value={phone}
+              onChange={e => setPhone(formatPhone(e.target.value))}
+              onKeyDown={e => {
+                if (['Backspace','Delete'].includes(e.key) && rawDigits(phone).length <= 3) e.preventDefault();
+              }}
+              placeholder="+998 90 123 45 67" style={iStyle}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Password */}
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Parol</label>
-        <div style={{ position: 'relative' }}>
-          <span style={iconPos}><Lock size={18} weight="duotone" /></span>
-          <input
-            type={showPass ? 'text' : 'password'}
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder={mode === 'register' ? 'Kamida 6 ta belgi' : 'Parolingiz'}
-            style={passFieldStyle}
-            className="input-focus"
-          />
-          <button type="button" onClick={() => setShowPass(p => !p)} style={eyeBtnStyle}>
-            {showPass ? <EyeSlash size={18} /> : <Eye size={18} />}
-          </button>
+      {/* Password — only show for login or register form step */}
+      {(mode === 'login' || regStep === 'form') && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Parol</label>
+          <div style={{ position: 'relative' }}>
+            <span style={iconPos}><Lock size={18} weight="duotone" /></span>
+            <input
+              type={showPass ? 'text' : 'password'} value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder={mode === 'register' ? 'Kamida 6 ta belgi' : 'Parolingiz'}
+              style={passFieldStyle} className="input-focus"
+            />
+            <button type="button" onClick={() => setShowPass(p => !p)} style={eyeBtnStyle}>
+              {showPass ? <EyeSlash size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {mode === 'register' && (
+      {mode === 'register' && regStep === 'form' && (
         <div style={{ marginBottom: 12 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Parolni tasdiqlang</label>
           <div style={{ position: 'relative' }}>
             <span style={iconPos}><Lock size={18} weight="duotone" /></span>
             <input
-              type={showPass2 ? 'text' : 'password'}
-              value={password2}
+              type={showPass2 ? 'text' : 'password'} value={password2}
               onChange={e => setPassword2(e.target.value)}
               placeholder="Parolni qayta kiriting"
-              style={passFieldStyle}
-              className="input-focus"
+              style={passFieldStyle} className="input-focus"
             />
             <button type="button" onClick={() => setShowPass2(p => !p)} style={eyeBtnStyle}>
               {showPass2 ? <EyeSlash size={18} /> : <Eye size={18} />}
@@ -229,8 +318,8 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
         </div>
       )}
 
-      {/* Submit */}
-      <button
+      {/* Submit — only show for login or register form step */}
+      {(mode === 'login' || regStep === 'form') && <button
         onClick={mode === 'login' ? handleLogin : handleRegister}
         disabled={loading}
         style={{
@@ -261,7 +350,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
         }
         {loading ? 'Yuklanmoqda...' : mode === 'login' ? 'Kirish' : "Ro'yxatdan o'tish"}
         {!loading && <ArrowRight size={16} />}
-      </button>
+      </button>}
 
       <div style={{ textAlign: 'center', fontSize: 13, color: C.muted }}>
         Xaridor sifatida kirish?{' '}
