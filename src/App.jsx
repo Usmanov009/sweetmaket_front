@@ -1225,13 +1225,13 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
                   <MapPin size={20} weight="duotone"/>
                 </div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:11, color:C.muted, fontWeight:600, marginBottom:2 }}>Yashash joyi</div>
+                  <div style={{ fontSize:11, color:C.muted, fontWeight:600, marginBottom:2 }}>{t('locationLabel')}</div>
                   <div style={{ fontSize:14, fontWeight:700, color:C.dark }}>
-                    {user?.region ? `${user.region}${user.city ? ', '+user.city : ''}` : 'Belgilanmagan'}
+                    {user?.region ? `${user.region}${user.city ? ', '+user.city : ''}` : (t('locationLabel') === 'Местоположение' ? 'Не указано' : 'Belgilanmagan')}
                   </div>
                 </div>
                 <button onClick={onChangeLocation} style={{ padding:'7px 14px', borderRadius:10, border:'1px solid '+C.border, background:C.s2, color:C.navy, cursor:'pointer', fontSize:12, fontWeight:700 }}>
-                  O'zgartirish
+                  {t('changeLocation')}
                 </button>
               </div>
             </div>

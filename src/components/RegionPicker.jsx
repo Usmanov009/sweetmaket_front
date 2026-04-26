@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { MapPin, ArrowLeft, Check } from '@phosphor-icons/react';
+import { MapPin, ArrowLeft } from '@phosphor-icons/react';
 import { REGIONS } from '../constants/regions.js';
+import { useLocale } from '../locale.jsx';
 
 export default function RegionPicker({ C, onSave }) {
+  const { t } = useLocale();
   const [step,   setStep]   = useState(0); // 0=region, 1=city
   const [region, setRegion] = useState(null);
   const [city,   setCity]   = useState('');
@@ -45,10 +47,10 @@ export default function RegionPicker({ C, onSave }) {
           <MapPin size={24} color="#fff" weight="fill" />
           <div>
             <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>
-              {step === 0 ? 'Viloyatingizni tanlang' : `${region?.name}`}
+              {step === 0 ? t('regionPickerTitle') : `${region?.name}`}
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', marginTop: 2 }}>
-              {step === 0 ? 'O\'zbekiston viloyatlari' : 'Shahar yoki tumanni tanlang'}
+              {step === 0 ? t('regionPickerSub') : t('cityPickerSub')}
             </div>
           </div>
         </div>
@@ -68,7 +70,7 @@ export default function RegionPicker({ C, onSave }) {
           >
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.dark }}>{r.name}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{r.cities.length} ta shahar</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{r.cities.length} {t('citiesCount')}</div>
             </div>
             <div style={{ fontSize: 18, color: C.muted }}>›</div>
           </button>

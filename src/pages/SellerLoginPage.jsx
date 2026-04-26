@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import {
   Phone, Lock, Storefront, User, Eye, EyeSlash,
-  ArrowRight, CircleNotch, MapPin, Package, TrendUp, Buildings, ArrowLeft, Check,
+  ArrowRight, CircleNotch, MapPin, Package, TrendUp, Buildings, ArrowLeft,
 } from '@phosphor-icons/react';
 import api from '../api';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 import { REGIONS } from '../constants/regions.js';
+import { useLocale } from '../locale.jsx';
 
 export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) {
+  const { t } = useLocale();
   const [mode,      setMode]      = useState('login');
   // register steps: 'region' → 'city' → 'form'
   const [regStep,   setRegStep]   = useState('region');
@@ -99,10 +101,10 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
         </div>
         <div>
           <div style={{ fontSize:17, fontWeight:800, color:C.dark }}>
-            {regStep === 'region' ? 'Viloyatni tanlang' : selRegion?.name}
+            {regStep === 'region' ? t('regionPickerTitle') : selRegion?.name}
           </div>
           <div style={{ fontSize:12, color:C.muted, marginTop:1 }}>
-            {regStep === 'region' ? "Do'koningiz joylashgan viloyat" : 'Shahar yoki tumanni tanlang'}
+            {regStep === 'region' ? t('regionPickerSub') : t('cityPickerSub')}
           </div>
         </div>
       </div>
@@ -112,7 +114,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           display:'flex', alignItems:'center', gap:6, background:'none', border:'none',
           cursor:'pointer', color:C.muted, fontSize:13, fontWeight:600, marginBottom:14, padding:0,
         }}>
-          <ArrowLeft size={16} /> Viloyatga qaytish
+          <ArrowLeft size={16} /> {t('backToRegion')}
         </button>
       )}
 
@@ -128,7 +130,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
             <div>
               <div style={{ fontSize:14, fontWeight:700, color:C.dark }}>{r.name}</div>
-              <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{r.cities.length} ta shahar</div>
+              <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{r.cities.length} {t('citiesCount')}</div>
             </div>
             <span style={{ color:C.muted, fontSize:18 }}>›</span>
           </button>
@@ -231,12 +233,12 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
             <button onClick={() => setRegStep('region')} style={{
               marginLeft:'auto', background:'none', border:'none', cursor:'pointer',
               fontSize:11, color:C.muted, fontWeight:600,
-            }}>O'zgartirish</button>
+            }}>{t('changeLocation')}</button>
           </div>
           {[
             { label: 'Ism Familiya', icon: <User size={18} weight="duotone" />, value: name, set: v => setName(v.replace(/[0-9]/g, '')), placeholder: 'Aziz Karimov' },
             { label: "Do'kon nomi",  icon: <Storefront size={18} weight="duotone" />, value: shopName, set: setShopName, placeholder: 'Aziz Shirinliklari' },
-            { label: "Ko'cha va uy raqami", icon: <MapPin size={18} weight="duotone" />, value: address, set: setAddress, placeholder: "Mustaqillik ko'chasi, 12-uy" },
+            { label: t('streetHouseLabel'), icon: <MapPin size={18} weight="duotone" />, value: address, set: setAddress, placeholder: "Mustaqillik ko'chasi, 12-uy" },
           ].map(({ label, icon, value, set, placeholder }) => (
             <div key={label} style={{ marginBottom: 12 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>{label}</label>
