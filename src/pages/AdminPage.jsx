@@ -17,8 +17,10 @@ export default function AdminPage({ C, onBack }) {
   const [users,       setUsers]       = useState([]);
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState('');
-  const [resetting,   setResetting]   = useState(null); // seller id being reset
+  const [resetting,   setResetting]   = useState(null);
   const [resetMsg,    setResetMsg]    = useState('');
+  const [resetModal,  setResetModal]  = useState(null); // { seller }
+  const [collectAmt,  setCollectAmt]  = useState('');
 
   const headers = { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET };
 
@@ -41,18 +43,25 @@ export default function AdminPage({ C, onBack }) {
 
   useEffect(() => { if (authed) loadData(); }, [authed]);
 
-  const resetPlan = async (seller) => {
-    if (!window.confirm(`${seller.shopName} — ${sum(seller.planEarnings)} nollamoqchimisiz?`)) return;
+  const openResetModal = (seller) => {
+    setCollectAmt(String(seller.planEarnings));
+    setResetModal({ seller });
+  };
+
+  const confirmReset = async () => {
+    const { seller } = resetModal;
     setResetting(seller.id);
+    setResetModal(null);
     try {
       const r = await fetch(`${BASE}/api/admin/sellers/${seller.id}/reset-plan`, {
         method: 'POST', headers,
+        body: JSON.stringify({ collectedAmount: Number(collectAmt) || 0 }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error);
       setSellers(prev => prev.map(s => s.id === seller.id ? { ...s, planEarnings: 0 } : s));
-      setResetMsg(`✅ ${seller.shopName}: ${sum(data.amount)} nollandi`);
-      setTimeout(() => setResetMsg(''), 4000);
+      setResetMsg(`✅ ${seller.shopName}: ${sum(data.collectedAmount)} olindi, plan nollandi`);
+      setTimeout(() => setResetMsg(''), 5000);
     } catch (e) {
       alert(e.message);
     } finally {
@@ -229,7 +238,7 @@ export default function AdminPage({ C, onBack }) {
                     </div>
                     {s.planEarnings > 0 && (
                       <button
-                        onClick={() => resetPlan(s)}
+                        onClick={() => openResetModal(s)}
                         disabled={resetting === s.id}
                         title="Planini nollash va botdan xabar yuborish"
                         style={{
@@ -279,6 +288,74 @@ export default function AdminPage({ C, onBack }) {
           </>
         )}
       </div>
+
+      {/* Reset modal */}
+      {resetModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 4000,
+          background: 'rgba(0,0,0,.55)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }} onClick={() => setResetModal(null)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            width: '100%', maxWidth: 480, background: C.s1,
+            borderRadius: '24px 24px 0 0', padding: '8px 0 0',
+            boxShadow: '0 -12px 48px rgba(0,0,0,.25)',
+          }}>
+            <div style={{ width: 40, height: 4, borderRadius: 99, background: C.border, margin: '0 auto 20px' }} />
+            <div style={{ padding: '0 24px 32px' }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: C.dark, marginBottom: 4 }}>
+                Planini nollash
+              </div>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 20 }}>
+                🏪 {resetModal.seller.shopName} &nbsp;·&nbsp; Plan: <b style={{ color: C.navy }}>{sum(resetModal.seller.planEarnings)}</b>
+              </div>
+
+              <label style={{ fontSize: 12, fontWeight: 700, color: C.muted, display: 'block', marginBottom: 8, letterSpacing: .5 }}>
+                OLINGAN SUMMA (so'm)
+              </label>
+              <input
+                type="number"
+                value={collectAmt}
+                onChange={e => setCollectAmt(e.target.value)}
+                placeholder="0"
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  background: C.s2, border: `1.5px solid ${C.border}`,
+                  borderRadius: 14, padding: '14px 16px',
+                  color: C.dark, fontSize: 18, fontWeight: 700,
+                  outline: 'none', marginBottom: 6,
+                }}
+                onFocus={e => e.target.style.borderColor = C.navy}
+                onBlur={e => e.target.style.borderColor = C.border}
+                autoFocus
+              />
+              {collectAmt && Number(collectAmt) !== resetModal.seller.planEarnings && (
+                <div style={{ fontSize: 12, color: '#d97706', marginBottom: 14 }}>
+                  ⚠️ Plan summasidan farq: {sum(Math.abs(resetModal.seller.planEarnings - Number(collectAmt)))}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <button onClick={() => setResetModal(null)} style={{
+                  flex: 1, padding: '14px', borderRadius: 14,
+                  border: `1.5px solid ${C.border}`, background: 'none',
+                  color: C.muted, cursor: 'pointer', fontWeight: 600, fontSize: 14,
+                }}>
+                  Bekor qilish
+                </button>
+                <button onClick={confirmReset} style={{
+                  flex: 2, padding: '14px', borderRadius: 14, border: 'none',
+                  background: 'linear-gradient(135deg,#dc2626,#ef4444)',
+                  color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14,
+                  boxShadow: '0 4px 16px rgba(220,38,38,.35)',
+                }}>
+                  ✅ Tasdiqlash — {sum(Number(collectAmt) || 0)} olindi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

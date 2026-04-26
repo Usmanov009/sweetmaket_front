@@ -65,7 +65,10 @@ router.post('/sellers/:id/reset-plan', adminAuth, async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: 'Sotuvchi topilmadi' });
 
     const seller = rows[0];
-    const amount = Number(seller.plan_earnings);
+    const planAmount = Number(seller.plan_earnings);
+    const collectedAmount = req.body.collectedAmount != null
+      ? Number(req.body.collectedAmount)
+      : planAmount;
     const now = new Date().toLocaleString('uz-UZ', {
       day: 'numeric', month: 'long', year: 'numeric',
       hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent',
@@ -79,13 +82,14 @@ router.post('/sellers/:id/reset-plan', adminAuth, async (req, res) => {
         seller.telegram_id,
         `💸 <b>Plan to'ldirildi!</b>\n\n` +
         `🏪 Do'kon: <b>${seller.shop_name}</b>\n` +
-        `💰 To'langan summa: <b>${amount.toLocaleString('ru-RU')} so'm</b>\n` +
+        `💰 Plan summasi: <b>${planAmount.toLocaleString('ru-RU')} so'm</b>\n` +
+        `✅ Olingan summa: <b>${collectedAmount.toLocaleString('ru-RU')} so'm</b>\n` +
         `🕐 Sana: <b>${now}</b>\n\n` +
         `Keyingi oyda ham omad! 🎂`
       );
     }
 
-    res.json({ ok: true, amount, resetAt: new Date().toISOString() });
+    res.json({ ok: true, planAmount, collectedAmount, resetAt: new Date().toISOString() });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
