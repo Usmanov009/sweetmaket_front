@@ -47,18 +47,67 @@ router.post('/webhook', async (req, res) => {
   const chatId = msg.chat.id;
   const from   = msg.from || {};
 
+  const telegramId = String(from.id || '');
+
   /* /start command */
   if (msg.text && msg.text.startsWith('/start')) {
-    await sendMessage(chatId,
-      "Salom! 👋 <b>SweetMarket</b>'ga xush kelibsiz!\n\nKirish yoki ro'yxatdan o'tish uchun telefon raqamingizni yuboring:",
-      {
-        reply_markup: {
-          keyboard: [[{ text: '📱 Telefon raqamini ulashish', request_contact: true }]],
-          resize_keyboard: true,
-          one_time_keyboard: true,
-        },
-      }
-    );
+    let existingUser = null;
+    if (telegramId) {
+      existingUser = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]).catch(() => ({ rows: [] }))).rows[0];
+    }
+    if (existingUser) {
+      await sendMessage(chatId,
+        `Salom, <b>${existingUser.name || 'Foydalanuvchi'}</b> 👋\n\nSiz allaqachon ro'yxatdan o'tgansiz. Quyidagi tugmani bosib kirishingiz mumkin:`,
+        {
+          reply_markup: {
+            remove_keyboard: true,
+            inline_keyboard: [[{ text: '🔑 Kirish', web_app: { url: MINI_APP_URL } }]],
+          },
+        }
+      );
+    } else {
+      await sendMessage(chatId,
+        "Salom! 👋 <b>SweetMarket</b>'ga xush kelibsiz!\n\nKirish yoki ro'yxatdan o'tish uchun telefon raqamingizni yuboring:",
+        {
+          reply_markup: {
+            keyboard: [[{ text: '📱 Telefon raqamini ulashish', request_contact: true }]],
+            resize_keyboard: true,
+            one_time_keyboard: true,
+          },
+        }
+      );
+    }
+    return;
+  }
+
+  /* Any text message (keyboard still visible) */
+  if (msg.text) {
+    let existingUser = null;
+    if (telegramId) {
+      existingUser = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]).catch(() => ({ rows: [] }))).rows[0];
+    }
+    if (existingUser) {
+      await sendMessage(chatId,
+        `Salom, <b>${existingUser.name || 'Foydalanuvchi'}</b> 👋\n\nQuyidagi tugmani bosib kirishingiz mumkin:`,
+        {
+          reply_markup: {
+            remove_keyboard: true,
+            inline_keyboard: [[{ text: '🔑 Kirish', web_app: { url: MINI_APP_URL } }]],
+          },
+        }
+      );
+    } else {
+      await sendMessage(chatId,
+        "Ro'yxatdan o'tish uchun telefon raqamingizni yuboring:",
+        {
+          reply_markup: {
+            keyboard: [[{ text: '📱 Telefon raqamini ulashish', request_contact: true }]],
+            resize_keyboard: true,
+            one_time_keyboard: true,
+          },
+        }
+      );
+    }
     return;
   }
 
@@ -70,14 +119,14 @@ router.post('/webhook', async (req, res) => {
     const firstName = contact.first_name || from.first_name || '';
     const lastName  = contact.last_name  || from.last_name  || '';
     const name      = [firstName, lastName].filter(Boolean).join(' ') || 'Foydalanuvchi';
-    const telegramId = String(from.id || contact.user_id || '');
+    const contactTelegramId = telegramId || String(contact.user_id || '');
 
     // Find or create user
     let isNew = false;
     let userRow = null;
 
-    if (telegramId) {
-      userRow = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]).catch(()=>({rows:[]}))).rows[0];
+    if (contactTelegramId) {
+      userRow = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [contactTelegramId]).catch(()=>({rows:[]}))).rows[0];
     }
     if (!userRow) {
       userRow = (await pool.query('SELECT * FROM users WHERE phone = $1', [rawPhone]).catch(()=>({rows:[]}))).rows[0];
@@ -91,15 +140,15 @@ router.post('/webhook', async (req, res) => {
       const nm = name;
       await pool.query(
         `INSERT INTO users (id, telegram_id, phone, first_name, last_name, name) VALUES ($1,$2,$3,$4,$5,$6)`,
-        [id, telegramId || null, rawPhone, fn, ln, nm]
+        [id, contactTelegramId || null, rawPhone, fn, ln, nm]
       ).catch(() => {});
       await pool.query(
         `INSERT INTO birthdays (id, user_id, emoji, name, date) VALUES ($1,$2,$3,$4,$5),($6,$2,$7,$8,$9)`,
         [genId(), id, '🎂', 'Onam', '12 Апреля', genId(), '🎉', "Do'stim", '3 Июня']
       ).catch(() => {});
       userRow = (await pool.query('SELECT * FROM users WHERE id = $1', [id]).catch(()=>({rows:[]}))).rows[0];
-    } else if (telegramId && !userRow.telegram_id) {
-      await pool.query('UPDATE users SET telegram_id=$1 WHERE id=$2', [telegramId, userRow.id]).catch(() => {});
+    } else if (contactTelegramId && !userRow.telegram_id) {
+      await pool.query('UPDATE users SET telegram_id=$1 WHERE id=$2', [contactTelegramId, userRow.id]).catch(() => {});
     }
 
     const displayName = userRow?.name || name;
