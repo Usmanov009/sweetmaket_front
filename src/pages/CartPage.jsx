@@ -4,14 +4,15 @@ import {
   Package, CircleNotch, CheckCircle, MapPin, Storefront,
 } from '@phosphor-icons/react';
 import CakeVisual from '../components/CakeVisual';
-import { sum } from '../utils/format';
+import { sum, translateAddress } from '../utils/format';
 import api from '../api';
 import { useLocale } from '../locale.jsx';
+import { REGIONS } from '../constants/regions.js';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
 export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, onClear, onOrder, toast, setPage, user }) {
-  const { t } = useLocale();
+  const { t, lang } = useLocale();
   const [ordering,  setOrdering]  = useState(false);
   const [done,      setDone]      = useState(false);
   const [sellers,   setSellers]   = useState([]);
@@ -180,7 +181,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
                     <div style={{ fontSize: 13, fontWeight: 700, color: active ? C.navy : C.dark }}>{b.name}</div>
                     {b.address && (
                       <div style={{ fontSize: 12, color: C.muted, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <MapPin size={11} /> {b.address}
+                        <MapPin size={11} /> {translateAddress(b, lang, REGIONS)}
                       </div>
                     )}
                   </div>
@@ -219,7 +220,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
               <Storefront size={12} color={C.navy} />
               <span style={{ color: C.navy, fontWeight: 600 }}>{selected.name}</span>
-              {selected.address && <span>· {selected.address}</span>}
+              {selected.address && <span>· {translateAddress(selected, lang, REGIONS)}</span>}
             </div>
           )}
           <button onClick={handleOrder} disabled={ordering} style={{

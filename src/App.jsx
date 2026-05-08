@@ -9,8 +9,9 @@ import {
 import api from './api';
 import { useLocale } from './locale.jsx';
 import { THEMES, injectGlobal } from './constants/themes';
+import { REGIONS } from './constants/regions.js';
 import { useBreakpoint } from './hooks/useBreakpoint';
-import { sum, pluralRu, daysUntil, formatPhone, rawDigits, isValidPhone } from './utils/format';
+import { sum, pluralRu, daysUntil, formatPhone, rawDigits, isValidPhone, translateAddress } from './utils/format';
 import Toast from './components/Toast';
 import CakeVisual from './components/CakeVisual';
 import BottomNav from './components/BottomNav';
@@ -314,7 +315,7 @@ function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
    CREATE PAGE
 ═══════════════════════════════════════════════════════ */
 function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) {
-  const { t } = useLocale();
+  const { t, lang } = useLocale();
 
   const DETAILS = 50; const PUBLISH = 51; const DONE = 52;
 
@@ -544,7 +545,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:14,fontWeight:700,color:active?C.navy:C.dark}}>{b.name}</div>
-                    <div style={{fontSize:12,color:C.muted,marginTop:2}}>{b.address}</div>
+                    <div style={{fontSize:12,color:C.muted,marginTop:2}}>{translateAddress(b, lang, REGIONS)}</div>
                     <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {b.hours} &nbsp;·&nbsp; ⭐ {b.rating}</div>
                   </div>
                   <div style={{width:22,height:22,borderRadius:'50%',flexShrink:0,

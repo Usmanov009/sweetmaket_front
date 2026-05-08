@@ -22,6 +22,19 @@ export function pluralRu(n, one, two, five) {
   return five;
 }
 
+export function translateAddress(b, lang, REGIONS) {
+  if (lang !== 'ru' || !b || !b.region) return b?.address || '';
+  const regionData = REGIONS.find(r => r.name === b.region || r.nameRu === b.region);
+  if (!regionData) return b.address || '';
+  const ruRegion = regionData.nameRu;
+  const cityIdx = regionData.cities.indexOf(b.city);
+  const ruCity = cityIdx >= 0 ? (regionData.citiesRu?.[cityIdx] || b.city) : b.city;
+  const addr = b.address || '';
+  const prefix = `${b.region}, ${b.city}, `;
+  const street = addr.startsWith(prefix) ? addr.slice(prefix.length) : addr.split(', ').slice(2).join(', ') || addr;
+  return `${ruRegion}, ${ruCity}, ${street}`;
+}
+
 export function daysUntil(dateStr) {
   if (!dateStr) return 999;
   const now = new Date();
