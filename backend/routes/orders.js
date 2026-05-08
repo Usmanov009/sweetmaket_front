@@ -3,12 +3,6 @@ const pool    = require('../db/pool');
 const { genId } = require('../utils/db');
 const { sendTelegramMessage } = require('../utils/telegram');
 
-// Ensure orders table has nullable TEXT seller_id
-async function migrateOrders() {
-  await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id DROP NOT NULL`).catch(() => {});
-  await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
-}
-
 async function notifyUser(userId, title, message, type = 'order') {
   const id = genId();
   await pool.query(
@@ -42,12 +36,6 @@ router.post('/', async (req, res, next) => {
     }
 
     const id = genId();
-
-    // Ensure columns exist before inserting
-    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS seller_id TEXT`).catch(() => {});
-    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id DROP NOT NULL`).catch(() => {});
-    await pool.query(`ALTER TABLE orders ALTER COLUMN seller_id TYPE TEXT USING seller_id::TEXT`).catch(() => {});
-    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
 
     let row;
     try {

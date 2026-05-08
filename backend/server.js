@@ -12,19 +12,18 @@ const isProd = process.env.NODE_ENV === 'production';
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-// Lazy DB init — runs once on first request
-let dbReady = false;
+// Lazy DB init — shared promise prevents concurrent init calls
+let dbInitPromise = null;
 app.use(async (_req, _res, next) => {
-  if (!dbReady) {
-    try { 
-      await initDB(); 
-      dbReady = true; 
-      console.log('Database initialized successfully');
-    } catch (error) {
-      console.error('Database initialization failed:', error);
-      // Don't set dbReady = true, so it will retry on next request
-    }
+  if (!dbInitPromise) {
+    dbInitPromise = initDB()
+      .then(() => console.log('Database initialized successfully'))
+      .catch(error => {
+        console.error('Database initialization failed:', error);
+        dbInitPromise = null; // allow retry on next request
+      });
   }
+  await dbInitPromise;
   next();
 });
 

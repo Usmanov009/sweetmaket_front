@@ -9,7 +9,7 @@ import { REGIONS } from '../constants/regions.js';
 import { useLocale } from '../locale.jsx';
 
 export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) {
-  const { t } = useLocale();
+  const { t, lang, setLang } = useLocale();
   const [mode,      setMode]      = useState('login');
   // register steps: 'region' → 'city' → 'form'
   const [regStep,   setRegStep]   = useState('region');
@@ -40,8 +40,8 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
   const pickCity = (c) => { setSelCity(c); setRegStep('form'); };
 
   const handleLogin = async () => {
-    if (!isValidPhone(phone)) { setError("To'g'ri telefon raqam kiriting"); return; }
-    if (!password) { setError('Parol kiriting'); return; }
+    if (!isValidPhone(phone)) { setError(t('correctPhone')); return; }
+    if (!password) { setError(t('enterPassword')); return; }
     setError(''); setLoading(true);
     try {
       const { token, seller } = await api.post('/api/seller/login', { phone, password });
@@ -52,14 +52,15 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
   };
 
   const handleRegister = async () => {
-    if (!name.trim())      { setError('Ism kiriting'); return; }
-    if (!shopName.trim())  { setError("Do'kon nomi kiriting"); return; }
-    if (!isValidPhone(phone)) { setError("To'g'ri telefon raqam kiriting"); return; }
-    if (password.length < 6)  { setError("Parol kamida 6 ta belgi bo'lishi kerak"); return; }
-    if (password !== password2) { setError('Parollar mos kelmadi'); return; }
-    if (!address.trim()) { setError("Ko'cha va uy raqamini kiriting"); return; }
+    if (!name.trim())      { setError(t('enterName')); return; }
+    if (!shopName.trim())  { setError(t('enterShopName')); return; }
+    if (!isValidPhone(phone)) { setError(t('correctPhone')); return; }
+    if (password.length < 6)  { setError(t('passwordMin')); return; }
+    if (password !== password2) { setError(t('passwordsNoMatch')); return; }
+    if (!address.trim()) { setError(t('enterStreet')); return; }
     setError(''); setLoading(true);
-    const fullAddress = `${selRegion?.name || ''}, ${selCity}, ${address.trim()}`;
+    const regionName = lang === 'ru' ? (selRegion?.nameRu || selRegion?.name || '') : (selRegion?.name || '');
+    const fullAddress = `${regionName}, ${selCity}, ${address.trim()}`;
     try {
       const { token, seller } = await api.post('/api/seller/register', {
         name: name.trim(), shopName: shopName.trim(), phone, password,
@@ -94,6 +95,18 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
   /* ── Region step (register only) ── */
   const regionStep = (
     <div>
+      {/* Language toggle */}
+      <div style={{ display:'flex', justifyContent:'flex-end', gap:6, marginBottom:12 }}>
+        {['uz', 'ru'].map(l => (
+          <button key={l} onClick={() => setLang(l)} style={{
+            padding:'5px 12px', borderRadius:20, border:`1.5px solid ${l === lang ? ACCENT : C.border}`,
+            cursor:'pointer', background: l === lang ? ACCENT : C.s2,
+            color: l === lang ? '#fff' : C.muted,
+            fontWeight:700, fontSize:12, transition:'all .15s',
+          }}>{l.toUpperCase()}</button>
+        ))}
+      </div>
+
       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
         <div style={{ width:40, height:40, borderRadius:12, background:`linear-gradient(135deg,${DARK_ACCENT},${ACCENT})`,
           display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -101,7 +114,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
         </div>
         <div>
           <div style={{ fontSize:17, fontWeight:800, color:C.dark }}>
-            {regStep === 'region' ? t('regionPickerTitle') : selRegion?.name}
+            {regStep === 'region' ? t('regionPickerTitle') : (lang === 'ru' ? selRegion?.nameRu : selRegion?.name)}
           </div>
           <div style={{ fontSize:12, color:C.muted, marginTop:1 }}>
             {regStep === 'region' ? t('regionPickerSub') : t('cityPickerSub')}
@@ -129,13 +142,15 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           onMouseEnter={e => e.currentTarget.style.borderColor = ACCENT}
           onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
             <div>
-              <div style={{ fontSize:14, fontWeight:700, color:C.dark }}>{r.name}</div>
+              <div style={{ fontSize:14, fontWeight:700, color:C.dark }}>
+                {lang === 'ru' ? r.nameRu : r.name}
+              </div>
               <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{r.cities.length} {t('citiesCount')}</div>
             </div>
             <span style={{ color:C.muted, fontSize:18 }}>›</span>
           </button>
         ))}
-        {regStep === 'city' && selRegion?.cities.map(c => (
+        {regStep === 'city' && selRegion?.cities.map((c, i) => (
           <button key={c} onClick={() => pickCity(c)} style={{
             width:'100%', padding:'13px 16px', borderRadius:12,
             border:`1.5px solid ${C.border}`, background:C.s2,
@@ -148,7 +163,9 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
               display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
               <MapPin size={16} color={ACCENT} />
             </div>
-            <span style={{ fontSize:14, fontWeight:600, color:C.dark }}>{c}</span>
+            <span style={{ fontSize:14, fontWeight:600, color:C.dark }}>
+              {lang === 'ru' ? selRegion.citiesRu[i] : c}
+            </span>
           </button>
         ))}
       </div>
@@ -176,7 +193,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
         marginBottom: 28,
         gap: 4,
       }}>
-        {[['login', 'Kirish'], ['register', "Ro'yxatdan o'tish"]].map(([m, label]) => (
+        {[['login', t('login')], ['register', t('signUp')]].map(([m, label]) => (
           <button
             key={m}
             onClick={() => switchMode(m)}
@@ -210,12 +227,12 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           color: C.dark,
           marginBottom: 6,
         }}>
-          {mode === 'login' ? 'Sotuvchi kabineti' : regStep === 'form' ? "Hisob ma'lumotlari" : 'Yangi sotuvchi'}
+          {mode === 'login' ? t('sellerCabinet') : regStep === 'form' ? t('accountInfo') : t('newSeller')}
         </div>
         <div style={{ fontSize: 14, color: C.muted }}>
           {mode === 'login'
-            ? "Do'koningizni boshqaring"
-            : regStep === 'form' ? `📍 ${selRegion?.name}, ${selCity}` : "Avval joylashuvni tanlang"}
+            ? t('manageStoreSubtitle')
+            : regStep === 'form' ? `📍 ${lang === 'ru' ? selRegion?.nameRu : selRegion?.name}, ${selCity}` : t('pickLocationFirst')}
         </div>
       </div>
 
@@ -229,15 +246,15 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16,
             padding:'10px 14px', borderRadius:12, background:`${ACCENT}10`, border:`1px solid ${ACCENT}30` }}>
             <MapPin size={16} color={ACCENT} weight="fill"/>
-            <span style={{ fontSize:13, fontWeight:700, color:ACCENT }}>{selRegion?.name}, {selCity}</span>
+            <span style={{ fontSize:13, fontWeight:700, color:ACCENT }}>{lang === 'ru' ? selRegion?.nameRu : selRegion?.name}, {selCity}</span>
             <button onClick={() => setRegStep('region')} style={{
               marginLeft:'auto', background:'none', border:'none', cursor:'pointer',
               fontSize:11, color:C.muted, fontWeight:600,
             }}>{t('changeLocation')}</button>
           </div>
           {[
-            { label: 'Ism Familiya', icon: <User size={18} weight="duotone" />, value: name, set: v => setName(v.replace(/[0-9]/g, '')), placeholder: 'Aziz Karimov' },
-            { label: "Do'kon nomi",  icon: <Storefront size={18} weight="duotone" />, value: shopName, set: setShopName, placeholder: 'Aziz Shirinliklari' },
+            { label: t('yourName'), icon: <User size={18} weight="duotone" />, value: name, set: v => setName(v.replace(/[0-9]/g, '')), placeholder: 'Aziz Karimov' },
+            { label: t('shopName'), icon: <Storefront size={18} weight="duotone" />, value: shopName, set: setShopName, placeholder: 'Aziz Shirinliklari' },
             { label: t('streetHouseLabel'), icon: <MapPin size={18} weight="duotone" />, value: address, set: setAddress, placeholder: "Mustaqillik ko'chasi, 12-uy" },
           ].map(({ label, icon, value, set, placeholder }) => (
             <div key={label} style={{ marginBottom: 12 }}>
@@ -255,7 +272,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
       {/* Phone — only show for login or register form step */}
       {(mode === 'login' || regStep === 'form') && (
         <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Telefon raqam</label>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>{t('phoneNumber')}</label>
           <div style={{ position: 'relative' }}>
             <span style={iconPos}><Phone size={18} weight="duotone" /></span>
             <input
@@ -273,13 +290,13 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
       {/* Password — only show for login or register form step */}
       {(mode === 'login' || regStep === 'form') && (
         <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Parol</label>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>{t('password')}</label>
           <div style={{ position: 'relative' }}>
             <span style={iconPos}><Lock size={18} weight="duotone" /></span>
             <input
               type={showPass ? 'text' : 'password'} value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder={mode === 'register' ? 'Kamida 6 ta belgi' : 'Parolingiz'}
+              placeholder={mode === 'register' ? t('passwordPlaceholder') : t('yourPassword')}
               style={passFieldStyle} className="input-focus"
             />
             <button type="button" onClick={() => setShowPass(p => !p)} style={eyeBtnStyle}>
@@ -291,13 +308,13 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
 
       {mode === 'register' && regStep === 'form' && (
         <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>Parolni tasdiqlang</label>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>{t('confirmPassword')}</label>
           <div style={{ position: 'relative' }}>
             <span style={iconPos}><Lock size={18} weight="duotone" /></span>
             <input
               type={showPass2 ? 'text' : 'password'} value={password2}
               onChange={e => setPassword2(e.target.value)}
-              placeholder="Parolni qayta kiriting"
+              placeholder={t('repeatPassword')}
               style={passFieldStyle} className="input-focus"
             />
             <button type="button" onClick={() => setShowPass2(p => !p)} style={eyeBtnStyle}>
@@ -350,14 +367,13 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} />
           : mode === 'login' ? <Lock size={18} /> : <Storefront size={18} />
         }
-        {loading ? 'Yuklanmoqda...' : mode === 'login' ? 'Kirish' : "Ro'yxatdan o'tish"}
+        {loading ? t('loadingText') : mode === 'login' ? t('login') : t('signUp')}
         {!loading && <ArrowRight size={16} />}
       </button>}
 
       <div style={{ textAlign: 'center', fontSize: 13, color: C.muted }}>
-        Xaridor sifatida kirish?{' '}
         <span onClick={goUserLogin} style={{ color: '#4f46e5', fontWeight: 700, cursor: 'pointer' }}>
-          Bu yerga bosing
+          {t('userLoginLink')}
         </span>
       </div>
     </div>
@@ -390,17 +406,17 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
             marginBottom: 12,
             lineHeight: 1.1,
           }}>
-            Sotuvchi<span style={{ color: 'rgba(255,255,255,.45)' }}> Kabineti</span>
+            {t('sellerHeroTitle')}
           </div>
           <div style={{ color: 'rgba(255,255,255,.75)', fontSize: 15, maxWidth: 300, lineHeight: 1.8, marginBottom: 44 }}>
-            Buyurtmalarni kuzating, do'koningizni boshqaring
+            {t('sellerHeroDesc')}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { icon: <Package size={20} weight="fill" />,   text: "Buyurtmalarni real vaqtda kuzating" },
-              { icon: <Buildings size={20} weight="fill" />, text: "Do'koningizni to'liq boshqaring"    },
-              { icon: <TrendUp size={20} weight="fill" />,   text: "Daromad statistikasini ko'ring"     },
+              { icon: <Package size={20} weight="fill" />,   text: t('sellerFeature1') },
+              { icon: <Buildings size={20} weight="fill" />, text: t('sellerFeature2') },
+              { icon: <TrendUp size={20} weight="fill" />,   text: t('sellerFeature3') },
             ].map(({ icon, text }) => (
               <div key={text} style={{
                 display: 'flex',
@@ -443,10 +459,10 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           color: '#fff',
           marginBottom: 8,
         }}>
-          Sotuvchi <span style={{ opacity: .5 }}>Kabineti</span>
+          {t('sellerHeroTitle')}
         </div>
         <div style={{ color: 'rgba(255,255,255,.65)', fontSize: 14 }}>
-          SweetMarket biznes platformasi
+          {t('sellerHeroDesc')}
         </div>
       </div>
       {formContent}

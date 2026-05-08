@@ -4,6 +4,7 @@ const crypto  = require('crypto');
 const pool    = require('../db/pool');
 const { genId } = require('../utils/db');
 const { sendTelegramMessage } = require('../utils/telegram');
+const { m } = require('../utils/i18n');
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const JWT_SECRET = process.env.JWT_SECRET || 'sweetmarket_secret_key';
@@ -36,14 +37,14 @@ router.post('/register', async (req, res) => {
   try {
     const { name, shopName, phone, password, address, description, region, city } = req.body;
     if (!name || !shopName || !phone || !password)
-      return res.status(400).json({ error: 'Ism, do\'kon nomi, telefon va parol kerak' });
+      return res.status(400).json({ error: m(req, 'requiredFields') });
 
     const normPhone = normalizePhone(phone);
     const existing = (await pool.query(
       `SELECT id FROM sellers WHERE REGEXP_REPLACE(phone, '[^0-9]', '', 'g') = $1`,
       [normPhone]
     )).rows[0];
-    if (existing) return res.status(400).json({ error: 'Bu telefon raqam allaqachon ro\'yxatdan o\'tgan' });
+    if (existing) return res.status(400).json({ error: m(req, 'phoneExists') });
 
     const id = genId();
     const hash = hashPassword(password);
@@ -64,21 +65,18 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { phone, password, telegramId } = req.body;
-    if (!phone || !password) return res.status(400).json({ error: 'Telefon va parol kerak' });
+    if (!phone || !password) return res.status(400).json({ error: m(req, 'phonePassRequired') });
 
     const normPhone = normalizePhone(phone);
     const row = (await pool.query(
       `SELECT * FROM sellers WHERE REGEXP_REPLACE(phone, '[^0-9]', '', 'g') = $1`,
       [normPhone]
     )).rows[0];
-    if (!row) return res.status(400).json({ error: 'Sotuvchi topilmadi' });
-    if (row.password !== hashPassword(password)) return res.status(400).json({ error: 'Parol noto\'g\'ri' });
+    if (!row) return res.status(400).json({ error: m(req, 'sellerNotFound') });
+    if (row.password !== hashPassword(password)) return res.status(400).json({ error: m(req, 'wrongPassword') });
 
     // Telegram orqali kirsa — telegram_id ni bog'lash
     if (telegramId && !row.telegram_id) {
-      await pool.query(
-        `ALTER TABLE sellers ADD COLUMN IF NOT EXISTS telegram_id TEXT UNIQUE`
-      ).catch(() => {});
       await pool.query(
         `UPDATE sellers SET telegram_id = $1 WHERE id = $2`,
         [String(telegramId), row.id]
@@ -214,10 +212,6 @@ router.patch('/orders/:id/status', sellerAuth, async (req, res) => {
 // GET /api/seller/plan
 router.get('/plan', sellerAuth, async (req, res) => {
   try {
-    // Lazy migrations — run silently if columns already exist
-    await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS plan_earnings NUMERIC DEFAULT 0`).catch(() => {});
-    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT ''`).catch(() => {});
-
     const sellerRow = (await pool.query(
       'SELECT COALESCE(plan_earnings, 0) as plan_earnings FROM sellers WHERE id=$1', [req.seller.id]
     )).rows[0];
@@ -334,9 +328,6 @@ router.post('/products', sellerAuth, async (req, res) => {
       return res.status(400).json({ error: 'Name, emoji, price va ingredients kerak' });
     }
 
-    // Ensure products column exists
-    await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS products JSONB DEFAULT '[]'`).catch(()=>{});
-
     const { rows } = await pool.query(
       `SELECT COALESCE(products, '[]'::jsonb) as products FROM sellers WHERE id = $1`,
       [req.seller.id]
@@ -413,7 +404,6 @@ router.post('/publish', sellerAuth, async (req, res) => {
     const sellerRow = (await pool.query('SELECT * FROM sellers WHERE id = $1', [req.seller.id])).rows[0];
     if (!sellerRow) return res.status(404).json({ error: 'Sotuvchi topilmadi' });
 
-    const { genId } = require('../utils/db');
     const postId = genId();
     const fullDesc = [desc, note].filter(Boolean).join(' — ');
 

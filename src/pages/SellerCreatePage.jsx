@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import CakeVisual from '../components/CakeVisual';
+import { useLocale } from '../locale.jsx';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
@@ -16,52 +17,53 @@ function sellerFetch(method, path, body) {
   });
 }
 
-const CREATE_OPTIONS = {
-  type: [
-    { id:'tort',  category:'tort', emoji:'🎂', label:'Tort',       desc:'Klassik tortlar',     basePrice:89000, color:'#fce4ec' },
-    { id:'bento', category:'tort', emoji:'🎁', label:'Bento tort', desc:'Mini dekorativ tort', basePrice:69000, color:'#e8f5e9' },
-  ],
-  shape: [
-    { id:'round',  emoji:'⭕', label:'Yumaloq', desc:'Klassik shakl', color:'#fce4ec' },
-    { id:'square', emoji:'◼️', label:'Kvadrat', desc:'Zamonaviy',     color:'#e8f5e9' },
-    { id:'heart',  emoji:'❤️', label:'Yurak',   desc:'Romantik',      color:'#ffe4e1' },
-  ],
-  size: [
-    { id:'mini', emoji:'🫐', label:'Mini',      sub:'1–2 kishi',  desc:'Kichkina',    priceAdd:0,     color:'#e3f2fd' },
-    { id:'std',  emoji:'🍓', label:'Standart',  sub:'4–6 kishi',  desc:'Eng mashhur', priceAdd:20000, color:'#fff8e1' },
-    { id:'big',  emoji:'🍒', label:'Katta',     sub:'8–12 kishi', desc:"To'y uchun",  priceAdd:40000, color:'#fce4ec' },
-    { id:'xl',   emoji:'🎉', label:'XL',        sub:'15+ kishi',  desc:'Ulkan',       priceAdd:80000, color:'#f9fbe7' },
-  ],
-  flavor: [
-    { id:'velvet', emoji:'🍷', label:'Red Velvet',  desc:'Qizil barxat',     priceAdd:10000, color:'#fce4ec' },
-    { id:'choco',  emoji:'🍫', label:'Shokolad',     desc:'Qoʻngʻir krema',   priceAdd:5000,  color:'#efebe9' },
-    { id:'pista',  emoji:'🌿', label:'Pistashka',    desc:'Yashil rang',      priceAdd:15000, color:'#e8f5e9' },
-    { id:'rasp',   emoji:'🍓', label:'Malina',       desc:'Mevali',           priceAdd:10000, color:'#fce4ec' },
-    { id:'lemon',  emoji:'🍋', label:'Limon',        desc:'Nordon-shirin',    priceAdd:5000,  color:'#fffde7' },
-  ],
-  decoration: [
-    { id:'flower',   emoji:'🌸', label:'Gul bezak',       desc:'Gul naqshlari',    priceAdd:15000, color:'#fce4ec' },
-    { id:'chocoDec', emoji:'🍫', label:'Shokolad bezak',   desc:'Shokolad plitalar',priceAdd:10000, color:'#efebe9' },
-    { id:'fruit',    emoji:'🍇', label:'Meva bezak',       desc:'Yangi mevalar',    priceAdd:12000, color:'#e8f5e9' },
-    { id:'minimal',  emoji:'✨', label:'Minimal',          desc:'Sodda va chiroyli', priceAdd:0,    color:'#f5f5f5' },
-    { id:'kids',     emoji:'🎠', label:'Bolalar bezak',    desc:'Rangli va quvnoq', priceAdd:20000, color:'#fffde7' },
-  ],
-};
-
-const CREATE_STEPS = [
-  { key:'type',       question:'Qanday tort?',         hint:'Tort turini tanlang' },
-  { key:'shape',      question:'Shakli qanday?',       hint:'Tortning shaklini tanlang' },
-  { key:'size',       question:'Qanchaga mo\'ljallangan?', hint:'Tortning o\'lchamini tanlang' },
-  { key:'flavor',     question:'Ta\'mi qanday?',       hint:'Asosiy ta\'mni tanlang' },
-  { key:'decoration', question:'Bezagi qanday?',       hint:'Bezak turini tanlang' },
-];
-
 export default function SellerCreatePage({ C, onBack, onPublished }) {
+  const { t } = useLocale();
   const [step, setStep]         = useState(0);
   const [form, setForm]         = useState({ type:null, shape:null, size:null, flavor:null, decoration:null, note:'', image:null });
   const [publishing, setPublishing] = useState(false);
   const [imgDrag, setImgDrag]   = useState(false);
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const CREATE_OPTIONS = useMemo(() => ({
+    type: [
+      { id:'tort',  category:'tort', emoji:'🎂', label:t('cTortLabel'),  desc:t('klassikTortlar'),  basePrice:89000, color:'#fce4ec' },
+      { id:'bento', category:'tort', emoji:'🎁', label:t('cBentoLabel'), desc:t('miniDecTort'),     basePrice:69000, color:'#e8f5e9' },
+    ],
+    shape: [
+      { id:'round',  emoji:'⭕', label:t('cRoundLabel'),  desc:t('klassikShakl'), color:'#fce4ec' },
+      { id:'square', emoji:'◼️', label:t('cSquareLabel'), desc:t('zamonaviy'),    color:'#e8f5e9' },
+      { id:'heart',  emoji:'❤️', label:t('cHeartLabel'),  desc:t('romantik'),     color:'#ffe4e1' },
+    ],
+    size: [
+      { id:'mini', emoji:'🫐', label:t('cMiniLabel'), sub:'1–2 kishi',  desc:t('kichkina'),    priceAdd:0,     color:'#e3f2fd' },
+      { id:'std',  emoji:'🍓', label:t('cStdLabel'),  sub:'4–6 kishi',  desc:t('engMashhur'), priceAdd:20000, color:'#fff8e1' },
+      { id:'big',  emoji:'🍒', label:t('cBigLabel'),  sub:'8–12 kishi', desc:t('toyUchun'),   priceAdd:40000, color:'#fce4ec' },
+      { id:'xl',   emoji:'🎉', label:t('cXlLabel'),   sub:'15+ kishi',  desc:t('ulkan'),      priceAdd:80000, color:'#f9fbe7' },
+    ],
+    flavor: [
+      { id:'velvet', emoji:'🍷', label:t('cVelvetLabel'), desc:t('qizilBarxat'),   priceAdd:10000, color:'#fce4ec' },
+      { id:'choco',  emoji:'🍫', label:t('cChocoLabel'),  desc:t('qongirKrema'),   priceAdd:5000,  color:'#efebe9' },
+      { id:'pista',  emoji:'🌿', label:t('cPistaLabel'),  desc:t('yashilRang'),    priceAdd:15000, color:'#e8f5e9' },
+      { id:'rasp',   emoji:'🍓', label:t('cRaspLabel'),   desc:t('mevaliDesc'),    priceAdd:10000, color:'#fce4ec' },
+      { id:'lemon',  emoji:'🍋', label:t('cLemonLabel'),  desc:t('nordonShirin'),  priceAdd:5000,  color:'#fffde7' },
+    ],
+    decoration: [
+      { id:'flower',   emoji:'🌸', label:t('cFlowerLabel'),   desc:t('gulNaqsh'),       priceAdd:15000, color:'#fce4ec' },
+      { id:'chocoDec', emoji:'🍫', label:t('cChocoDecLabel'), desc:t('shokoladPlita'),  priceAdd:10000, color:'#efebe9' },
+      { id:'fruit',    emoji:'🍇', label:t('cFruitLabel'),    desc:t('yangiMevalar'),   priceAdd:12000, color:'#e8f5e9' },
+      { id:'minimal',  emoji:'✨', label:t('cMinimalLabel'),  desc:t('soddaChiroyli'),  priceAdd:0,     color:'#f5f5f5' },
+      { id:'kids',     emoji:'🎠', label:t('cKidsLabel'),     desc:t('rangliQuvnoq'),   priceAdd:20000, color:'#fffde7' },
+    ],
+  }), [t]);
+
+  const CREATE_STEPS = useMemo(() => [
+    { key:'type',       question:t('sellerStepTypeQ'),   hint:t('sellerStepTypeH') },
+    { key:'shape',      question:t('sellerStepShapeQ'),  hint:t('sellerStepShapeH') },
+    { key:'size',       question:t('sellerStepSizeQ'),   hint:t('sellerStepSizeH') },
+    { key:'flavor',     question:t('sellerStepFlavorQ'), hint:t('sellerStepFlavorH') },
+    { key:'decoration', question:t('sellerStepDecoQ'),   hint:t('sellerStepDecoH') },
+  ], [t]);
 
   const activeSteps = form.type?.id === 'tort'
     ? CREATE_STEPS
@@ -129,9 +131,9 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
       <Header />
       <div style={{ maxWidth:520, margin:'0 auto', padding:'24px 20px 120px' }}>
         <div style={{ fontFamily:"'Playfair Display',serif", fontSize:24, fontWeight:900, color:C.dark, marginBottom:4 }}>
-          Mahsulot tafsilotlari
+          {t('productDetails')}
         </div>
-        <div style={{ color:C.muted, fontSize:13, marginBottom:24 }}>Ushbu mahsulot bosh sahifa va qidiruvda ko'rinadi</div>
+        <div style={{ color:C.muted, fontSize:13, marginBottom:24 }}>{t('productVisible')}</div>
 
         <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:28 }}>
           {selections.map(o => (
@@ -143,7 +145,7 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
 
         {/* Image */}
         <div style={{ marginBottom:20 }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase', marginBottom:12 }}>Rasm (ixtiyoriy)</div>
+          <div style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase', marginBottom:12 }}>{t('photoLabel')}</div>
           <div
             onDragOver={e => { e.preventDefault(); setImgDrag(true); }}
             onDragLeave={() => setImgDrag(false)}
@@ -159,7 +161,7 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
             ) : (
               <div style={{ textAlign:'center', color:C.muted }}>
                 <div style={{ fontSize:28, marginBottom:6 }}>📸</div>
-                <div style={{ fontSize:13, fontWeight:600 }}>Rasm yuklash</div>
+                <div style={{ fontSize:13, fontWeight:600 }}>{t('uploadPhoto')}</div>
               </div>
             )}
           </div>
@@ -167,9 +169,9 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
 
         {/* Note */}
         <div style={{ marginBottom:20 }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase', marginBottom:12 }}>Izoh</div>
+          <div style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase', marginBottom:12 }}>{t('noteLabel')}</div>
           <textarea value={form.note} onChange={e => setF('note', e.target.value)}
-            placeholder="Qo'shimcha ma'lumot, narx o'zgarishi, maxsus taklif..."
+            placeholder={t('notePlaceholderSeller')}
             rows={3} style={{ width:'100%', background:C.s1, border:`1.5px solid ${C.border}`, borderRadius:16, padding:'14px 16px', color:C.dark, fontSize:14, resize:'none', lineHeight:1.6, boxSizing:'border-box', outline:'none' }}
             onFocus={e => e.target.style.borderColor='#059669'}
             onBlur={e => e.target.style.borderColor=C.border} />
@@ -178,7 +180,7 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
         {/* Price */}
         <div style={{ background:C.s1, borderRadius:20, border:`1px solid ${C.border}`, overflow:'hidden', marginBottom:20 }}>
           <div style={{ padding:'12px 18px', borderBottom:`1px solid ${C.border}`, fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>
-            Narx tarkibi
+            {t('priceBreakdown')}
           </div>
           {[
             { label:form.type?.label, price:form.type?.basePrice, emoji:form.type?.emoji, base:true },
@@ -194,7 +196,7 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
             </div>
           ))}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 18px', background:'rgba(5,150,105,.06)' }}>
-            <span style={{ fontSize:15, fontWeight:800, color:C.dark }}>Jami narx</span>
+            <span style={{ fontSize:15, fontWeight:800, color:C.dark }}>{t('totalPriceLabel')}</span>
             <span style={{ fontSize:18, fontWeight:900, color:'#059669' }}>{totalPrice.toLocaleString('ru-RU')} so'm</span>
           </div>
         </div>
@@ -206,7 +208,7 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
           cursor: publishing ? 'default' : 'pointer',
           fontWeight:700, fontSize:16, boxShadow: publishing ? 'none' : '0 6px 24px rgba(5,150,105,.4)', transition:'all .25s',
         }}>
-          {publishing ? 'Nashr qilinmoqda...' : '🌟 Nashr qilish'}
+          {publishing ? t('publishingBtn') : t('publishBtn')}
         </button>
       </div>
     </div>
@@ -218,9 +220,9 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
       <div style={{ width:110, height:110, borderRadius:'50%', overflow:'hidden', boxShadow:'0 12px 40px rgba(5,150,105,.25)', marginBottom:24 }}>
         <CakeVisual category={form.type?.category} shape={form.shape?.id} bg={form.type?.color||'#fce4ec'} height={110} />
       </div>
-      <div style={{ fontSize:28, fontWeight:900, color:C.dark, marginBottom:8 }}>Nashr qilindi! 🎉</div>
+      <div style={{ fontSize:28, fontWeight:900, color:C.dark, marginBottom:8 }}>{t('published')}</div>
       <div style={{ color:C.muted, fontSize:14, lineHeight:1.8, marginBottom:32, maxWidth:280 }}>
-        Mahsulotingiz bosh sahifada va qidiruvda ko'rinadi
+        {t('publishedDesc')}
       </div>
       <button onClick={onPublished} style={{
         padding:'16px 40px', borderRadius:16, border:'none',
@@ -228,7 +230,7 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
         color:'#fff', fontWeight:700, fontSize:15, cursor:'pointer',
         boxShadow:'0 6px 20px rgba(5,150,105,.4)',
       }}>
-        Ortga qaytish
+        {t('goBack')}
       </button>
     </div>
   );
@@ -283,7 +285,7 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
                   <div style={{ fontSize:12, color:C.muted, lineHeight:1.4 }}>{opt.desc}</div>
                   {addPrice != null && (
                     <div style={{ marginTop:8, display:'inline-block', background: active ? 'rgba(5,150,105,.12)' : C.s2, borderRadius:50, padding:'3px 10px', fontSize:11, fontWeight:700, color: active ? '#059669' : C.muted }}>
-                      {opt.basePrice ? opt.basePrice.toLocaleString('ru-RU')+' so\'m' : addPrice > 0 ? '+'+addPrice.toLocaleString('ru-RU')+' so\'m' : 'Bepul'}
+                      {opt.basePrice ? opt.basePrice.toLocaleString('ru-RU')+' so\'m' : addPrice > 0 ? '+'+addPrice.toLocaleString('ru-RU')+' so\'m' : t('cFree')}
                     </div>
                   )}
                 </div>

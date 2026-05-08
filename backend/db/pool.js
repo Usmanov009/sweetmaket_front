@@ -13,7 +13,7 @@ function neonQuery(text, params = []) {
       port: 443,
       path: '/sql',
       method: 'POST',
-      rejectUnauthorized: false,
+      rejectUnauthorized: true,
       timeout: 15000,
       headers: {
         'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ function neonQuery(text, params = []) {
         try {
           const json = JSON.parse(data);
           if (json.message) return reject(new Error(json.message));
-          resolve(json.rows || []);
+          resolve({ rows: json.rows || [], rowCount: json.rowCount ?? json.rows?.length ?? 0 });
         } catch (e) {
           reject(new Error('JSON parse xato: ' + data.slice(0, 200)));
         }
@@ -42,8 +42,7 @@ function neonQuery(text, params = []) {
 
 const pool = {
   async query(text, params) {
-    const rows = await neonQuery(text, params);
-    return { rows };
+    return neonQuery(text, params);
   },
 };
 

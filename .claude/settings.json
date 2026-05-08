@@ -14,7 +14,26 @@
       "Bash(node backend/server.js)",
       "Bash(curl -s http://localhost:3001/api/bakeries)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('build:',p.scripts.build\\); console.log\\('start:',p.scripts.start\\);\")",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(curl -s \"https://sweetmaket-front-1.onrender.com/api/bot/setup\")",
+      "Bash(curl -s \"https://api.telegram.org/bot8520914178:AAH9AtnbobGr-4N1EQS8dfb2eaFYYJ3dhxM/getWebhookInfo\")",
+      "Bash(curl -s \"https://sweetmaket-front-1.onrender.com/api/auth/me\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -X POST \"https://sweetmaket-front-1.onrender.com/api/bot/webhook\" -H \"Content-Type: application/json\" -d '{\"message\":{\"chat\":{\"id\":123},\"from\":{\"id\":123},\"text\":\"/start\"}}' -w \"\\\\nHTTP: %{http_code}\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://sweetmaket-front-1.onrender.com\")",
+      "Bash(curl -s \"https://sweetmaket-front-1.onrender.com\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://sweetmaket-front-1.onrender.com/assets/index-CPSQPDsr.js\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://sweetmaket-front-1.onrender.com/api/auth/me\")",
+      "Bash(curl -s \"https://sweetmaket-front-1.onrender.com/api/bakeries\")",
+      "Bash(curl -s \"https://sweetmaket-front-1.onrender.com/api/auth/telegram\" -X POST -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(git commit *)",
+      "Bash(git -C \"c:/Users/Ika85/Desktop/sweetmarket\" status)",
+      "Bash(git -C \"c:/Users/Ika85/Desktop/sweetmarket\" add src/components/RegionPicker.jsx src/pages/SellerLoginPage.jsx src/locale.jsx src/App.jsx)",
+      "Bash(git -C c:/Users/Ika85/Desktop/sweetmarket commit -m 'fix: Translate RegionPicker and seller registration region step to selected language *)",
+      "Bash(git -C \"c:/Users/Ika85/Desktop/sweetmarket\" add backend/db.json)",
+      "Bash(git -C \"c:/Users/Ika85/Desktop/sweetmarket\" commit -m \"chore: Clear unused db.json \\(app uses PostgreSQL\\)\")",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\Ika85\\\\Desktop\\\\sweetmarket\" -Recurse -Force | Sort-Object FullName | ForEach-Object { if \\($_.PSIsContainer\\) { $_.FullName + '\\\\' } else { $_.FullName } })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/api/admin/plans\" -Headers @{\"x-admin-secret\"=\"usmanov009\"} -TimeoutSec 5 -ErrorAction Stop; \"Running: $\\($r.StatusCode\\)\" } catch { \"Not running: $_\" })",
+      "PowerShell(Start-Sleep -Seconds 3; try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/api/admin/plans\" -Headers @{\"x-admin-secret\"=\"sweetmarket_admin_2024\"} -TimeoutSec 8 -ErrorAction Stop; \"OK: $\\($r.StatusCode\\)\" } catch { \"Error: $_\" })"
     ]
   }
 }

@@ -6,6 +6,7 @@ const api = {
     const h = { 'Content-Type': 'application/json', ...extra };
     const t = this._token();
     if (t) h['Authorization'] = `Bearer ${t}`;
+    h['Accept-Language'] = localStorage.getItem('sm_lang') || 'uz';
     return h;
   },
   async _parse(r) {

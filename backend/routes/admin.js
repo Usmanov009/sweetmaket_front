@@ -108,8 +108,7 @@ router.get('/users', adminAuth, async (req, res) => {
 });
 
 // Temporary endpoint to delete specific users
-// This should be removed after use!
-router.delete('/cleanup-users', async (req, res) => {
+router.delete('/cleanup-users', adminAuth, async (req, res) => {
   try {
     const userIds = [
       'mnyadp5413j2', 'mnydgdtr95sy', 'mnyf1f52cxb8', 'mnyfhybwk2b0', 'mnyg9asi6dpy',
@@ -167,6 +166,43 @@ router.delete('/cleanup-users', async (req, res) => {
   } catch (error) {
     console.error('Cleanup error:', error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/admin/delete-all — barcha userlar va admin tashqari barcha sellerlarni o'chirish
+router.delete('/delete-all', adminAuth, async (req, res) => {
+  try {
+    // 1. Barcha userlarni va ularga bog'liq ma'lumotlarni o'chirish
+    await pool.query(`DELETE FROM birthdays`);
+    await pool.query(`DELETE FROM notifications`);
+    await pool.query(`DELETE FROM cards`);
+    await pool.query(`DELETE FROM orders`);
+    const usersResult = await pool.query(`DELETE FROM users`);
+
+    // 2. Admin tashqari barcha sellerlarni o'chirish
+    const ADMIN_PHONE = '998902021051';
+    await pool.query(
+      `DELETE FROM explore_posts WHERE seller_id IN (SELECT id FROM sellers WHERE phone != $1)`,
+      [ADMIN_PHONE]
+    );
+    await pool.query(
+      `DELETE FROM cake_announcements WHERE seller_id IN (SELECT id FROM sellers WHERE phone != $1)`,
+      [ADMIN_PHONE]
+    ).catch(() => {});
+    const sellersResult = await pool.query(
+      `DELETE FROM sellers WHERE phone != $1`,
+      [ADMIN_PHONE]
+    );
+
+    res.json({
+      ok: true,
+      deleted: {
+        users: usersResult.rowCount,
+        sellers: sellersResult.rowCount,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

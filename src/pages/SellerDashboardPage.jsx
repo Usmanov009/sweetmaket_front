@@ -5,10 +5,11 @@ import {
   ChatCircle, CheckCircle, XCircle, UserCircle, MapPin, ClipboardText,
   CircleNotch, CurrencyDollar, Star, TrendUp, Clock, Plus, Trash,
 } from '@phosphor-icons/react';
-
-const ADMIN_PHONE = '998902021051';
 import { sum } from '../utils/format';
 import ChatModal from '../components/ChatModal';
+import { useLocale } from '../locale.jsx';
+
+const ADMIN_PHONE = '998902021051';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
@@ -25,17 +26,19 @@ function sellerFetch(method, path, body) {
   });
 }
 
-const STATUS_META = {
-  pending:   { label: 'Kutilmoqda',     color: '#d97706', bg: 'rgba(217,119,6,.1)'   },
-  confirmed: { label: 'Tasdiqlandi',    color: '#2563eb', bg: 'rgba(37,99,235,.1)'   },
-  ready:     { label: 'Tayyor',         color: '#059669', bg: 'rgba(5,150,105,.12)'  },
-  delivered: { label: 'Topshirildi',   color: '#7c3aed', bg: 'rgba(124,58,237,.1)'  },
-  cancelled: { label: 'Bekor qilindi', color: '#dc2626', bg: 'rgba(220,38,38,.1)'   },
-};
+function getStatusMeta(t) {
+  return {
+    pending:   { label: t('orderPending'),   color: '#d97706', bg: 'rgba(217,119,6,.1)'   },
+    confirmed: { label: t('orderConfirmed'), color: '#2563eb', bg: 'rgba(37,99,235,.1)'   },
+    ready:     { label: t('orderReady'),     color: '#059669', bg: 'rgba(5,150,105,.12)'  },
+    delivered: { label: t('orderDelivered'), color: '#7c3aed', bg: 'rgba(124,58,237,.1)'  },
+    cancelled: { label: t('orderCancelled'), color: '#dc2626', bg: 'rgba(220,38,38,.1)'   },
+  };
+}
 
-/* ─── Add-product modal ─────────────────────────────── */
 /* ─── Order card ─────────────────────────────────────── */
-function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }) {
+function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat, t }) {
+  const STATUS_META = getStatusMeta(t);
   const meta = STATUS_META[order.status] || { label: order.status, color: '#666', bg: '#eee' };
   return (
     <div style={{
@@ -45,7 +48,7 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
       {/* Top row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: C.dark }}>{order.user_name || 'Xaridor'}</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: C.dark }}>{order.user_name || t('buyer')}</div>
           {order.user_phone && (
             <div style={{ fontSize: 12, color: C.muted, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
               <Phone size={12} /> {order.user_phone}
@@ -64,7 +67,7 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
           display: 'flex', alignItems: 'center', gap: 5,
           background: 'rgba(5,150,105,.07)', padding: '7px 12px', borderRadius: 10,
         }}>
-          <MapPin size={13} weight="fill" /> Xaridor manzili: <b>{order.address}</b>
+          <MapPin size={13} weight="fill" /> {t('buyerAddress')} <b>{order.address}</b>
         </div>
       )}
 
@@ -91,7 +94,7 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
             background: 'rgba(139,92,246,.12)', color: '#7c3aed',
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600,
           }}>
-            <ChatCircle size={15} /> Chat
+            <ChatCircle size={15} /> {t('chat')}
           </button>
 
           {order.status === 'pending' && (
@@ -101,14 +104,14 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
                 background: 'rgba(37,99,235,.12)', color: '#2563eb',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
               }}>
-                <CheckCircle size={14} /> Qabul
+                <CheckCircle size={14} /> {t('accept')}
               </button>
               <button onClick={() => onCancel(order.id)} style={{
                 padding: '7px 14px', borderRadius: 10, border: 'none',
                 background: 'rgba(220,38,38,.08)', color: '#dc2626',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
               }}>
-                <XCircle size={14} /> Rad
+                <XCircle size={14} /> {t('reject')}
               </button>
             </>
           )}
@@ -119,7 +122,7 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
               background: 'rgba(5,150,105,.12)', color: '#059669',
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
             }}>
-              <CheckCircle size={14} /> Tayyor
+              <CheckCircle size={14} /> {t('ready')}
             </button>
           )}
 
@@ -130,7 +133,7 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
               color: '#fff', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
             }}>
-              <Package size={14} /> Topshirildi
+              <Package size={14} /> {t('orderDelivered')}
             </button>
           )}
         </div>
@@ -148,15 +151,22 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat }
 
 /* ─── Main component ─────────────────────────────────── */
 export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, setPage }) {
+  const { t } = useLocale();
   const isAdmin = (seller?.phone || '').replace(/\D/g, '').endsWith(ADMIN_PHONE.replace(/\D/g, ''));
   const [tapCount, setTapCount] = useState(0);
+  const tapTimerRef = useRef(null);
 
   const handleSecretTap = () => {
     if (!isAdmin) return;
     setTapCount(n => {
       const next = n + 1;
-      if (next >= 5) { setPage('admin'); return 0; }
-      setTimeout(() => setTapCount(0), 2000);
+      if (next >= 5) {
+        clearTimeout(tapTimerRef.current);
+        setPage('admin');
+        return 0;
+      }
+      clearTimeout(tapTimerRef.current);
+      tapTimerRef.current = setTimeout(() => setTapCount(0), 2000);
       return next;
     });
   };
@@ -180,7 +190,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
         setOrders(Array.isArray(data) ? data : []);
       })
       .catch(e => {
-        setOrdersError(e?.message || 'Buyurtmalarni yuklashda xatolik');
+        setOrdersError(e?.message || t('errorOccurred'));
       })
       .finally(() => setLoading(false));
   };
@@ -229,10 +239,10 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
   const topPad = isDesktop ? 0 : 52;
 
   const TABS = [
-    { id: 'orders',   icon: <Package size={20} />,    label: 'Buyurtmalar', badge: pendingCount },
-    { id: 'products', icon: <Plus size={20} />,       label: 'Mahsulotlar' },
-    { id: 'plan',     icon: <TrendUp size={20} />,    label: 'Plan' },
-    { id: 'profile',  icon: <UserCircle size={20} />, label: 'Profil' },
+    { id: 'orders',   icon: <Package size={20} />,    label: t('tabOrders'),   badge: pendingCount },
+    { id: 'products', icon: <Plus size={20} />,       label: t('tabProducts') },
+    { id: 'plan',     icon: <TrendUp size={20} />,    label: t('tabPlan') },
+    { id: 'profile',  icon: <UserCircle size={20} />, label: t('navProfile') },
   ];
 
   if (showCreate) return (
@@ -259,10 +269,10 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
             <div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>
-                Sotuvchi kabineti
+                {t('sellerCabinet')}
               </div>
               <div onClick={handleSecretTap} style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 2, cursor: 'default', userSelect: 'none' }}>
-                {isAdmin ? 'Sotuvchi kabineti' : seller?.shopName}
+                {isAdmin ? t('sellerCabinet') : seller?.shopName}
               </div>
               {!isAdmin && (
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,.65)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -275,16 +285,16 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
               background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.18)',
               borderRadius: 12, padding: '8px 14px', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600,
             }}>
-              <SignOut size={15} /> Chiqish
+              <SignOut size={15} /> {t('logout')}
             </button>
           </div>
 
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
             {[
-              { icon: <ClipboardText size={20} />, val: myOrders.length, label: 'Jami buyurtma' },
-              { icon: <CurrencyDollar size={20} />, val: sum(totalRevenue), label: 'Jami daromad', small: true },
-              { icon: <Package size={20} />, val: pendingCount, label: 'Kutilmoqda' },
+              { icon: <ClipboardText size={20} />, val: myOrders.length, label: t('totalOrders') },
+              { icon: <CurrencyDollar size={20} />, val: sum(totalRevenue), label: t('totalRevenue'), small: true },
+              { icon: <Package size={20} />, val: pendingCount, label: t('orderPending') },
             ].map(s => (
               <div key={s.label} style={{
                 background: 'rgba(255,255,255,.1)', backdropFilter: 'blur(10px)',
@@ -339,17 +349,17 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
               </div>
             ) : ordersError ? (
               <div style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 14, padding: '16px 18px', marginBottom: 12 }}>
-                <div style={{ color: '#ef4444', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Xatolik yuz berdi</div>
+                <div style={{ color: '#ef4444', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{t('errorOccurred')}</div>
                 <div style={{ color: '#ef4444', fontSize: 12 }}>{ordersError}</div>
                 <button onClick={loadOrders} style={{ marginTop: 10, padding: '7px 14px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-                  Qayta urinish
+                  {t('retry')}
                 </button>
               </div>
             ) : myOrders.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '64px 20px' }}>
                 <Package size={56} weight="duotone" color={C.muted} style={{ opacity: .35 }} />
-                <div style={{ fontWeight: 700, color: C.dark, marginTop: 14, marginBottom: 6 }}>Buyurtmalar yo'q</div>
-                <div style={{ color: C.muted, fontSize: 13 }}>Yangi buyurtmalar bu yerda ko'rinadi</div>
+                <div style={{ fontWeight: 700, color: C.dark, marginTop: 14, marginBottom: 6 }}>{t('noOrders')}</div>
+                <div style={{ color: C.muted, fontSize: 13 }}>{t('newOrdersHere')}</div>
                 <div style={{ color: C.muted, fontSize: 11, marginTop: 8, opacity: 0.6 }}>Sotuvchi ID: {seller?.id}</div>
               </div>
             ) : myOrders.map(order => (
@@ -357,6 +367,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                 key={order.id}
                 order={order}
                 C={C}
+                t={t}
                 onConfirm={id => updateStatus(id, 'confirmed')}
                 onCancel={id => updateStatus(id, 'cancelled')}
                 onReady={id => updateStatus(id, 'ready')}
@@ -374,13 +385,13 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                 borderRadius: 20, padding: '28px 24px', marginBottom: 20, textAlign: 'center',
               }}>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
-                  Jami Plan Daromadi (10%)
+                  {t('planRevenue')}
                 </div>
                 <div style={{ fontSize: 36, fontWeight: 900, color: '#fff', fontFamily: "'Playfair Display',serif" }}>
                   {sum(plan.totalEarnings)}
                 </div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,.6)', marginTop: 8 }}>
-                  {plan.orders?.length || 0} ta topshirilgan buyurtmadan
+                  {plan.orders?.length || 0} {t('fromDeliveredOrders')}
                 </div>
               </div>
 
@@ -388,8 +399,8 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
               {(!plan.orders || plan.orders.length === 0) ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                   <TrendUp size={56} weight="duotone" color={C.muted} style={{ opacity: .35 }} />
-                  <div style={{ fontWeight: 700, color: C.dark, marginTop: 14, marginBottom: 6 }}>Hali topshirilgan buyurtma yo'q</div>
-                  <div style={{ color: C.muted, fontSize: 13 }}>Buyurtma topshirilganda 10% plan hisobiga o'tadi</div>
+                  <div style={{ fontWeight: 700, color: C.dark, marginTop: 14, marginBottom: 6 }}>{t('noDeliveredOrders')}</div>
+                  <div style={{ color: C.muted, fontSize: 13 }}>{t('planDesc')}</div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -434,14 +445,14 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                 color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}>
-                <Plus size={18} /> Yangi mahsulot yaratish
+                <Plus size={18} /> {t('newProductBtn')}
               </button>
 
               {products.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '48px 16px', color: C.muted }}>
                   <div style={{ fontSize: 48, marginBottom: 12 }}>🎂</div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: C.dark, marginBottom: 6 }}>Mahsulotlar yo'q</div>
-                  <div style={{ fontSize: 13 }}>Yuqoridagi tugma orqali qo'shing</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: C.dark, marginBottom: 6 }}>{t('noProducts')}</div>
+                  <div style={{ fontSize: 13 }}>{t('addProductHint')}</div>
                 </div>
               )}
               {products.map(p => (
@@ -483,10 +494,10 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
 
               <div style={{ background: C.s1, borderRadius: 20, overflow: 'hidden', border: `1px solid ${C.border}` }}>
                 {[
-                  { icon: <Storefront size={18} weight="duotone" />, label: "Do'kon nomi", val: seller?.shopName, color: '#059669' },
-                  { icon: <UserCircle size={18} weight="duotone" />, label: 'Ism Familiya',  val: seller?.name,     color: '#4f46e5' },
-                  { icon: <Phone size={18} weight="duotone" />,      label: 'Telefon',       val: seller?.phone,    color: '#0088cc' },
-                  { icon: <MapPin size={18} weight="duotone" />,     label: 'Manzil',        val: seller?.address || '—', color: '#d97706' },
+                  { icon: <Storefront size={18} weight="duotone" />, label: t('shopName'),   val: seller?.shopName, color: '#059669' },
+                  { icon: <UserCircle size={18} weight="duotone" />, label: t('yourName'),   val: seller?.name,     color: '#4f46e5' },
+                  { icon: <Phone size={18} weight="duotone" />,      label: t('phone'),      val: seller?.phone,    color: '#0088cc' },
+                  { icon: <MapPin size={18} weight="duotone" />,     label: t('address'),    val: seller?.address || '—', color: '#d97706' },
                 ].map((row, i, arr) => (
                   <div key={row.label} style={{
                     display: 'flex', gap: 14, alignItems: 'center', padding: '16px 20px',
@@ -513,7 +524,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                 color: '#dc2626', cursor: 'pointer', fontWeight: 700, fontSize: 14,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}>
-                <SignOut size={16} /> Kabinetdan chiqish
+                <SignOut size={16} /> {t('logoutFromCabinet')}
               </button>
             </div>
           )}
