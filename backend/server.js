@@ -27,6 +27,9 @@ app.use(async (_req, _res, next) => {
   next();
 });
 
+// Health check (keep-alive ping endpoint)
+app.get('/api/ping', (_req, res) => res.json({ ok: true, t: Date.now() }));
+
 // Public routes
 app.use('/api/auth',     require('./routes/auth'));
 app.use('/api/seller',   require('./routes/seller'));
@@ -59,6 +62,19 @@ if (require.main === module) {
   }
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ SweetMarket backend: http://0.0.0.0:${PORT}`);
+
+    // Keep-alive: Render free tier 15 daqiqada sleep rejimiga o'tadi.
+    // Har 14 daqiqada o'zimizni ping qilib uyg'oq tutamiz.
+    if (isProd) {
+      const https = require('https');
+      const baseUrl = process.env.BACKEND_URL || 'https://sweetmaket-front-1.onrender.com';
+      setInterval(() => {
+        https.get(`${baseUrl}/api/ping`, res => {
+          console.log(`[keep-alive] ping → ${res.statusCode}`);
+        }).on('error', e => console.error('[keep-alive] xato:', e.message));
+      }, 14 * 60 * 1000);
+      console.log('[keep-alive] 14 daqiqalik self-ping yoqildi');
+    }
     if (isProd && process.env.BOT_TOKEN) {
       const backendUrl = process.env.BACKEND_URL || 'https://sweetmaket-front-1.onrender.com';
       const https = require('https');
