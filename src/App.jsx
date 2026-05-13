@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo, useCallback } from 'react';
+import { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
 import {
   Sun, Moon, Bell,
   Trash, Plus, Package, Gear, SignOut,
@@ -314,7 +314,13 @@ function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
 /* ═══════════════════════════════════════════════════════
    CREATE PAGE
 ═══════════════════════════════════════════════════════ */
-function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) {
+function confectionerNumericId(b) {
+  if (!b?.isSeller || b.id == null) return null;
+  const m = String(b.id).match(/^seller_(\d+)$/);
+  return m ? Number(m[1]) : null;
+}
+
+function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [], addToCart }) {
   const { t, lang } = useLocale();
 
   const DETAILS = 50; const PUBLISH = 51; const DONE = 52;
@@ -401,10 +407,18 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
   ];
 
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,note:'',image:null});
+  const [form, setForm] = useState({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,pickupBranch:null,note:'',image:null});
   const [publishing, setPublishing] = useState(false);
   const [imgDrag, setImgDrag] = useState(false);
   const setF = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const sellerProducts = useMemo(() => {
+    const sid = confectionerNumericId(form.bakery);
+    if (sid == null) return [];
+    return cakeCards.filter(p => p.isSeller && Number(p.sellerId) === sid);
+  }, [cakeCards, form.bakery]);
+
+  const restaurantBranches = useMemo(() => bakeries.filter(b => !b.isSeller), [bakeries]);
 
   const handleImageFile = (file) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -416,10 +430,10 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
   const activeSteps = form.type?.id === 'tort'
     ? CREATE_STEPS
     : CREATE_STEPS.filter(s => s.key !== 'shape' && s.key !== 'layers');
-  const currentStepCfg = activeSteps[step];
+  const currentStepCfg = step >= 1 && step <= activeSteps.length ? activeSteps[step - 1] : null;
   const currentVal     = currentStepCfg ? form[currentStepCfg.key] : null;
   const selections     = [form.type,form.shape,form.layers,form.size,form.biscuit,form.propitka,form.fillingType,form.fillingDetail,form.decoration].filter(Boolean);
-  const progress       = step >= DETAILS ? 1 : step / (activeSteps.length + 1);
+  const progress       = step >= DETAILS ? 1 : (step + 1) / (activeSteps.length + 2);
 
   const totalPrice = (form.type?.basePrice||0)+(form.shape?.priceAdd||0)+(form.layers?.priceAdd||0)+(form.size?.priceAdd||0)+(form.biscuit?.priceAdd||0)+(form.propitka?.priceAdd||0)+(form.fillingType?.priceAdd||0)+(form.fillingDetail?.priceAdd||0)+(form.decoration?.priceAdd||0);
 
@@ -461,7 +475,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
 
   const resetAndHome = () => {
     setStep(0);
-    setForm({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,note:'',image:null});
+    setForm({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,pickupBranch:null,note:'',image:null});
     setPage('home');
   };
 
@@ -484,21 +498,20 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             width:`${Math.max(progress*100,4)}%`,transition:'width .4s cubic-bezier(.4,0,.2,1)'}}/>
         </div>
         <div style={{fontSize:12,fontWeight:700,color:C.muted,minWidth:36,textAlign:'right'}}>
-          {step < DETAILS ? `${step+1} / ${activeSteps.length}` : ''}
+          {step >= 1 && step <= activeSteps.length ? `${step} / ${activeSteps.length}` : ''}
         </div>
       </div>
     </div>
   );
 
-  const lastChoiceStep = activeSteps.length - 1;
-
   const goBack = () => setStep(s => {
-    if (s === DETAILS) return lastChoiceStep;
+    if (s === DETAILS) return activeSteps.length;
     return Math.max(0, s - 1);
   });
   const goNext = () => setStep(s => {
-    if (s === lastChoiceStep) return DETAILS;
-    return Math.min(lastChoiceStep, s + 1);
+    if (s === 0) return form.bakery ? 1 : 0;
+    if (s === activeSteps.length) return DETAILS;
+    return Math.min(activeSteps.length, s + 1);
   });
 
   /* ── DETAILS ── */
@@ -522,16 +535,31 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
           ))}
         </div>
 
-        {/* Bakery picker */}
+        {form.bakery && (
+          <div style={{marginBottom:20,padding:'14px 16px',borderRadius:18,border:`1px solid ${C.border}`,background:C.s1}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:8}}>
+              {t('createPickSellerQ')}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <span style={{fontSize:26}}>{form.bakery.emoji}</span>
+              <div>
+                <div style={{fontSize:15,fontWeight:800,color:C.dark}}>{form.bakery.name}</div>
+                <div style={{fontSize:12,color:C.muted,marginTop:2}}>{translateAddress(form.bakery, lang, REGIONS)}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Restoran / filial */}
         <div style={{marginBottom:20}}>
           <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:12}}>
-            {t('selectBranch')}
+            {t('selectPickupBranch')}
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:10}}>
-            {bakeries.filter(b => b.isSeller).map(b => {
-              const active = form.bakery?.id === b.id;
+            {bakeries.filter(b => !b.isSeller).map(b => {
+              const active = form.pickupBranch?.id === b.id;
               return (
-                <div key={b.id} onClick={()=>setF('bakery',b)}
+                <div key={b.id} onClick={()=>setF('pickupBranch',b)}
                   style={{display:'flex',gap:14,alignItems:'center',padding:'14px 16px',borderRadius:18,
                     border:`2px solid ${active?C.navy:C.border}`,
                     background: active ? `rgba(37,99,235,.05)` : C.s1,
@@ -647,15 +675,15 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
           </div>
         </div>
 
-        <button onClick={handleOrder} disabled={!form.bakery}
+        <button onClick={handleOrder} disabled={!form.pickupBranch}
           style={{width:'100%',padding:'17px',borderRadius:16,border:'none',
-            background: form.bakery ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.border,
-            color: form.bakery ? '#fff' : C.muted,
-            cursor: form.bakery ? 'pointer' : 'default',
+            background: form.pickupBranch ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.border,
+            color: form.pickupBranch ? '#fff' : C.muted,
+            cursor: form.pickupBranch ? 'pointer' : 'default',
             fontWeight:700,fontSize:16,
-            boxShadow: form.bakery ? `0 6px 24px ${C.navy}44` : 'none',
+            boxShadow: form.pickupBranch ? `0 6px 24px ${C.navy}44` : 'none',
             transition:'all .25s'}}>
-          {form.bakery ? `${t('addToCart')} — ${totalPrice.toLocaleString('ru-RU')} so'm` : t('selectBranchFirst')}
+          {form.pickupBranch ? `${t('addToCart')} — ${totalPrice.toLocaleString('ru-RU')} so'm` : t('selectPickupFirst')}
         </button>
       </div>
     </div>
@@ -758,6 +786,16 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
             </div>
           </div>
         )}
+        {form.pickupBranch && (
+          <div style={{borderTop:`1px solid ${C.border}`,padding:'12px 20px',
+            display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontSize:22}}>{form.pickupBranch.emoji}</span>
+            <div style={{textAlign:'left'}}>
+              <div style={{fontSize:13,fontWeight:700,color:C.dark}}>{form.pickupBranch.name}</div>
+              <div style={{fontSize:11,color:C.muted}}>{translateAddress(form.pickupBranch, lang, REGIONS)}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       <button onClick={resetAndHome}
@@ -767,6 +805,128 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
           boxShadow:`0 6px 20px ${C.navy}44`}}>
         {t('backToHome')}
       </button>
+    </div>
+  );
+
+  /* ── STEP 0: qandolatchi, mahsulotlar, restoranlar ── */
+  if (step === 0) return (
+    <div style={{minHeight:'100vh',background:C.bg}}>
+      <Header onBack={() => setPage('home')} backHidden={false}/>
+      <div style={{maxWidth:560,margin:'0 auto',padding:'28px 20px 120px'}}>
+        <div style={{marginBottom:24}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:C.dark,marginBottom:6,lineHeight:1.2}}>
+            {t('createPickSellerQ')}
+          </div>
+          <div style={{fontSize:14,color:C.muted}}>{t('createPickSellerH')}</div>
+        </div>
+
+        <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:8}}>
+          {bakeries.filter(b => b.isSeller).map(b => {
+            const active = form.bakery?.id === b.id;
+            return (
+              <div key={b.id} onClick={() => setF('bakery', b)}
+                style={{display:'flex',gap:14,alignItems:'center',padding:'14px 16px',borderRadius:18,
+                  border:`2px solid ${active ? C.navy : C.border}`,
+                  background: active ? `rgba(37,99,235,.05)` : C.s1,
+                  cursor:'pointer',transition:'all .18s',
+                  boxShadow: active ? `0 4px 16px ${C.navy}18` : 'none'}}>
+                <div style={{width:46,height:46,borderRadius:14,flexShrink:0,
+                  background: active ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.s2,
+                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,
+                  transition:'background .18s'}}>
+                  {b.emoji}
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:14,fontWeight:700,color:active ? C.navy : C.dark}}>{b.name}</div>
+                  <div style={{fontSize:12,color:C.muted,marginTop:2}}>{translateAddress(b, lang, REGIONS)}</div>
+                  <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {b.hours} &nbsp;·&nbsp; ⭐ {b.rating}</div>
+                </div>
+                <div style={{width:22,height:22,borderRadius:'50%',flexShrink:0,
+                  border:`2.5px solid ${active ? C.navy : C.border}`,
+                  background:active ? C.navy : 'transparent',transition:'all .18s',
+                  display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  {active && <svg width="11" height="11" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {form.bakery && (
+          <>
+            <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',margin:'20px 0 12px'}}>
+              {t('createSellerProducts')}
+            </div>
+            {sellerProducts.length === 0 ? (
+              <div style={{fontSize:13,color:C.muted,marginBottom:24,lineHeight:1.55}}>{t('createNoSellerProducts')}</div>
+            ) : (
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:24}}>
+                {sellerProducts.map(p => (
+                  <div key={p.id} style={{
+                    borderRadius:18,border:`1px solid ${C.border}`,overflow:'hidden',background:C.s1,
+                    display:'flex',flexDirection:'column',
+                  }}>
+                    <div style={{
+                      height:88,background:typeof p.bg === 'string' && p.bg.includes('gradient') ? p.bg : p.bg || '#fce4ec',
+                      display:'flex',alignItems:'center',justifyContent:'center',fontSize:36,
+                    }}>{p.emoji}</div>
+                    <div style={{padding:'10px 12px 12px',flex:1,display:'flex',flexDirection:'column'}}>
+                      <div style={{fontSize:13,fontWeight:700,color:C.dark,lineHeight:1.3,marginBottom:4}}>{p.name}</div>
+                      <div style={{fontSize:12,fontWeight:800,color:C.navy,marginBottom:8}}>{Number(p.price).toLocaleString('ru-RU')} so'm</div>
+                      <button type="button" onClick={() => { addToCart(p); toast(t('addedToCart')); }}
+                        style={{
+                          marginTop:'auto',width:'100%',padding:'8px 10px',borderRadius:12,border:'none',
+                          background:`linear-gradient(135deg,${C.navy},${C.mid})`,color:'#fff',
+                          fontSize:12,fontWeight:700,cursor:'pointer',
+                        }}>
+                        {t('addToCartShort')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:12}}>
+              {t('createRestaurants')}
+            </div>
+            {restaurantBranches.length === 0 ? (
+              <div style={{fontSize:13,color:C.muted,marginBottom:20}}>—</div>
+            ) : (
+              <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:28}}>
+                {restaurantBranches.map(b => (
+                  <div key={b.id}
+                    style={{display:'flex',gap:14,alignItems:'center',padding:'12px 14px',borderRadius:16,
+                      border:`1px solid ${C.border}`,background:C.s1}}>
+                    <div style={{width:42,height:42,borderRadius:12,background:C.s2,
+                      display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>
+                      {b.emoji}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:700,color:C.dark}}>{b.name}</div>
+                      <div style={{fontSize:12,color:C.muted,marginTop:2}}>{translateAddress(b, lang, REGIONS)}</div>
+                      <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {b.hours} · ⭐ {b.rating}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        <button type="button" onClick={goNext} disabled={!form.bakery}
+          style={{
+            width:'100%',padding:'16px',borderRadius:16,border:'none',
+            background: form.bakery ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.border,
+            color: form.bakery ? '#fff' : C.muted,
+            cursor: form.bakery ? 'pointer' : 'default',
+            fontWeight:700,fontSize:15,
+            boxShadow: form.bakery ? `0 6px 20px ${C.navy}44` : 'none',
+            transition:'all .2s',
+          }}>
+          {t('continueBtn')}
+        </button>
+      </div>
     </div>
   );
 
@@ -792,7 +952,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], addToCart }) 
 
   return (
     <div style={{minHeight:'100vh',background:C.bg}}>
-      <Header onBack={goBack} backHidden={step===0}/>
+      <Header onBack={() => (step === 0 ? setPage('home') : goBack())} backHidden={false}/>
       <div style={{maxWidth:560,margin:'0 auto',padding:'28px 20px 120px'}}>
 
         {/* question */}
@@ -1306,7 +1466,13 @@ export default function App() {
   const C = isDark ? THEMES.dark : THEMES.light;
   const { setLang } = useLocale();
 
-  const [langChosen, setLangChosen] = useState(() => !!localStorage.getItem('sm_lang'));
+  const [langChosen, setLangChosen] = useState(() => {
+    try {
+      return !!localStorage.getItem('sm_lang');
+    } catch {
+      return false;
+    }
+  });
 
   const [page, setPage] = useState('login');
   const [orders, setOrders] = useState([]);
@@ -1465,7 +1631,7 @@ export default function App() {
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
     if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} addToCart={addToCart} />;
-    if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} addToCart={addToCart} />;
+    if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} cakeCards={cakeCards} addToCart={addToCart} />;
     if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={(items, total, bakery, address) => handleAddToOrder(items, total, bakery, address)} toast={toast} setPage={setPage} user={user} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} onChangeLocation={() => setShowRegionPicker(true)} />;
     return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;

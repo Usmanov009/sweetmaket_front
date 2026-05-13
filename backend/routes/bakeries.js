@@ -1,7 +1,8 @@
 const router = require('express').Router();
 const pool = require('../db/pool');
+const { bakeries: staticBakeries } = require('../db/static.json');
 
-// GET /api/bakeries
+// GET /api/bakeries — konditerlar + statik filial/restoranlar
 router.get('/', async (req, res) => {
   try {
     // Sellers ma'lumotlarini olish
@@ -34,8 +35,16 @@ router.get('/', async (req, res) => {
       lng: null,
       isSeller: true
     }));
-    
-    res.json(sellerBakeries);
+
+    const branches = (staticBakeries || []).map(b => ({
+      ...b,
+      id: `branch_${b.id}`,
+      region: '',
+      city: '',
+      isSeller: false,
+    }));
+
+    res.json([...sellerBakeries, ...branches]);
   } catch (error) {
     console.error('Bakeries API error:', error);
     res.json([]);
