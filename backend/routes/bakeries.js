@@ -21,20 +21,40 @@ router.get('/', async (req, res) => {
       ORDER BY created_at DESC
     `);
     
-    // Sellers ma'lumotlarini formatlash
-    const sellerBakeries = rows.map(seller => ({
-      id: `seller_${seller.id}`,
-      name: seller.name,
-      address: seller.address,
-      hours: seller.hours,
-      rating: parseFloat(seller.rating) || 4.8,
-      emoji: seller.emoji,
-      region: seller.region || '',
-      city: seller.city || '',
-      lat: null,
-      lng: null,
-      isSeller: true
-    }));
+    // Har bir qandolatchi uchun kamida bitta filial (keyin JSONB bilan kengaytirish mumkin)
+    const sellerBakeries = rows.map(seller => {
+      const addr = (seller.address && String(seller.address).trim()) || '';
+      const fromRegion = [seller.region, seller.city].filter(Boolean).join(', ');
+      const displayAddr = addr || fromRegion || '';
+      const branches = [
+        {
+          id: `seller_br_${seller.id}_main`,
+          kind: 'main',
+          name: 'main',
+          address: displayAddr || 'Manzil kiritilmagan',
+          hours: seller.hours,
+          rating: parseFloat(seller.rating) || 4.8,
+          emoji: seller.emoji,
+          region: seller.region || '',
+          city: seller.city || '',
+          isSellerBranch: true,
+        },
+      ];
+      return {
+        id: `seller_${seller.id}`,
+        name: seller.name,
+        address: seller.address,
+        hours: seller.hours,
+        rating: parseFloat(seller.rating) || 4.8,
+        emoji: seller.emoji,
+        region: seller.region || '',
+        city: seller.city || '',
+        lat: null,
+        lng: null,
+        isSeller: true,
+        branches,
+      };
+    });
 
     const branches = (staticBakeries || []).map(b => ({
       ...b,

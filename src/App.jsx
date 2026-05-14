@@ -407,7 +407,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
   ];
 
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,pickupBranch:null,note:'',image:null});
+  const [form, setForm] = useState({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,sellerBranch:null,pickupBranch:null,note:'',image:null});
   const [publishing, setPublishing] = useState(false);
   const [imgDrag, setImgDrag] = useState(false);
   const setF = (k,v) => setForm(f=>({...f,[k]:v}));
@@ -419,6 +419,12 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
   }, [cakeCards, form.bakery]);
 
   const restaurantBranches = useMemo(() => bakeries.filter(b => !b.isSeller), [bakeries]);
+
+  const branchLabel = (br) => {
+    if (!br) return '';
+    if (br.kind === 'main') return t('sellerBranchMain');
+    return br.name && br.name !== 'main' ? br.name : t('sellerBranchMain');
+  };
 
   const handleImageFile = (file) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -475,7 +481,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
 
   const resetAndHome = () => {
     setStep(0);
-    setForm({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,pickupBranch:null,note:'',image:null});
+    setForm({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,sellerBranch:null,pickupBranch:null,note:'',image:null});
     setPage('home');
   };
 
@@ -509,7 +515,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
     return Math.max(0, s - 1);
   });
   const goNext = () => setStep(s => {
-    if (s === 0) return form.bakery ? 1 : 0;
+    if (s === 0) return (form.bakery && form.sellerBranch) ? 1 : 0;
     if (s === activeSteps.length) return DETAILS;
     return Math.min(activeSteps.length, s + 1);
   });
@@ -545,6 +551,22 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
               <div>
                 <div style={{fontSize:15,fontWeight:800,color:C.dark}}>{form.bakery.name}</div>
                 <div style={{fontSize:12,color:C.muted,marginTop:2}}>{translateAddress(form.bakery, lang, REGIONS)}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {form.sellerBranch && (
+          <div style={{marginBottom:20,padding:'14px 16px',borderRadius:18,border:`1px solid ${C.border}`,background:C.s1}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:8}}>
+              {t('createSelectSellerBranch')}
+            </div>
+            <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
+              <span style={{fontSize:26}}>{form.sellerBranch.emoji || form.bakery?.emoji}</span>
+              <div>
+                <div style={{fontSize:15,fontWeight:800,color:C.dark}}>{branchLabel(form.sellerBranch)}</div>
+                <div style={{fontSize:12,color:C.muted,marginTop:2}}>{form.sellerBranch.address}</div>
+                <div style={{fontSize:11,color:C.muted,marginTop:4}}>⏰ {form.sellerBranch.hours} · ⭐ {form.sellerBranch.rating}</div>
               </div>
             </div>
           </div>
@@ -786,6 +808,16 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
             </div>
           </div>
         )}
+        {form.sellerBranch && (
+          <div style={{borderTop:`1px solid ${C.border}`,padding:'12px 20px',
+            display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontSize:22}}>{form.sellerBranch.emoji || form.bakery?.emoji}</span>
+            <div style={{textAlign:'left'}}>
+              <div style={{fontSize:13,fontWeight:700,color:C.dark}}>{branchLabel(form.sellerBranch)}</div>
+              <div style={{fontSize:11,color:C.muted}}>{form.sellerBranch.address}</div>
+            </div>
+          </div>
+        )}
         {form.pickupBranch && (
           <div style={{borderTop:`1px solid ${C.border}`,padding:'12px 20px',
             display:'flex',alignItems:'center',gap:10}}>
@@ -824,7 +856,27 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
           {bakeries.filter(b => b.isSeller).map(b => {
             const active = form.bakery?.id === b.id;
             return (
-              <div key={b.id} onClick={() => setF('bakery', b)}
+              <div key={b.id} onClick={() => {
+                const branchList = (b.branches && b.branches.length)
+                  ? b.branches
+                  : [{
+                      id: `seller_br_${String(b.id).replace(/^seller_/, '')}_main`,
+                      kind: 'main',
+                      name: 'main',
+                      address: (b.address && String(b.address).trim()) || [b.region, b.city].filter(Boolean).join(', ') || '—',
+                      hours: b.hours,
+                      rating: b.rating,
+                      emoji: b.emoji,
+                      region: b.region || '',
+                      city: b.city || '',
+                      isSellerBranch: true,
+                    }];
+                setForm(f => ({
+                  ...f,
+                  bakery: { ...b, branches: branchList },
+                  sellerBranch: branchList.length === 1 ? branchList[0] : null,
+                }));
+              }}
                 style={{display:'flex',gap:14,alignItems:'center',padding:'14px 16px',borderRadius:18,
                   border:`2px solid ${active ? C.navy : C.border}`,
                   background: active ? `rgba(37,99,235,.05)` : C.s1,
@@ -854,6 +906,40 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
 
         {form.bakery && (
           <>
+            <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',margin:'20px 0 12px'}}>
+              {t('createSelectSellerBranch')}
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:20}}>
+              {(form.bakery.branches || []).map(br => {
+                const active = form.sellerBranch?.id === br.id;
+                return (
+                  <div key={br.id} onClick={() => setF('sellerBranch', br)}
+                    style={{display:'flex',gap:14,alignItems:'center',padding:'12px 14px',borderRadius:16,
+                      border:`2px solid ${active ? C.navy : C.border}`,
+                      background: active ? `rgba(37,99,235,.05)` : C.s1,
+                      cursor:'pointer',transition:'all .18s',
+                      boxShadow: active ? `0 4px 16px ${C.navy}18` : 'none'}}>
+                    <div style={{width:42,height:42,borderRadius:12,flexShrink:0,
+                      background: active ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.s2,
+                      display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>
+                      {br.emoji || form.bakery.emoji}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:14,fontWeight:700,color:active ? C.navy : C.dark}}>{branchLabel(br)}</div>
+                      <div style={{fontSize:12,color:C.muted,marginTop:2}}>{br.address}</div>
+                      <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {br.hours} · ⭐ {br.rating}</div>
+                    </div>
+                    <div style={{width:22,height:22,borderRadius:'50%',flexShrink:0,
+                      border:`2.5px solid ${active ? C.navy : C.border}`,
+                      background:active ? C.navy : 'transparent',transition:'all .18s',
+                      display:'flex',alignItems:'center',justifyContent:'center'}}>
+                      {active && <svg width="11" height="11" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',margin:'20px 0 12px'}}>
               {t('createSellerProducts')}
             </div>
@@ -914,17 +1000,17 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
           </>
         )}
 
-        <button type="button" onClick={goNext} disabled={!form.bakery}
+        <button type="button" onClick={goNext} disabled={!form.bakery || !form.sellerBranch}
           style={{
             width:'100%',padding:'16px',borderRadius:16,border:'none',
-            background: form.bakery ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.border,
-            color: form.bakery ? '#fff' : C.muted,
-            cursor: form.bakery ? 'pointer' : 'default',
+            background: (form.bakery && form.sellerBranch) ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.border,
+            color: (form.bakery && form.sellerBranch) ? '#fff' : C.muted,
+            cursor: (form.bakery && form.sellerBranch) ? 'pointer' : 'default',
             fontWeight:700,fontSize:15,
-            boxShadow: form.bakery ? `0 6px 20px ${C.navy}44` : 'none',
+            boxShadow: (form.bakery && form.sellerBranch) ? `0 6px 20px ${C.navy}44` : 'none',
             transition:'all .2s',
           }}>
-          {t('continueBtn')}
+          {form.bakery && !form.sellerBranch ? t('selectSellerBranchFirst') : t('continueBtn')}
         </button>
       </div>
     </div>
