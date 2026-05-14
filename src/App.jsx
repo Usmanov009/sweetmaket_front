@@ -407,7 +407,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
   ];
 
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,sellerBranch:null,pickupBranch:null,note:'',image:null});
+  const [form, setForm] = useState({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,sellerBranch:null,note:'',image:null});
   const [publishing, setPublishing] = useState(false);
   const [imgDrag, setImgDrag] = useState(false);
   const setF = (k,v) => setForm(f=>({...f,[k]:v}));
@@ -481,7 +481,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
 
   const resetAndHome = () => {
     setStep(0);
-    setForm({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,sellerBranch:null,pickupBranch:null,note:'',image:null});
+    setForm({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,sellerBranch:null,note:'',image:null});
     setPage('home');
   };
 
@@ -572,43 +572,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
           </div>
         )}
 
-        {/* Restoran / filial */}
-        <div style={{marginBottom:20}}>
-          <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:12}}>
-            {t('selectPickupBranch')}
-          </div>
-          <div style={{display:'flex',flexDirection:'column',gap:10}}>
-            {bakeries.filter(b => !b.isSeller).map(b => {
-              const active = form.pickupBranch?.id === b.id;
-              return (
-                <div key={b.id} onClick={()=>setF('pickupBranch',b)}
-                  style={{display:'flex',gap:14,alignItems:'center',padding:'14px 16px',borderRadius:18,
-                    border:`2px solid ${active?C.navy:C.border}`,
-                    background: active ? `rgba(37,99,235,.05)` : C.s1,
-                    cursor:'pointer',transition:'all .18s',
-                    boxShadow: active ? `0 4px 16px ${C.navy}18` : 'none'}}>
-                  <div style={{width:46,height:46,borderRadius:14,flexShrink:0,
-                    background: active ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.s2,
-                    display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,
-                    transition:'background .18s'}}>
-                    {b.emoji}
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:700,color:active?C.navy:C.dark}}>{b.name}</div>
-                    <div style={{fontSize:12,color:C.muted,marginTop:2}}>{translateAddress(b, lang, REGIONS)}</div>
-                    <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {b.hours} &nbsp;·&nbsp; ⭐ {b.rating}</div>
-                  </div>
-                  <div style={{width:22,height:22,borderRadius:'50%',flexShrink:0,
-                    border:`2.5px solid ${active?C.navy:C.border}`,
-                    background:active?C.navy:'transparent',transition:'all .18s',
-                    display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    {active && <svg width="11" height="11" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
         {/* Image upload */}
         <div style={{marginBottom:20}}>
@@ -697,15 +660,15 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
           </div>
         </div>
 
-        <button onClick={handleOrder} disabled={!form.pickupBranch}
+        <button onClick={handleOrder} disabled={!form.sellerBranch}
           style={{width:'100%',padding:'17px',borderRadius:16,border:'none',
-            background: form.pickupBranch ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.border,
-            color: form.pickupBranch ? '#fff' : C.muted,
-            cursor: form.pickupBranch ? 'pointer' : 'default',
+            background: form.sellerBranch ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.border,
+            color: form.sellerBranch ? '#fff' : C.muted,
+            cursor: form.sellerBranch ? 'pointer' : 'default',
             fontWeight:700,fontSize:16,
-            boxShadow: form.pickupBranch ? `0 6px 24px ${C.navy}44` : 'none',
+            boxShadow: form.sellerBranch ? `0 6px 24px ${C.navy}44` : 'none',
             transition:'all .25s'}}>
-          {form.pickupBranch ? `${t('addToCart')} — ${totalPrice.toLocaleString('ru-RU')} so'm` : t('selectPickupFirst')}
+          {form.sellerBranch ? `${t('addToCart')} — ${totalPrice.toLocaleString('ru-RU')} so'm` : t('selectSellerBranchFirst')}
         </button>
       </div>
     </div>
@@ -815,16 +778,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
             <div style={{textAlign:'left'}}>
               <div style={{fontSize:13,fontWeight:700,color:C.dark}}>{branchLabel(form.sellerBranch)}</div>
               <div style={{fontSize:11,color:C.muted}}>{form.sellerBranch.address}</div>
-            </div>
-          </div>
-        )}
-        {form.pickupBranch && (
-          <div style={{borderTop:`1px solid ${C.border}`,padding:'12px 20px',
-            display:'flex',alignItems:'center',gap:10}}>
-            <span style={{fontSize:22}}>{form.pickupBranch.emoji}</span>
-            <div style={{textAlign:'left'}}>
-              <div style={{fontSize:13,fontWeight:700,color:C.dark}}>{form.pickupBranch.name}</div>
-              <div style={{fontSize:11,color:C.muted}}>{translateAddress(form.pickupBranch, lang, REGIONS)}</div>
             </div>
           </div>
         )}
