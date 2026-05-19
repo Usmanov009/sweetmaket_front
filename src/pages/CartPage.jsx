@@ -17,10 +17,8 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
   const [done,      setDone]      = useState(false);
   const [sellers,   setSellers]   = useState([]);
   const [selected,  setSelected]  = useState(null); // selected bakery/seller
-  const [selectedBranch, setSelectedBranch] = useState(null);
 
   const total = cart.reduce((s, item) => s + item.price * item.qty, 0);
-  const canOrder = cart.length && selected && (!selected?.branches?.length || selectedBranch) && !ordering;
   const topPad = isDesktop ? 16 : 60;
 
   useEffect(() => {
@@ -33,10 +31,9 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
   const handleOrder = async () => {
     if (!cart.length) return;
     if (!selected) { toast(t('selectBakery')); return; }
-    if (selected?.branches?.length > 1 && !selectedBranch) { toast(t('selectBranchFirst')); return; }
     setOrdering(true);
     try {
-      await onOrder(cart, total, selectedBranch ? { ...selected, branch: selectedBranch } : selected, '');
+      await onOrder(cart, total, selected, '');
       setDone(true);
       setTimeout(() => {
         onClear();
@@ -172,11 +169,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
               {filtered.map(b => {
               const active = selected?.id === b.id;
               return (
-                <div key={b.id} onClick={() => {
-                  setSelected(b);
-                  const branches = Array.isArray(b.branches) ? b.branches : [];
-                  setSelectedBranch(branches.length === 1 ? branches[0] : null);
-                }} style={{
+                <div key={b.id} onClick={() => setSelected(b)} style={{
                   display: 'flex', gap: 12, alignItems: 'center',
                   padding: '12px 14px', borderRadius: 14,
                   border: `1.5px solid ${active ? C.navy : C.border}`,
@@ -208,42 +201,6 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
         })()}
       </div>
 
-      {selected?.branches?.length > 1 && (
-        <div style={{ padding: '20px 20px 0' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Storefront size={16} color={C.navy} /> {t('selectBranch')}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 10 }}>
-            {selected.branches.map(br => {
-              const active = selectedBranch?.id === br.id;
-              return (
-                <div key={br.id} onClick={() => setSelectedBranch(br)} style={{
-                  display: 'flex', gap: 12, alignItems: 'center', padding: '12px 14px', borderRadius: 14,
-                  border: `1.5px solid ${active ? C.navy : C.border}`,
-                  background: active ? `${C.navy}08` : C.s1,
-                  cursor: 'pointer', transition: 'all .15s',
-                }}>
-                  <div style={{ fontSize: 26, flexShrink: 0 }}>{br.emoji || selected.emoji || '🍰'}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: active ? C.navy : C.dark }}>{br.name === 'main' ? t('sellerBranchMain') : br.name}</div>
-                    <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{br.address}</div>
-                    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>⏰ {br.hours} · ⭐ {br.rating}</div>
-                  </div>
-                  <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                    background: active ? C.navy : 'transparent', border: `2px solid ${active ? C.navy : C.border}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {active && <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>✓</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {!selectedBranch && (
-            <div style={{ fontSize: 12, color: C.muted }}>{t('selectBranchFirst')}</div>
-          )}
-        </div>
-      )}
-
       {/* Sticky bottom */}
       <div style={{
         position: 'fixed', bottom: isDesktop ? 20 : 72, left: '50%', transform: 'translateX(-50%)',
@@ -260,20 +217,13 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
             </span>
           </div>
           {selected && (
-            <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
               <Storefront size={12} color={C.navy} />
               <span style={{ color: C.navy, fontWeight: 600 }}>{selected.name}</span>
               {selected.address && <span>· {translateAddress(selected, lang, REGIONS)}</span>}
             </div>
           )}
-          {selectedBranch && (
-            <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-              <MapPin size={12} color={C.navy} />
-              <span style={{ fontWeight: 600 }}>{selectedBranch.name === 'main' ? t('sellerBranchMain') : selectedBranch.name}</span>
-              <span>· {selectedBranch.address}</span>
-            </div>
-          )}
-          <button onClick={handleOrder} disabled={!canOrder} style={{
+          <button onClick={handleOrder} disabled={ordering} style={{
             width: '100%', padding: '15px 20px', borderRadius: 14, border: 'none',
             cursor: ordering ? 'default' : 'pointer', fontWeight: 700, fontSize: 15,
             color: '#fff', background: ordering ? C.navy : `linear-gradient(135deg,${C.navy},${C.mid})`,

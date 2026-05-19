@@ -39,18 +39,6 @@ router.get('/', async (req, res) => {
           city: seller.city || '',
           isSellerBranch: true,
         },
-        {
-          id: `seller_br_${seller.id}_2`,
-          kind: 'branch',
-          name: 'Filial 2',
-          address: displayAddr ? `${displayAddr} (2)` : 'Manzil kiritilmagan',
-          hours: seller.hours,
-          rating: parseFloat(seller.rating) || 4.8,
-          emoji: seller.emoji,
-          region: seller.region || '',
-          city: seller.city || '',
-          isSellerBranch: true,
-        },
       ];
       return {
         id: `seller_${seller.id}`,
