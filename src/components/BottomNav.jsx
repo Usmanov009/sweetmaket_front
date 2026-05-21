@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { House, MagnifyingGlass, Cake, ShoppingCart, User } from '@phosphor-icons/react';
 import { useLocale } from '../locale.jsx';
-
+ 
 const ITEMS = (t) => [
   { id:'home',    Icon: House,            label:t('home') },
   { id:'explore', Icon: MagnifyingGlass,  label:t('navExplore') },
