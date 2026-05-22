@@ -206,4 +206,42 @@ router.delete('/delete-all', adminAuth, async (req, res) => {
   }
 });
 
+// POST /api/admin/add-seller/:userId — user ni seller qilish (temporary no auth)
+router.post('/add-seller/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const crypto = require('crypto');
+    
+    // Get user info
+    const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (!userRes.rows[0]) return res.status(404).json({ error: 'User topilmadi' });
+    
+    const user = userRes.rows[0];
+    
+    // Check if seller already exists
+    if (user.phone) {
+      const sellerRes = await pool.query(
+        `SELECT * FROM sellers WHERE REGEXP_REPLACE(phone, '[^0-9]', '', 'g') = REGEXP_REPLACE($1, '[^0-9]', '', 'g')`,
+        [user.phone]
+      );
+      if (sellerRes.rows.length > 0) return res.json({ seller: sellerRes.rows[0] });
+    }
+    
+    // Add seller
+    const sellerId = genId();
+    const hash = crypto.createHash('sha256').update('sweetmakers_admin' + 'sweetmarket_salt').digest('hex');
+    
+    await pool.query(
+      `INSERT INTO sellers (id, name, shop_name, phone, password, address, region, city, telegram_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [sellerId, user.name || 'User', 'Sweetmakers Shop', user.phone || '998000000000', hash, 'Toshkent', 'Toshkent', 'Toshkent', user.telegram_id || null]
+    );
+    
+    const newSeller = (await pool.query('SELECT * FROM sellers WHERE id = $1', [sellerId])).rows[0];
+    res.json({ seller: newSeller });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;
