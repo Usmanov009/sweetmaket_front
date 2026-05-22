@@ -96,7 +96,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
             </div>
           </div>
 
-          {/* Telefon */}
+          {/* Telefon raqam */}
           <div style={{ marginBottom: 18 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
               {t('phoneNumber')}
