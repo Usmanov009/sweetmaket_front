@@ -1,5 +1,4 @@
 const MSG = {
-  alreadyUser:      { uz: "Siz allaqachon foydalanuvchi sifatida ro'yxatdan o'tgansiz.", ru: 'Вы уже зарегистрированы как покупатель.' },
   alreadySeller:    { uz: "Siz allaqachon sotuvchi sifatida ro'yxatdan o'tgansiz. Iltimos, boshqa Telegram hisobidan foydalaning.", ru: 'Вы уже зарегистрированы как продавец. Используйте другой аккаунт Telegram.' },
   phoneExists:      { uz: "Bu telefon raqam allaqachon ro'yxatdan o'tgan", ru: 'Этот номер телефона уже зарегистрирован' },
   sellerNotFound:   { uz: 'Sotuvchi topilmadi', ru: 'Продавец не найден' },
