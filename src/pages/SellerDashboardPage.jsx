@@ -635,7 +635,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                           color: '#fff', fontWeight: 700, fontSize: 13, cursor: branchForm.address.trim() ? 'pointer' : 'not-allowed',
                         }}
                       >
-                        {branchLoading ? '...' : editBranch ? 'Saqlash' : 'Qo'shish'}
+                        {branchLoading ? '...' : editBranch ? 'Saqlash' : "Qo'shish"}
                       </button>
                       <button
                         onClick={() => { setShowBranchForm(false); setEditBranch(null); }}
