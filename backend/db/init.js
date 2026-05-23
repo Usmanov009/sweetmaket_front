@@ -99,6 +99,7 @@ async function initDB() {
   await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS products JSONB DEFAULT '[]'`).catch(() => {});
   await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS plan_earnings NUMERIC DEFAULT 0`).catch(() => {});
   await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS telegram_id TEXT`).catch(() => {});
+  await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS username TEXT DEFAULT ''`).catch(() => {});
 
   // Migrate: mavjud users jadvaliga telegram_id qo'shish
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_id TEXT`).catch(() => {});

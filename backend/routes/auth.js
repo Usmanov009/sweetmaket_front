@@ -185,9 +185,9 @@ router.post('/telegram', async (req, res) => {
         const id = genId();
         const hashedPassword = await bcrypt.hash(password, 10);
         await pool.query(
-          `INSERT INTO sellers (id, name, shop_name, phone, password, address, telegram_id)
-           VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-          [id, tgName, tgName, `tg_${telegramId}`, hashedPassword, address, telegramId]
+          `INSERT INTO sellers (id, name, shop_name, phone, password, address, telegram_id, username)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [id, tgName, tgName, `tg_${telegramId}`, hashedPassword, address, telegramId, tgUser.username || '']
         );
         sellerRow = (await pool.query('SELECT * FROM sellers WHERE id = $1', [id])).rows[0];
       }
@@ -280,9 +280,12 @@ function rowToSeller(r) {
     id: r.id,
     phone: r.phone || '',
     telegramId: r.telegram_id || undefined,
+    username: r.username || undefined,
     name: r.name,
     shopName: r.shop_name,
     address: r.address,
+    region: r.region || '',
+    city: r.city || '',
     createdAt: r.created_at,
   };
 }

@@ -540,9 +540,11 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                     icon: <Phone size={18} weight="duotone" />,
                     label: t('phone'),
                     val: seller?.phone?.startsWith('tg_')
-                      ? <span style={{ display:'flex', alignItems:'center', gap:5 }}>
+                      ? <span style={{ display:'flex', alignItems:'center', gap:6 }}>
                           <span style={{ background:'#0088cc18', color:'#0088cc', borderRadius:8, padding:'2px 8px', fontSize:12, fontWeight:700 }}>Telegram</span>
-                          <span style={{ fontSize:13, color:C.muted }}>@{seller?.telegramId || '—'}</span>
+                          <span style={{ fontSize:15, fontWeight:700, color:C.dark }}>
+                            {seller?.username ? `@${seller.username}` : seller?.name || '—'}
+                          </span>
                         </span>
                       : seller?.phone,
                     color: '#0088cc'
@@ -633,7 +635,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                           color: '#fff', fontWeight: 700, fontSize: 13, cursor: branchForm.address.trim() ? 'pointer' : 'not-allowed',
                         }}
                       >
-                        {branchLoading ? '...' : editBranch ? "Saqlash" : "Qoshish"}
+                        {branchLoading ? '...' : editBranch ? 'Saqlash' : 'Qo'shish'}
                       </button>
                       <button
                         onClick={() => { setShowBranchForm(false); setEditBranch(null); }}

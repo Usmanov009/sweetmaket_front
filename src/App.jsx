@@ -1253,7 +1253,15 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
             <div>
               <div style={{ fontSize:18, fontWeight:900, color:'#fff', marginBottom:3 }}>{user?.name||'Foydalanuvchi'}</div>
               <div style={{ fontSize:12, color:'rgba(255,255,255,.6)', marginBottom:7, display:'flex', alignItems:'center', gap:4 }}>
-                <Phone size={11} /> {user?.phone||''}
+                <Phone size={11} />
+                {user?.phone
+                  ? user.phone
+                  : user?.username
+                    ? <span style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <span style={{ background:'rgba(0,136,204,.3)', color:'#7dd3fc', borderRadius:6, padding:'1px 6px', fontSize:10, fontWeight:700 }}>Telegram</span>
+                        @{user.username}
+                      </span>
+                    : ''}
               </div>
             </div>
           </div>
