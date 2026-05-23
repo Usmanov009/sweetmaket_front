@@ -170,11 +170,6 @@ router.post('/telegram', async (req, res) => {
     const telegramId = String(tgUser.id);
 
     if (userType === 'seller') {
-      const existingUser = (await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId])).rows[0];
-      if (existingUser) {
-        return res.status(400).json({ error: m(req, 'phoneExists') });
-      }
-
       let sellerRow = (await pool.query('SELECT * FROM sellers WHERE telegram_id = $1', [telegramId])).rows[0];
 
       if (!sellerRow) {
@@ -292,4 +287,4 @@ function rowToSeller(r) {
   };
 }
 
-module.exports = router;
+module.exports = router; 
