@@ -454,6 +454,7 @@ function rowToSeller(r) {
     name: r.name,
     shopName: r.shop_name,
     phone: r.phone,
+    telegramId: r.telegram_id || undefined,
     address: r.address,
     description: r.description,
     region: r.region || '',

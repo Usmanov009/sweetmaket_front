@@ -1584,12 +1584,22 @@ export default function App() {
     api.get('/api/bakeries').then(setBakeries).catch(() => {});
   }, []);
 
-  // Show RegionPicker whenever a logged-in user/seller has no region set
+  // Show RegionPicker only once per account (first login without region)
   useEffect(() => {
-    if (seller?.id && !seller.region) setShowRegionPicker(true);
+    if (!seller?.id) return;
+    const key = `region_asked_${seller.id}`;
+    if (!seller.region && !localStorage.getItem(key)) {
+      localStorage.setItem(key, '1');
+      setShowRegionPicker(true);
+    }
   }, [seller?.id]);
   useEffect(() => {
-    if (user?.id && !user.region) setShowRegionPicker(true);
+    if (!user?.id) return;
+    const key = `region_asked_${user.id}`;
+    if (!user.region && !localStorage.getItem(key)) {
+      localStorage.setItem(key, '1');
+      setShowRegionPicker(true);
+    }
   }, [user?.id]);
 
   // Restore seller session
