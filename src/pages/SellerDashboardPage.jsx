@@ -231,7 +231,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
   };
 
   const deleteBranch = async (id) => {
-    if (!confirm('Filialni o'chirishni tasdiqlaysizmi?')) return;
+    if (!confirm("Filialni o'chirishni tasdiqlaysizmi?")) return;
     setBranches(prev => prev.filter(b => b.id !== id));
     sellerFetch('DELETE', `/api/seller/branches/${id}`).catch(() => loadBranches());
   };
@@ -633,7 +633,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                           color: '#fff', fontWeight: 700, fontSize: 13, cursor: branchForm.address.trim() ? 'pointer' : 'not-allowed',
                         }}
                       >
-                        {branchLoading ? '...' : editBranch ? 'Saqlash' : 'Qo'shish'}
+                        {branchLoading ? '...' : editBranch ? "Saqlash" : "Qoshish"}
                       </button>
                       <button
                         onClick={() => { setShowBranchForm(false); setEditBranch(null); }}
