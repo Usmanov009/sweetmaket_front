@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "buildCommand": "npm install --include=dev && npx vite build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/((?!api).*)", "destination": "/index.html" }
+  ]
+}
