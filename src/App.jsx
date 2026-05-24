@@ -973,30 +973,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
               </div>
             )}
 
-            <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.2,textTransform:'uppercase',marginBottom:12}}>
-              {t('createRestaurants')}
-            </div>
-            {restaurantBranches.length === 0 ? (
-              <div style={{fontSize:13,color:C.muted,marginBottom:20}}>—</div>
-            ) : (
-              <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:28}}>
-                {restaurantBranches.map(b => (
-                  <div key={b.id}
-                    style={{display:'flex',gap:14,alignItems:'center',padding:'12px 14px',borderRadius:16,
-                      border:`1px solid ${C.border}`,background:C.s1}}>
-                    <div style={{width:42,height:42,borderRadius:12,background:C.s2,
-                      display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>
-                      {b.emoji}
-                    </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:13,fontWeight:700,color:C.dark}}>{b.name}</div>
-                      <div style={{fontSize:12,color:C.muted,marginTop:2}}>{translateAddress(b, lang, REGIONS)}</div>
-                      <div style={{fontSize:11,color:C.muted,marginTop:2}}>⏰ {b.hours} · ⭐ {b.rating}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+
           </>
         )}
 
@@ -1652,11 +1629,20 @@ export default function App() {
   const toast = (msg) => { setToastMsg(msg); setToastId(id => id + 1); setTimeout(() => setToastMsg(''), 2600); };
 
   const handleLogin = (userData) => {
+    if (userData?.lang && (userData.lang === 'ru' || userData.lang === 'uz')) {
+      setLang(userData.lang);
+      setLangChosen(true);
+    }
     setUser(userData);
     setPage('home');
   };
 
   const handleTelegramAuth = (userData, userType) => {
+    // Apply language from user's stored preference
+    if (userData?.lang && (userData.lang === 'ru' || userData.lang === 'uz')) {
+      setLang(userData.lang);
+      setLangChosen(true);
+    }
     if (userType === 'seller') {
       setSeller(userData);
       setPage('seller');
@@ -1672,6 +1658,10 @@ export default function App() {
     setPage(window.Telegram?.WebApp?.initData ? 'telegram-auth' : 'login');
   };
   const handleSellerLogin = (sellerData) => {
+    if (sellerData?.lang && (sellerData.lang === 'ru' || sellerData.lang === 'uz')) {
+      setLang(sellerData.lang);
+      setLangChosen(true);
+    }
     setSeller(sellerData);
     setPage('seller');
   };

@@ -281,6 +281,7 @@ function rowToSeller(r) {
     phone: r.phone || '',
     telegramId: r.telegram_id || undefined,
     username: r.username || undefined,
+    lang: r.lang || 'uz',
     name: r.name,
     shopName: r.shop_name,
     address: r.address,
