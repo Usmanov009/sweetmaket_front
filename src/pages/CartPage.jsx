@@ -162,7 +162,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
             : sellers;
           return filtered.length === 0 ? (
             <div style={{ fontSize: 13, color: C.muted, padding: '12px 0' }}>
-              {sellers.length === 0 ? t('noBakeries') : `${user?.city || user?.region} da qandolatchilar topilmadi`}
+              {sellers.length === 0 ? t('noBakeries') : (lang === 'ru' ? `В ${user?.city || user?.region} кондитеры не найдены` : `${user?.city || user?.region} da qandolatchilar topilmadi`)}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
