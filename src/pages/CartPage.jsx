@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   ShoppingCart, Trash, Plus, Minus, ArrowRight,
   Package, CircleNotch, CheckCircle, MapPin, Storefront,
+  Buildings, Phone, Clock,
 } from '@phosphor-icons/react';
 import CakeVisual from '../components/CakeVisual';
 import { sum, translateAddress } from '../utils/format';
@@ -16,7 +17,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
   const [ordering,  setOrdering]  = useState(false);
   const [done,      setDone]      = useState(false);
   const [sellers,   setSellers]   = useState([]);
-  const [selected,  setSelected]  = useState(null); // selected bakery/seller
+  const [selected,  setSelected]  = useState(null); // selected branch
 
   const total = cart.reduce((s, item) => s + item.price * item.qty, 0);
   const topPad = isDesktop ? 16 : 60;
@@ -28,12 +29,37 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
       .catch(() => {});
   }, []);
 
+  // If all cart items belong to same bakery — auto-filter to that bakery's branches
+  const cartBakeryId = useMemo(() => {
+    const ids = [...new Set(cart.map(i => i.bakeryId).filter(Boolean))];
+    return ids.length === 1 ? ids[0] : null;
+  }, [cart]);
+
+  const cartBakery = useMemo(() => {
+    if (!cartBakeryId) return null;
+    return sellers.find(s => s.id === cartBakeryId) || null;
+  }, [cartBakeryId, sellers]);
+
+  // Branches to show: if cart has a specific bakery => show only its branches, else show all sellers
+  const displayBranches = useMemo(() => {
+    if (cartBakery) {
+      return cartBakery.branches || [];
+    }
+    // Fallback: filter sellers by user city
+    const filtered = (user?.region && user?.city)
+      ? sellers.filter(b => b.region === user.region && b.city === user.city)
+      : sellers;
+    return filtered;
+  }, [cartBakery, sellers, user]);
+
   const handleOrder = async () => {
     if (!cart.length) return;
     if (!selected) { toast(t('selectBakery')); return; }
     setOrdering(true);
     try {
-      await onOrder(cart, total, selected, '');
+      // Pass bakery info along with selected branch
+      const bakeryInfo = cartBakery || selected;
+      await onOrder(cart, total, { ...bakeryInfo, selectedBranch: selected }, '');
       setDone(true);
       setTimeout(() => {
         onClear();
@@ -128,6 +154,11 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
               <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {item.emoji && <span style={{ marginRight: 4 }}>{item.emoji}</span>}{item.name}
               </div>
+              {item.bakeryName && (
+                <div style={{ fontSize: 11, color: C.navy, fontWeight: 600, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <Storefront size={10} /> {item.bakeryName}
+                </div>
+              )}
               <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginBottom: 8 }}>
                 {sum(item.price * item.qty)}
               </div>
@@ -151,42 +182,90 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
         ))}
       </div>
 
-      {/* Seller selector */}
+      {/* Seller / Branch selector */}
       <div style={{ padding: '20px 20px 0' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Storefront size={16} color={C.navy} /> {t('selectBakery')}
-        </div>
-        {(() => {
-          const filtered = (user?.region && user?.city)
-            ? sellers.filter(b => b.region === user.region && b.city === user.city)
-            : sellers;
-          return filtered.length === 0 ? (
-            <div style={{ fontSize: 13, color: C.muted, padding: '12px 0' }}>
-              {sellers.length === 0 ? t('noBakeries') : (lang === 'ru' ? `В ${user?.city || user?.region} кондитеры не найдены` : `${user?.city || user?.region} da qandolatchilar topilmadi`)}
+
+        {/* If cart has specific bakery — show bakery header */}
+        {cartBakery && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: `${C.navy}08`, border: `1.5px solid ${C.navy}30`,
+            borderRadius: 16, padding: '12px 14px', marginBottom: 14,
+          }}>
+            <div style={{ fontSize: 28 }}>{cartBakery.emoji || '🎂'}</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: C.navy }}>{cartBakery.name}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                {lang === 'ru' ? 'Выберите филиал для получения' : 'Olib ketish filialini tanlang'}
+              </div>
             </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {filtered.map(b => {
+          </div>
+        )}
+
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {cartBakery
+            ? <><Buildings size={16} color={C.navy} /> {lang === 'ru' ? 'Филиалы' : 'Filiallar'}</>
+            : <><Storefront size={16} color={C.navy} /> {t('selectBakery')}</>
+          }
+        </div>
+
+        {displayBranches.length === 0 ? (
+          <div style={{ fontSize: 13, color: C.muted, padding: '12px 0' }}>
+            {sellers.length === 0
+              ? t('noBakeries')
+              : (lang === 'ru'
+                  ? `В ${user?.city || user?.region} кондитеры не найдены`
+                  : `${user?.city || user?.region} da qandolatchilar topilmadi`)}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {displayBranches.map(b => {
               const active = selected?.id === b.id;
+              // b can be a branch or a full seller
+              const branchName = b.name && b.name !== 'main' ? b.name : (b.shopName || b.name || '');
+              const branchAddr = b.address || '';
+              const branchPhone = b.phone || '';
+              const branchHours = b.hours || b.working_hours || '';
               return (
                 <div key={b.id} onClick={() => setSelected(b)} style={{
-                  display: 'flex', gap: 12, alignItems: 'center',
+                  display: 'flex', gap: 12, alignItems: 'flex-start',
                   padding: '12px 14px', borderRadius: 14,
                   border: `1.5px solid ${active ? C.navy : C.border}`,
                   background: active ? `${C.navy}08` : C.s1,
                   cursor: 'pointer', transition: 'all .15s',
                 }}>
-                  <div style={{ fontSize: 26, flexShrink: 0 }}>{b.emoji || '🎂'}</div>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                    background: active ? `${C.navy}18` : C.s2,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+                  }}>
+                    {cartBakery ? <Buildings size={18} color={active ? C.navy : C.muted} weight="duotone" /> : (b.emoji || '🎂')}
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: active ? C.navy : C.dark }}>{b.name}</div>
-                    {b.address && (
-                      <div style={{ fontSize: 12, color: C.muted, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <MapPin size={11} /> {translateAddress(b, lang, REGIONS)}
+                    {branchName && (
+                      <div style={{ fontSize: 13, fontWeight: 700, color: active ? C.navy : C.dark, marginBottom: 3 }}>
+                        {branchName}
+                      </div>
+                    )}
+                    {branchAddr && (
+                      <div style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                        <MapPin size={11} weight="fill" color={active ? C.navy : C.muted} />
+                        {cartBakery ? branchAddr : translateAddress(b, lang, REGIONS)}
+                      </div>
+                    )}
+                    {branchPhone && (
+                      <div style={{ fontSize: 12, color: C.muted, display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                        <Phone size={11} color="#0088cc" /> {branchPhone}
+                      </div>
+                    )}
+                    {branchHours && (
+                      <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <Clock size={10} /> {branchHours}
                       </div>
                     )}
                   </div>
                   <div style={{
-                    width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                    width: 22, height: 22, borderRadius: '50%', flexShrink: 0, marginTop: 2,
                     background: active ? C.navy : 'transparent',
                     border: `2px solid ${active ? C.navy : C.border}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -196,9 +275,8 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
                 </div>
               );
             })}
-            </div>
-          );
-        })()}
+          </div>
+        )}
       </div>
 
       {/* Sticky bottom */}
@@ -219,8 +297,13 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
           {selected && (
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
               <Storefront size={12} color={C.navy} />
-              <span style={{ color: C.navy, fontWeight: 600 }}>{selected.name}</span>
-              {selected.address && <span>· {translateAddress(selected, lang, REGIONS)}</span>}
+              {cartBakery && <span style={{ color: C.navy, fontWeight: 600 }}>{cartBakery.name}</span>}
+              {selected.name && selected.name !== 'main' && (
+                <span style={{ color: C.dark, fontWeight: 600 }}>
+                  {cartBakery ? ` · ${selected.name}` : selected.name}
+                </span>
+              )}
+              {selected.address && <span>· {selected.address}</span>}
             </div>
           )}
           <button onClick={handleOrder} disabled={ordering} style={{

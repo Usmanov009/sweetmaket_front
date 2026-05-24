@@ -454,6 +454,8 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
         category: form.type?.category || 'tort',
         bg: form.type?.color || '#fce4ec',
         image: form.image || null,
+        bakeryId: form.bakery?.id || null,
+        bakeryName: form.bakery?.name || null,
       }, 1);
     }
     toast('Savatga qo\'shildi!');

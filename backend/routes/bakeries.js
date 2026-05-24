@@ -1,70 +1,74 @@
 const router = require('express').Router();
-const pool = require('../db/pool');
-const { bakeries: staticBakeries } = require('../db/static.json');
+const pool   = require('../db/pool');
 
-// GET /api/bakeries — konditerlar + statik filial/restoranlar
+// GET /api/bakeries — sellers + their branches from seller_branches table
 router.get('/', async (req, res) => {
   try {
-    // Sellers ma'lumotlarini olish
-    const { rows } = await pool.query(`
+    const { rows: sellers } = await pool.query(`
       SELECT id, COALESCE(shop_name, name) as name, address, phone,
              region, city,
              CASE
                WHEN COALESCE(shop_name, name) ILIKE '%sweet%' THEN '🎂'
-               WHEN COALESCE(shop_name, name) ILIKE '%шири%' THEN '🧁'
-               WHEN COALESCE(shop_name, name) ILIKE '%торт%' THEN '🍰'
+               WHEN COALESCE(shop_name, name) ILIKE '%шири%'  THEN '🧁'
+               WHEN COALESCE(shop_name, name) ILIKE '%торт%'  THEN '🍰'
                ELSE '🎂'
-             END as emoji,
-             '09:00–21:00' as hours, '4.8' as rating
+             END as emoji
       FROM sellers
       WHERE phone != '998902021051'
       ORDER BY created_at DESC
     `);
-    
-    // Har bir qandolatchi uchun kamida bitta filial (keyin JSONB bilan kengaytirish mumkin)
-    const sellerBakeries = rows.map(seller => {
+
+    const { rows: allBranches } = await pool.query(
+      `SELECT * FROM seller_branches ORDER BY created_at ASC`
+    ).catch(() => ({ rows: [] }));
+
+    const sellerBakeries = sellers.map(seller => {
+      const dbBranches = allBranches.filter(b => b.seller_id === seller.id);
       const addr = (seller.address && String(seller.address).trim()) || '';
       const fromRegion = [seller.region, seller.city].filter(Boolean).join(', ');
-      const displayAddr = addr || fromRegion || '';
-      const branches = [
-        {
-          id: `seller_br_${seller.id}_main`,
-          kind: 'main',
-          name: 'main',
-          address: displayAddr || 'Manzil kiritilmagan',
-          hours: seller.hours,
-          rating: parseFloat(seller.rating) || 4.8,
-          emoji: seller.emoji,
-          region: seller.region || '',
-          city: seller.city || '',
-          isSellerBranch: true,
-        },
-      ];
+      const displayAddr = addr || fromRegion || 'Manzil kiritilmagan';
+
+      // Build branches list: seller_branches from DB + main address as fallback
+      const branches = dbBranches.length > 0
+        ? dbBranches.map(b => ({
+            id: b.id,
+            kind: 'branch',
+            name: b.name || '',
+            address: b.address,
+            phone: b.phone || '',
+            hours: b.working_hours || '',
+            emoji: seller.emoji,
+            region: seller.region || '',
+            city: seller.city || '',
+            isSellerBranch: true,
+          }))
+        : [{
+            id: `seller_br_${seller.id}_main`,
+            kind: 'main',
+            name: '',
+            address: displayAddr,
+            phone: seller.phone || '',
+            hours: '',
+            emoji: seller.emoji,
+            region: seller.region || '',
+            city: seller.city || '',
+            isSellerBranch: true,
+          }];
+
       return {
         id: `seller_${seller.id}`,
+        sellerId: seller.id,
         name: seller.name,
-        address: seller.address,
-        hours: seller.hours,
-        rating: parseFloat(seller.rating) || 4.8,
+        address: displayAddr,
         emoji: seller.emoji,
         region: seller.region || '',
         city: seller.city || '',
-        lat: null,
-        lng: null,
         isSeller: true,
         branches,
       };
     });
 
-    const branches = (staticBakeries || []).map(b => ({
-      ...b,
-      id: `branch_${b.id}`,
-      region: '',
-      city: '',
-      isSeller: false,
-    }));
-
-    res.json([...sellerBakeries, ...branches]);
+    res.json(sellerBakeries);
   } catch (error) {
     console.error('Bakeries API error:', error);
     res.json([]);
