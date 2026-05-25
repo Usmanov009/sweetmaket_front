@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, ArrowLeft } from '@phosphor-icons/react';
+import { MapPin, ArrowLeft } from 'lucide-react';
 import { REGIONS } from '../constants/regions.js';
 import { useLocale } from '../locale.jsx';
 

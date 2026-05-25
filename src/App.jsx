@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
 import {
   Sun, Moon, Bell,
-  Trash, Plus, Package, Gear, SignOut,
+  Trash2, Plus, Package, Settings, LogOut,
   Heart, X, Check,
-  MapPin, Clock, Star, TrendUp,
-  PencilSimple, House, Gift, UserCircle, Phone,
-} from '@phosphor-icons/react';
+  MapPin, Clock, Star, TrendingUp,
+  Pencil, Home, Gift, UserCircle2, Phone,
+} from 'lucide-react';
 import api from './api';
 import { useLocale } from './locale.jsx';
 import { THEMES, injectGlobal } from './constants/themes';
@@ -1168,7 +1168,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
   const TABS = [
     { id: 'orders',   icon: <Package size={20} />, label: t('tabOrders') },
     { id: 'bdays',    icon: <Gift size={20} />,    label: t('tabBirthdays') },
-    { id: 'settings', icon: <Gear size={20} />,    label: t('tabSettings') },
+    { id: 'settings', icon: <Settings size={20} />,    label: t('tabSettings') },
   ];
 
   return (
@@ -1218,11 +1218,11 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
         <div style={{ maxWidth:600, margin:'0 auto', padding:'0 20px', position:'relative' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
             <button onClick={() => setPage('home')} style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:8, padding:'6px 11px', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600 }}>
-              <House size={14} /> {t('home')}
+              <Home size={14} /> {t('home')}
             </button>
             <button onClick={() => { setNameForm({firstName:user?.firstName||'',lastName:user?.lastName||''}); setNameModal(true); }}
               style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', borderRadius:8, padding:'6px 11px', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600 }}>
-              <PencilSimple size={14} /> {t('profileEdit')}
+              <Pencil size={14} /> {t('profileEdit')}
             </button>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:14 }}>
@@ -1252,7 +1252,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
         <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8 }}>
           {[
             { icon:<Package size={16} weight="duotone"/>, color:'#4f46e5', val:orders.length, label:t('ordersStat') },
-            { icon:<TrendUp size={16} weight="duotone"/>, color:'#059669', val:sum(totalSpent), label:t('spentStat'), small:totalSpent>999999 },
+            { icon:<TrendingUp size={16} weight="duotone"/>, color:'#059669', val:sum(totalSpent), label:t('spentStat'), small:totalSpent>999999 },
           ].map(s => (
             <div key={s.label} style={{ background:C.s1, borderRadius:14, padding:'12px 8px', textAlign:'center', border:'1px solid '+C.border, boxShadow:'0 2px 10px rgba(0,0,0,.06)' }}>
               <div style={{ width:30, height:30, borderRadius:9, background:s.color+'15', margin:'0 auto 6px', display:'flex', alignItems:'center', justifyContent:'center', color:s.color }}>
@@ -1382,7 +1382,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
                     </div>
                     <button onClick={async () => { try{ await api.del('/api/birthdays/'+b.id); }catch{} setBdays(b2=>b2.filter((_,j)=>j!==i)); }}
                       style={{ padding:'0 16px', background:'none', border:'none', cursor:'pointer', color:'#ef4444', opacity:.5, display:'flex', alignItems:'center' }}>
-                      <Trash size={16} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
@@ -1440,7 +1440,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
                 <span style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>{t('accountSection')}</span>
               </div>
               {[
-                { icon:<UserCircle size={20} weight="duotone"/>, color:'#4f46e5', label:t('yourName'),    val:user?.name||'—' },
+                { icon:<UserCircle2 size={20} weight="duotone"/>, color:'#4f46e5', label:t('yourName'),    val:user?.name||'—' },
                 { icon:<Phone size={20} weight="duotone"/>,      color:'#059669', label:t('phoneNumber'), val:user?.phone||'—' },
               ].map((row,i) => (
                 <div key={row.label} style={{ padding:'14px 18px', display:'flex', alignItems:'center', gap:12, borderBottom:'1px solid '+C.border }}>
@@ -1470,7 +1470,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
               </div>
             </div>
             <button onClick={onLogout} style={{ width:'100%', padding:16, borderRadius:18, border:'1.5px solid rgba(239,68,68,.25)', background:'rgba(239,68,68,.05)', color:'#ef4444', cursor:'pointer', fontWeight:700, fontSize:15, display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}>
-              <SignOut size={18} /> {t('logout')}
+              <LogOut size={18} /> {t('logout')}
             </button>
           </div>
         )}

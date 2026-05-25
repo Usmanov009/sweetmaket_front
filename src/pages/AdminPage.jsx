@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendUp, Users, Package, ArrowLeft, Lock, ArrowCounterClockwise } from '@phosphor-icons/react';
+import { TrendingUp, Users, Package, ArrowLeft, Lock, RotateCcw } from 'lucide-react';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 const ADMIN_SECRET = 'usmanov009';
@@ -154,7 +154,7 @@ export default function AdminPage({ C, onBack }) {
       {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${C.border}`, background: C.s1 }}>
         {[
-          { id: 'plans', icon: <TrendUp size={16} />, label: 'Planlar' },
+          { id: 'plans', icon: <TrendingUp size={16} />, label: 'Planlar' },
           { id: 'users', icon: <Users size={16} />,   label: 'Foydalanuvchilar' },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
@@ -249,7 +249,7 @@ export default function AdminPage({ C, onBack }) {
                           display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
                           flexShrink: 0,
                         }}>
-                        <ArrowCounterClockwise size={14} />
+                        <RotateCcw size={14} />
                         {resetting === s.id ? '...' : 'Nollash'}
                       </button>
                     )}

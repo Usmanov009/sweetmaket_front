@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, X, ArrowLeft } from '@phosphor-icons/react';
+import { Camera, X, ArrowLeft } from 'lucide-react';
 import { useLocale } from '../locale.jsx';
 
 export default function CameraPage({ onBack, onPhotoTaken, C }) {

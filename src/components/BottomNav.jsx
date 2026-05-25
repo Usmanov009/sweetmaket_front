@@ -1,10 +1,10 @@
 import { memo } from 'react';
-import { House, MagnifyingGlass, Cake, ShoppingCart, User } from '@phosphor-icons/react';
+import { Home, Search, Cake, ShoppingCart, User } from 'lucide-react';
 import { useLocale } from '../locale.jsx';
  
 const ITEMS = (t) => [
-  { id:'home',    Icon: House,            label:t('home') },
-  { id:'explore', Icon: MagnifyingGlass,  label:t('navExplore') },
+  { id:'home',    Icon: Home,            label:t('home') },
+  { id:'explore', Icon: Search,  label:t('navExplore') },
   { id:'create',  Icon: Cake,             label:t('navCreate'), isCenter: true },
   { id:'cart',    Icon: ShoppingCart,     label:t('navCart') },
   { id:'profile', Icon: User,             label:t('navProfile') },

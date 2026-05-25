@@ -1,10 +1,10 @@
 import { memo } from 'react';
-import { House, MagnifyingGlass, Cake, ShoppingCart, User, SignOut, Sun, Moon } from '@phosphor-icons/react';
+import { Home, Search, Cake, ShoppingCart, User, LogOut, Sun, Moon } from 'lucide-react';
 import { useLocale } from '../locale.jsx';
 
 const ITEMS = (t) => [
-  { id:'home',    Icon: House,            label:t('navHome') },
-  { id:'explore', Icon: MagnifyingGlass,  label:t('navExplore') },
+  { id:'home',    Icon: Home,            label:t('navHome') },
+  { id:'explore', Icon: Search,  label:t('navExplore') },
   { id:'create',  Icon: Cake,             label:t('navCreate') },
   { id:'cart',    Icon: ShoppingCart,     label:t('navCart') },
   { id:'profile', Icon: User,             label:t('navProfile') },
@@ -114,7 +114,7 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, setIsDar
             padding:'9px 14px', borderRadius:12, border:'none', cursor:'pointer',
             background:'transparent', color:'#ef4444', fontWeight:500, fontSize:13, marginTop:2,
           }}>
-          <SignOut size={18} />
+          <LogOut size={18} />
           <span>{t('logout')}</span>
         </button>
       </div>

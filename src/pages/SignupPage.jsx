@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Phone, User, ShieldCheck } from '@phosphor-icons/react';
+import { Phone, User, ShieldCheck } from 'lucide-react';
 import api from '../api';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 import { useLocale } from '../locale.jsx';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Phone, User, ShieldCheck, CircleNotch, Storefront } from '@phosphor-icons/react';
+import { Phone, User, ShieldCheck, Loader2, Store } from 'lucide-react';
 import api from '../api';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 import { useLocale } from '../locale.jsx';
@@ -151,7 +151,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
 
           <button className="btn-hover" onClick={handleLogin} disabled={loading} style={primaryBtn(loading)}>
             {loading
-              ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} />
+              ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
               : <Phone size={18} />
             }
             {loading ? t('sending') : t('login')}
@@ -178,7 +178,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
               onClick={goSellerLogin}
               style={{ color: '#059669', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
             >
-              <Storefront size={13} weight="fill" /> {t('sellerPortal')}
+              <Store size={13} weight="fill" /> {t('sellerPortal')}
             </span>
           </div>
         </>
@@ -222,7 +222,7 @@ export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDeskt
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { icon: <Storefront size={20} weight="fill" />, text: t('loginFeature1') },
+              { icon: <Store size={20} weight="fill" />, text: t('loginFeature1') },
               { icon: <ShieldCheck size={20} weight="fill" />, text: t('loginFeature2') },
               { icon: <Phone size={20} weight="fill" />, text: t('loginFeature3') },
             ].map(({ icon, text }) => (

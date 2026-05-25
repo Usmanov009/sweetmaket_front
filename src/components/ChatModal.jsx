@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { PaperPlaneRight, X, ImageSquare, CircleNotch } from '@phosphor-icons/react';
+import { Send, X, Image, Loader2 } from 'lucide-react';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
@@ -100,7 +100,7 @@ export default function ChatModal({ onClose, orderId, userId, sellerId, isSeller
         <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {loading ? (
             <div style={{ textAlign: 'center', color: C.muted, padding: 20 }}>
-              <CircleNotch size={24} style={{ animation: 'spin 1s linear infinite', opacity: .4 }} />
+              <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', opacity: .4 }} />
             </div>
           ) : messages.length === 0 ? (
             <div style={{ textAlign: 'center', color: C.muted, padding: 32, fontSize: 13 }}>Hozircha xabarlar yo'q</div>
@@ -158,7 +158,7 @@ export default function ChatModal({ onClose, orderId, userId, sellerId, isSeller
                 background: C.s2, cursor: 'pointer', color: '#059669',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-                <ImageSquare size={18} />
+                <Image size={18} />
               </button>
               <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => loadImage(e.target.files[0])} />
             </>
@@ -192,8 +192,8 @@ export default function ChatModal({ onClose, orderId, userId, sellerId, isSeller
             }}
           >
             {sending
-              ? <CircleNotch size={16} style={{ animation: 'spin 1s linear infinite' }} />
-              : <PaperPlaneRight size={18} />
+              ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+              : <Send size={18} />
             }
           </button>
         </div>

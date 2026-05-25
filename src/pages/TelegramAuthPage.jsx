@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Storefront, ArrowLeft, CircleNotch, MapPin, Lock } from '@phosphor-icons/react';
+import { User, Store, ArrowLeft, Loader2, MapPin, Lock } from 'lucide-react';
 import { useLocale } from '../locale.jsx';
 
 const BASE = import.meta.env.VITE_API_URL || '';
@@ -121,7 +121,7 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
               marginBottom: 12, boxShadow: `0 4px 20px ${C.navy}40`,
             }}>
-              {loading ? <CircleNotch size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <User size={20} />}
+              {loading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <User size={20} />}
               {t('loginAsUser')}
             </button>
 
@@ -131,7 +131,7 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
               color: C.dark, fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
             }}>
-              <Storefront size={20} color="#059669" />
+              <Store size={20} color="#059669" />
               {t('loginAsSeller')}
             </button>
           </>
@@ -196,7 +196,7 @@ export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
               marginBottom: 10,
             }}>
-              {setupLoading ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Storefront size={18} />}
+              {setupLoading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Store size={18} />}
               {setupLoading ? 'Ro\'yxatdan o\'tilmoqda...' : 'Ro\'yxatdan o\'tish'}
             </button>
 

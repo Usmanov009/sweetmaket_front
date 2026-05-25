@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import SellerCreatePage from './SellerCreatePage';
 import {
-  Package, SignOut, Storefront, Phone, X,
-  ChatCircle, CheckCircle, XCircle, UserCircle, MapPin, ClipboardText,
-  CircleNotch, CurrencyDollar, Star, TrendUp, Clock, Plus, Trash, Buildings, PencilSimple, ArrowLeft, Check,
-} from '@phosphor-icons/react';
+  Package, LogOut, Store, Phone, X,
+  MessageCircle, CheckCircle, XCircle, UserCircle2, MapPin, ClipboardList,
+  Loader2, DollarSign, Star, TrendingUp, Clock, Plus, Trash2, Building2, Pencil, ArrowLeft, Check,
+} from 'lucide-react';
 import { sum } from '../utils/format';
 import { REGIONS } from '../constants/regions.js';
 import ChatModal from '../components/ChatModal';
@@ -95,7 +95,7 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat, 
             background: 'rgba(139,92,246,.12)', color: '#7c3aed',
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600,
           }}>
-            <ChatCircle size={15} /> {t('chat')}
+            <MessageCircle size={15} /> {t('chat')}
           </button>
 
           {order.status === 'pending' && (
@@ -304,8 +304,8 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
   const TABS = [
     { id: 'orders',   icon: <Package size={20} />,    label: t('tabOrders'),   badge: pendingCount },
     { id: 'products', icon: <Plus size={20} />,       label: t('tabProducts') },
-    { id: 'plan',     icon: <TrendUp size={20} />,    label: t('tabPlan') },
-    { id: 'profile',  icon: <UserCircle size={20} />, label: t('navProfile') },
+    { id: 'plan',     icon: <TrendingUp size={20} />,    label: t('tabPlan') },
+    { id: 'profile',  icon: <UserCircle2 size={20} />, label: t('navProfile') },
   ];
 
   if (showCreate) return (
@@ -339,7 +339,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
               </div>
               {!isAdmin && (
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,.65)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <UserCircle size={13} /> {seller?.name}
+                  <UserCircle2 size={13} /> {seller?.name}
                 </div>
               )}
             </div>
@@ -348,15 +348,15 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
               background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.18)',
               borderRadius: 12, padding: '8px 14px', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600,
             }}>
-              <SignOut size={15} /> {t('logout')}
+              <LogOut size={15} /> {t('logout')}
             </button>
           </div>
 
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
             {[
-              { icon: <ClipboardText size={20} />, val: myOrders.length, label: t('totalOrders') },
-              { icon: <CurrencyDollar size={20} />, val: sum(totalRevenue), label: t('totalRevenue'), small: true },
+              { icon: <ClipboardList size={20} />, val: myOrders.length, label: t('totalOrders') },
+              { icon: <DollarSign size={20} />, val: sum(totalRevenue), label: t('totalRevenue'), small: true },
               { icon: <Package size={20} />, val: pendingCount, label: t('orderPending') },
             ].map(s => (
               <div key={s.label} style={{
@@ -408,7 +408,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
           {tab === 'orders' && (
             loading ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', color: C.muted }}>
-                <CircleNotch size={32} style={{ animation: 'spin 1s linear infinite', opacity: .4 }} />
+                <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', opacity: .4 }} />
               </div>
             ) : ordersError ? (
               <div style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 14, padding: '16px 18px', marginBottom: 12 }}>
@@ -461,7 +461,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
               {/* Delivered orders list */}
               {(!plan.orders || plan.orders.length === 0) ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                  <TrendUp size={56} weight="duotone" color={C.muted} style={{ opacity: .35 }} />
+                  <TrendingUp size={56} weight="duotone" color={C.muted} style={{ opacity: .35 }} />
                   <div style={{ fontWeight: 700, color: C.dark, marginTop: 14, marginBottom: 6 }}>{t('noDeliveredOrders')}</div>
                   <div style={{ color: C.muted, fontSize: 13 }}>{t('planDesc')}</div>
                 </div>
@@ -529,7 +529,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                     <div style={{ fontSize: 13, fontWeight: 800, color: '#059669' }}>{Number(p.price).toLocaleString('ru-RU')} so'm</div>
                   </div>
                   <button onClick={() => deleteProduct(p.id)} style={{ background: 'rgba(220,38,38,.08)', border: 'none', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Trash size={16} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               ))}
@@ -550,7 +550,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   border: '3px solid rgba(255,255,255,.3)',
                 }}>
-                  <UserCircle size={40} color="#fff" weight="duotone" />
+                  <UserCircle2 size={40} color="#fff" weight="duotone" />
                 </div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{seller?.shopName}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,.65)', marginTop: 4 }}>{seller?.name}</div>
@@ -559,8 +559,8 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
               {/* Info rows */}
               <div style={{ background: C.s1, borderRadius: 20, overflow: 'hidden', border: `1px solid ${C.border}`, marginBottom: 16 }}>
                 {[
-                  { icon: <Storefront size={18} weight="duotone" />, label: t('shopName'), val: seller?.shopName, color: '#059669' },
-                  { icon: <UserCircle size={18} weight="duotone" />, label: t('yourName'), val: seller?.name,     color: '#4f46e5' },
+                  { icon: <Store size={18} weight="duotone" />, label: t('shopName'), val: seller?.shopName, color: '#059669' },
+                  { icon: <UserCircle2 size={18} weight="duotone" />, label: t('yourName'), val: seller?.name,     color: '#4f46e5' },
                   {
                     icon: <Phone size={18} weight="duotone" />,
                     label: t('phone'),
@@ -624,7 +624,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                         setAddrCity('');
                         setAddrStreet('');
                       }} style={{ background: '#d9770618', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <PencilSimple size={14} />
+                        <Pencil size={14} />
                       </button>
                     </div>
                   ) : (
@@ -710,7 +710,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                               color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
                               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                             }}>
-                              {addrSaving ? <CircleNotch size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={14} />}
+                              {addrSaving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={14} />}
                               {lang === 'ru' ? 'Сохранить' : 'Saqlash'}
                             </button>
                             <button onClick={() => setEditAddress(false)} style={{
@@ -731,7 +731,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <Buildings size={20} color="#d97706" weight="duotone" />
+                    <Building2 size={20} color="#d97706" weight="duotone" />
                     <span style={{ fontSize: 15, fontWeight: 800, color: C.dark }}>Filiallar</span>
                     {branches.length > 0 && (
                       <span style={{ background: '#d9770618', color: '#d97706', borderRadius: 20, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>
@@ -813,7 +813,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                     textAlign: 'center', padding: '28px 16px',
                     background: C.s1, borderRadius: 16, border: `1px dashed ${C.border}`,
                   }}>
-                    <Buildings size={40} color={C.muted} weight="duotone" style={{ opacity: .4, marginBottom: 8 }} />
+                    <Building2 size={40} color={C.muted} weight="duotone" style={{ opacity: .4, marginBottom: 8 }} />
                     <div style={{ fontSize: 13, color: C.muted }}>Hali filial qo'shilmagan</div>
                   </div>
                 )}
@@ -828,7 +828,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                       width: 36, height: 36, borderRadius: 10, background: '#d9770618',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2,
                     }}>
-                      <Buildings size={18} color="#d97706" weight="duotone" />
+                      <Building2 size={18} color="#d97706" weight="duotone" />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: C.dark, marginBottom: 3 }}>
@@ -857,13 +857,13 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                         }}
                         style={{ background: '#4f46e518', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        <PencilSimple size={14} />
+                        <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => deleteBranch(branch.id)}
                         style={{ background: 'rgba(220,38,38,.08)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        <Trash size={14} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
@@ -877,7 +877,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                 color: '#dc2626', cursor: 'pointer', fontWeight: 700, fontSize: 14,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}>
-                <SignOut size={16} /> {t('logoutFromCabinet')}
+                <LogOut size={16} /> {t('logoutFromCabinet')}
               </button>
             </div>
           )}

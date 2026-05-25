@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  ShoppingCart, Trash, Plus, Minus, ArrowRight,
-  Package, CircleNotch, CheckCircle, MapPin, Storefront,
-  Buildings, Phone, Clock,
-} from '@phosphor-icons/react';
+  ShoppingCart, Trash2, Plus, Minus, ArrowRight,
+  Package, Loader2, CheckCircle, MapPin, Store,
+  Building2, Phone, Clock,
+} from 'lucide-react';
 import CakeVisual from '../components/CakeVisual';
 import { sum, translateAddress } from '../utils/format';
 import api from '../api';
@@ -135,7 +135,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
           background: 'transparent', cursor: 'pointer', color: '#ef4444',
           fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          <Trash size={14} /> {t('clear')}
+          <Trash2 size={14} /> {t('clear')}
         </button>
       </div>
 
@@ -158,7 +158,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
               </div>
               {item.bakeryName && (
                 <div style={{ fontSize: 11, color: C.navy, fontWeight: 600, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 3 }}>
-                  <Storefront size={10} /> {item.bakeryName}
+                  <Store size={10} /> {item.bakeryName}
                 </div>
               )}
               <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginBottom: 8 }}>
@@ -178,7 +178,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
             </div>
             <button onClick={() => onRemove(item.id)}
               style={{ padding: '0 14px', height: '100%', background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
-              <Trash size={16} />
+              <Trash2 size={16} />
             </button>
           </div>
         ))}
@@ -206,14 +206,14 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
 
         <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
           {cartBakery
-            ? <><Buildings size={16} color={C.navy} /> {lang === 'ru' ? 'Филиалы' : 'Filiallar'}</>
-            : <><Storefront size={16} color={C.navy} /> {t('selectBakery')}</>
+            ? <><Building2 size={16} color={C.navy} /> {lang === 'ru' ? 'Филиалы' : 'Filiallar'}</>
+            : <><Store size={16} color={C.navy} /> {t('selectBakery')}</>
           }
         </div>
 
         {sellersLoading ? (
           <div style={{ fontSize: 13, color: C.muted, padding: '12px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <CircleNotch size={14} style={{ animation: 'spin 1s linear infinite' }} />
+            <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
             {lang === 'ru' ? 'Загрузка...' : 'Yuklanmoqda...'}
           </div>
         ) : displayBranches.length === 0 ? (
@@ -246,7 +246,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
                     background: active ? `${C.navy}18` : C.s2,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
                   }}>
-                    {cartBakery ? <Buildings size={18} color={active ? C.navy : C.muted} weight="duotone" /> : (b.emoji || '🎂')}
+                    {cartBakery ? <Building2 size={18} color={active ? C.navy : C.muted} weight="duotone" /> : (b.emoji || '🎂')}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {branchName && (
@@ -303,7 +303,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
           </div>
           {selected && (
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Storefront size={12} color={C.navy} />
+              <Store size={12} color={C.navy} />
               {cartBakery && <span style={{ color: C.navy, fontWeight: 600 }}>{cartBakery.name}</span>}
               {selected.name && selected.name !== 'main' && (
                 <span style={{ color: C.dark, fontWeight: 600 }}>
@@ -321,7 +321,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             opacity: ordering ? 0.75 : 1, transition: 'all .25s',
           }}>
-            {ordering ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Package size={18} />}
+            {ordering ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Package size={18} />}
             {ordering ? t('sending') : t('placeOrder')}
             {!ordering && <ArrowRight size={16} />}
           </button>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ChatCircle, X, CheckCircle } from '@phosphor-icons/react';
+import { Package, MessageCircle, X, CheckCircle } from 'lucide-react';
 import { sum } from '../utils/format';
 import ChatModal from '../components/ChatModal';
 import api from '../api';
@@ -106,7 +106,7 @@ export default function UserOrdersPage({ user, C, isDesktop, setPage }) {
                 {order.status === 'confirmed' && (
                   <button onClick={() => handleChat(order)}
                     style={{ padding:'6px 14px', borderRadius:10, border:'none', background:'#8b5cf6', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:700 }}>
-                    <ChatCircle size={14} />
+                    <MessageCircle size={14} />
                   </button>
                 )}
                 {order.status === 'ready' && (

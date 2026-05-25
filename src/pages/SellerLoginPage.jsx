@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {
-  Phone, Lock, Storefront, User, Eye, EyeSlash,
-  ArrowRight, CircleNotch, MapPin, Package, TrendUp, Buildings, ArrowLeft,
-} from '@phosphor-icons/react';
+  Phone, Lock, Store, User, Eye, EyeOff,
+  ArrowRight, Loader2, MapPin, Package, TrendingUp, Building2, ArrowLeft,
+} from 'lucide-react';
 import api from '../api';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 import { REGIONS } from '../constants/regions.js';
@@ -254,7 +254,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           </div>
           {[
             { label: t('yourName'), icon: <User size={18} weight="duotone" />, value: name, set: v => setName(v.replace(/[0-9]/g, '')), placeholder: 'Aziz Karimov' },
-            { label: t('shopName'), icon: <Storefront size={18} weight="duotone" />, value: shopName, set: setShopName, placeholder: 'Aziz Shirinliklari' },
+            { label: t('shopName'), icon: <Store size={18} weight="duotone" />, value: shopName, set: setShopName, placeholder: 'Aziz Shirinliklari' },
             { label: t('streetHouseLabel'), icon: <MapPin size={18} weight="duotone" />, value: address, set: setAddress, placeholder: "Mustaqillik ko'chasi, 12-uy" },
           ].map(({ label, icon, value, set, placeholder }) => (
             <div key={label} style={{ marginBottom: 12 }}>
@@ -300,7 +300,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
               style={passFieldStyle} className="input-focus"
             />
             <button type="button" onClick={() => setShowPass(p => !p)} style={eyeBtnStyle}>
-              {showPass ? <EyeSlash size={18} /> : <Eye size={18} />}
+              {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
         </div>
@@ -318,7 +318,7 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
               style={passFieldStyle} className="input-focus"
             />
             <button type="button" onClick={() => setShowPass2(p => !p)} style={eyeBtnStyle}>
-              {showPass2 ? <EyeSlash size={18} /> : <Eye size={18} />}
+              {showPass2 ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
         </div>
@@ -364,8 +364,8 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
         }}
       >
         {loading
-          ? <CircleNotch size={18} style={{ animation: 'spin 1s linear infinite' }} />
-          : mode === 'login' ? <Lock size={18} /> : <Storefront size={18} />
+          ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+          : mode === 'login' ? <Lock size={18} /> : <Store size={18} />
         }
         {loading ? t('loadingText') : mode === 'login' ? t('login') : t('signUp')}
         {!loading && <ArrowRight size={16} />}
@@ -415,8 +415,8 @@ export default function SellerLoginPage({ onLogin, goUserLogin, C, isDesktop }) 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
               { icon: <Package size={20} weight="fill" />,   text: t('sellerFeature1') },
-              { icon: <Buildings size={20} weight="fill" />, text: t('sellerFeature2') },
-              { icon: <TrendUp size={20} weight="fill" />,   text: t('sellerFeature3') },
+              { icon: <Building2 size={20} weight="fill" />, text: t('sellerFeature2') },
+              { icon: <TrendingUp size={20} weight="fill" />,   text: t('sellerFeature3') },
             ].map(({ icon, text }) => (
               <div key={text} style={{
                 display: 'flex',

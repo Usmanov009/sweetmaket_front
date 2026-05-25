@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, CheckCircle } from '@phosphor-icons/react';
+import { Bell, CheckCircle } from 'lucide-react';
 import api from '../api';
 import { useLocale } from '../locale.jsx';
 
