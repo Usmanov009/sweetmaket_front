@@ -17,16 +17,18 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
   const [ordering,  setOrdering]  = useState(false);
   const [done,      setDone]      = useState(false);
   const [sellers,   setSellers]   = useState([]);
+  const [sellersLoading, setSellersLoading] = useState(true);
   const [selected,  setSelected]  = useState(null); // selected branch
 
   const total = cart.reduce((s, item) => s + item.price * item.qty, 0);
   const topPad = isDesktop ? 16 : 60;
 
   useEffect(() => {
+    setSellersLoading(true);
     fetch(BASE + '/api/bakeries')
       .then(r => r.json())
-      .then(data => setSellers(Array.isArray(data) ? data : []))
-      .catch(() => {});
+      .then(data => { setSellers(Array.isArray(data) ? data : []); setSellersLoading(false); })
+      .catch(() => setSellersLoading(false));
   }, []);
 
   // If all cart items belong to same bakery — auto-filter to that bakery's branches
@@ -45,11 +47,11 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
     if (cartBakery) {
       return cartBakery.branches || [];
     }
-    // Fallback: filter sellers by user city
+    // Filter by user city, fallback to ALL sellers if nothing matches
     const filtered = (user?.region && user?.city)
       ? sellers.filter(b => b.region === user.region && b.city === user.city)
       : sellers;
-    return filtered;
+    return filtered.length > 0 ? filtered : sellers;
   }, [cartBakery, sellers, user]);
 
   const handleOrder = async () => {
@@ -209,7 +211,12 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
           }
         </div>
 
-        {displayBranches.length === 0 ? (
+        {sellersLoading ? (
+          <div style={{ fontSize: 13, color: C.muted, padding: '12px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <CircleNotch size={14} style={{ animation: 'spin 1s linear infinite' }} />
+            {lang === 'ru' ? 'Загрузка...' : 'Yuklanmoqda...'}
+          </div>
+        ) : displayBranches.length === 0 ? (
           <div style={{ fontSize: 13, color: C.muted, padding: '12px 0' }}>
             {sellers.length === 0
               ? t('noBakeries')

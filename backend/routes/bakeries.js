@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
                ELSE '🎂'
              END as emoji
       FROM sellers
-      WHERE phone != '998902021051'
+      WHERE phone NOT LIKE '%998902021051%' AND phone NOT LIKE '%902021051%'
       ORDER BY created_at DESC
     `);
 
