@@ -3,9 +3,10 @@ import SellerCreatePage from './SellerCreatePage';
 import {
   Package, SignOut, Storefront, Phone, X,
   ChatCircle, CheckCircle, XCircle, UserCircle, MapPin, ClipboardText,
-  CircleNotch, CurrencyDollar, Star, TrendUp, Clock, Plus, Trash, Buildings, PencilSimple,
+  CircleNotch, CurrencyDollar, Star, TrendUp, Clock, Plus, Trash, Buildings, PencilSimple, ArrowLeft, Check,
 } from '@phosphor-icons/react';
 import { sum } from '../utils/format';
+import { REGIONS } from '../constants/regions.js';
 import ChatModal from '../components/ChatModal';
 import { useLocale } from '../locale.jsx';
 
@@ -182,6 +183,14 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
   const [products,      setProducts]      = useState([]);
   const [showCreate,    setShowCreate]    = useState(false);
 
+  // Address edit state
+  const [editAddress,     setEditAddress]   = useState(false);
+  const [addrStep,        setAddrStep]      = useState('region'); // 'region' | 'city' | 'street'
+  const [addrRegion,      setAddrRegion]    = useState(null);
+  const [addrCity,        setAddrCity]      = useState('');
+  const [addrStreet,      setAddrStreet]    = useState('');
+  const [addrSaving,      setAddrSaving]    = useState(false);
+
   // Branches state
   const [branches,      setBranches]      = useState([]);
   const [showBranchForm, setShowBranchForm] = useState(false);
@@ -204,6 +213,22 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
 
   const loadProducts = () => {
     sellerFetch('GET', '/api/seller/posts').then(data => setProducts(Array.isArray(data) ? data : [])).catch(() => {});
+  };
+
+  const saveAddress = async () => {
+    if (!addrRegion || !addrCity) return;
+    setAddrSaving(true);
+    const regionName = lang === 'ru' ? (addrRegion.nameRu || addrRegion.name) : addrRegion.name;
+    const fullAddress = addrStreet.trim()
+      ? `${addrStreet.trim()}, ${addrCity}, ${regionName}`
+      : `${addrCity}, ${regionName}`;
+    try {
+      await sellerFetch('PATCH', '/api/seller/location', { region: addrRegion.name, city: addrCity });
+      await sellerFetch('PATCH', '/api/seller/address', { address: fullAddress });
+      setSeller(s => ({ ...s, region: addrRegion.name, city: addrCity, address: fullAddress }));
+      setEditAddress(false);
+    } catch(e) { alert(e.message); }
+    finally { setAddrSaving(false); }
   };
 
   const loadBranches = () => {
@@ -549,7 +574,6 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                       : seller?.phone,
                     color: '#0088cc'
                   },
-                  { icon: <MapPin size={18} weight="duotone" />, label: t('address'), val: seller?.address || '—', color: '#d97706' },
                 ].map((row, i, arr) => (
                   <div key={i} style={{
                     display: 'flex', gap: 14, alignItems: 'center', padding: '16px 20px',
@@ -568,6 +592,139 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
                     </div>
                   </div>
                 ))}
+
+                {/* Address row with edit */}
+                <div style={{ padding: '16px 20px' }}>
+                  {!editAddress ? (
+                    <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 12, background: '#d9770618', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', flexShrink: 0 }}>
+                        <MapPin size={18} weight="duotone" />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 2 }}>{t('address')}</div>
+                        {seller?.region || seller?.city ? (
+                          <div>
+                            <div style={{ fontSize: 13, color: C.navy, fontWeight: 700, marginBottom: 2 }}>
+                              📍 {[seller?.region, seller?.city].filter(Boolean).join(', ')}
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: C.dark }}>
+                              {seller?.address
+                                ? seller.address.replace(/,?\s*(seller\.city|seller\.region).*$/i, '').split(',').slice(0, -2).join(',').trim() || seller.address
+                                : '—'}
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.dark }}>{seller?.address || '—'}</div>
+                        )}
+                      </div>
+                      <button onClick={() => {
+                        setEditAddress(true);
+                        setAddrStep('region');
+                        setAddrRegion(null);
+                        setAddrCity('');
+                        setAddrStreet('');
+                      }} style={{ background: '#d9770618', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <PencilSimple size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <MapPin size={13} color="#d97706" />
+                          {addrStep === 'region' ? (lang === 'ru' ? 'Выберите регион' : "Viloyatni tanlang") :
+                           addrStep === 'city'   ? (lang === 'ru' ? 'Выберите город' : "Shaharni tanlang") :
+                                                   (lang === 'ru' ? 'Введите улицу' : "Ko'chani kiriting")}
+                        </span>
+                        {addrStep !== 'region' && (
+                          <button onClick={() => setAddrStep(addrStep === 'street' ? 'city' : 'region')}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center', gap: 3, fontSize: 11 }}>
+                            <ArrowLeft size={12} /> {lang === 'ru' ? 'Назад' : 'Orqaga'}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Step: region */}
+                      {addrStep === 'region' && (
+                        <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {REGIONS.map(r => (
+                            <button key={r.id} onClick={() => {
+                              setAddrRegion(r);
+                              if (r.cities.length === 1) { setAddrCity(r.cities[0]); setAddrStep('street'); }
+                              else setAddrStep('city');
+                            }} style={{
+                              padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${C.border}`,
+                              background: C.s2, cursor: 'pointer', textAlign: 'left',
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            }}>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: C.dark }}>
+                                {lang === 'ru' ? r.nameRu : r.name}
+                              </span>
+                              <span style={{ color: C.muted }}>›</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Step: city */}
+                      {addrStep === 'city' && addrRegion && (
+                        <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {addrRegion.cities.map((c, i) => (
+                            <button key={c} onClick={() => { setAddrCity(c); setAddrStep('street'); }} style={{
+                              padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${C.border}`,
+                              background: C.s2, cursor: 'pointer', textAlign: 'left',
+                              display: 'flex', alignItems: 'center', gap: 8,
+                            }}>
+                              <MapPin size={14} color="#d97706" weight="fill" />
+                              <span style={{ fontSize: 13, fontWeight: 600, color: C.dark }}>
+                                {lang === 'ru' ? addrRegion.citiesRu?.[i] : c}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Step: street */}
+                      {addrStep === 'street' && (
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '8px 12px', borderRadius: 10, background: '#d9770610', border: '1px solid #d9770630' }}>
+                            <MapPin size={13} color="#d97706" weight="fill" />
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706' }}>
+                              {lang === 'ru' ? addrRegion?.nameRu : addrRegion?.name}, {addrCity}
+                            </span>
+                          </div>
+                          <input
+                            value={addrStreet}
+                            onChange={e => setAddrStreet(e.target.value)}
+                            placeholder={lang === 'ru' ? "Улица, дом (необязательно)" : "Ko'cha, uy (ixtiyoriy)"}
+                            style={{
+                              width: '100%', boxSizing: 'border-box', padding: '10px 14px',
+                              borderRadius: 10, border: `1.5px solid ${C.border}`,
+                              background: C.s2, color: C.dark, fontSize: 14, outline: 'none', marginBottom: 10,
+                            }}
+                          />
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={saveAddress} disabled={addrSaving} style={{
+                              flex: 1, padding: '10px', borderRadius: 10, border: 'none',
+                              background: 'linear-gradient(135deg,#d97706,#b45309)',
+                              color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                            }}>
+                              {addrSaving ? <CircleNotch size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={14} />}
+                              {lang === 'ru' ? 'Сохранить' : 'Saqlash'}
+                            </button>
+                            <button onClick={() => setEditAddress(false)} style={{
+                              padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${C.border}`,
+                              background: 'none', color: C.muted, fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                            }}>
+                              {lang === 'ru' ? 'Отмена' : 'Bekor'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* ── Filiallar bo'limi ── */}

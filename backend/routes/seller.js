@@ -395,6 +395,17 @@ router.patch('/location', sellerAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// PATCH /api/seller/address — manzil saqlash
+router.patch('/address', sellerAuth, async (req, res) => {
+  try {
+    const { address } = req.body;
+    if (!address) return res.status(400).json({ error: 'Manzil kerak' });
+    await pool.query('UPDATE sellers SET address=$1 WHERE id=$2', [address, req.seller.id]);
+    const row = (await pool.query('SELECT * FROM sellers WHERE id=$1', [req.seller.id])).rows[0];
+    res.json({ seller: rowToSeller(row) });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // POST /api/seller/publish — explore + home sahifaga mahsulot qo'shish
 router.post('/publish', sellerAuth, async (req, res) => {
   try {
