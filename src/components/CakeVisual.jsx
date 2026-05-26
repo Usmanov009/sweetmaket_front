@@ -3,7 +3,6 @@
 const visuals = {
   tort: ({ size, shape }) => {
     const isSquare = shape === 'square';
-    const isHeart = shape === 'heart';
     const layerRx = isSquare ? 6 : 11;
 
     return (
@@ -21,11 +20,7 @@ const visuals = {
         {/* cream line */}
         <path d="M24 50 Q35 42 46 50 Q57 58 68 50 Q79 42 90 50 Q95 55 96 50" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
         {/* top layer */}
-        {isHeart ? (
-          <path d="M60 24 C50 14 34 20 34 38 C34 56 60 78 60 78 C60 78 86 56 86 38 C86 20 70 14 60 24 Z" fill="#f48fb1"/>
-        ) : (
-          <rect x="30" y="30" width="60" height="20" rx={layerRx} fill="#f48fb1"/>
-        )}
+        <rect x="30" y="30" width="60" height="20" rx={layerRx} fill="#f48fb1"/>
         <rect x="30" y="30" width="60" height="7" rx="3.5" fill="#f06292"/>
         {/* frosting top */}
         <path d="M34 30 Q40 22 46 30 Q52 22 58 30 Q64 22 70 30 Q76 22 82 30 Q86 26 86 30" stroke="none" fill="#fff" opacity=".7"/>

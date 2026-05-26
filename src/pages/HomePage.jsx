@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { Search, Bell, Heart, ShoppingCart, X, Sun, Moon } from 'lucide-react';
+import { Search, Bell, ShoppingCart, X, Sun, Moon } from 'lucide-react';
 import { sum } from '../utils/format';
 import CakeVisual from '../components/CakeVisual';
 import { useLocale } from '../locale.jsx';
@@ -70,7 +70,6 @@ export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setP
     .filter(c => activeKey==='all' || c.category===activeKey)
     .filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()));
 
-  const toggleLike = (id) => setCakeCards(prev => prev.map(c => c.id===id ? {...c,liked:!c.liked} : c));
   const topPad = isDesktop ? 0 : 52;
 
   const CardItem = memo(({ card, cardWidth }) => (
@@ -80,11 +79,6 @@ export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setP
       style={{ flex: cardWidth ? `0 0 ${cardWidth}px` : undefined, background:C.s1, borderRadius:20, overflow:'hidden', border:`1px solid ${C.border}`, cursor:'pointer', transition:'all .25s', boxShadow:`0 2px 8px rgba(0,0,0,.05)` }}>
       <div style={{ position:'relative' }}>
         <CakeVisual category={card.category} bg={card.bg} height={120} badge={card.badge} badgeColor={card.badgeColor}/>
-        <button
-          onClick={e=>{ e.stopPropagation(); toggleLike(card.id); toast(card.liked ? t('unsavedItem') : t('savedItem')); }}
-          style={{ position:'absolute', top:8, left:8, background:'rgba(255,255,255,.88)', border:'none', cursor:'pointer', width:30, height:30, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color: card.liked?'#ef4444':C.muted, zIndex:2 }}>
-          <Heart size={14} fill={card.liked?'currentColor':'none'}/>
-        </button>
       </div>
       <div style={{ padding:12 }}>
         <div style={{ fontSize:13, fontWeight:600, marginBottom:4, color:C.dark, lineHeight:1.3 }}>{card.name}</div>
@@ -188,30 +182,6 @@ export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setP
         {filtered.map(card => <CardItem key={card.id} card={card}/>)}
       </div>
 
-      {/* Saved */}
-      {cakeCards.some(c=>c.liked) && !search && (
-        <div style={{ padding:'24px 20px 24px' }}>
-          <div style={{ fontSize:isDesktop?18:16, fontWeight:700, color:C.dark, marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
-            <Heart size={18} fill="#ef4444" color="#ef4444"/> {t('saved')}
-          </div>
-          <div style={{ display:'flex', gap:12, overflowX:isDesktop?'unset':'auto', flexWrap:isDesktop?'wrap':'nowrap', scrollbarWidth:'none' }}>
-            {cakeCards.filter(c=>c.liked).map(card=>(
-              <div key={card.id} onClick={()=>setDetailCard(card)} style={{ flex:'0 0 120px', background:C.s1, borderRadius:16, overflow:'hidden', border:`1px solid ${C.border}`, cursor:'pointer' }}>
-                <div style={{ position:'relative' }}>
-                  <CakeVisual category={card.category} bg={card.bg} height={80}/>
-                  <button onClick={e=>{ e.stopPropagation(); toggleLike(card.id); }} style={{ position:'absolute', top:4, right:4, background:'rgba(255,255,255,.8)', border:'none', cursor:'pointer', width:24, height:24, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'#ef4444', zIndex:2 }}>
-                    <Heart size={11} fill="currentColor"/>
-                  </button>
-                </div>
-                <div style={{ padding:8 }}>
-                  <div style={{ fontSize:11, fontWeight:600, color:C.dark, marginBottom:3 }}>{card.name}</div>
-                  <div style={{ color:C.navy, fontWeight:700, fontSize:11 }}>{sum(card.price)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
       <div style={{ height:100 }}/>
     </div>
   );

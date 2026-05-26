@@ -1,4 +1,12 @@
 import { useState, useMemo } from 'react';
+import {
+  Cake, Gift, Circle, Square,
+  Grape, Cherry, Star, Leaf, Citrus,
+  Flower2, Apple, Sparkles, Smile,
+  Users, User, UserRound, UsersRound,
+  ImagePlus, FileText, Rocket, Check, ArrowLeft,
+  Layers,
+} from 'lucide-react';
 import CakeVisual from '../components/CakeVisual';
 import { useLocale } from '../locale.jsx';
 
@@ -17,12 +25,53 @@ function sellerFetch(method, path, body) {
   });
 }
 
+// Icon per option id
+const OPTION_ICONS = {
+  // type
+  tort:    { icon: Cake,      bg: '#fce4ec', color: '#e91e63' },
+  bento:   { icon: Gift,      bg: '#e8f5e9', color: '#2e7d32' },
+  // shape
+  round:   { icon: Circle,    bg: '#fce4ec', color: '#e91e63' },
+  square:  { icon: Square,    bg: '#e8f5e9', color: '#1565c0' },
+  // size
+  mini:    { icon: User,      bg: '#e3f2fd', color: '#1565c0' },
+  std:     { icon: Users,     bg: '#fff8e1', color: '#e65100' },
+  big:     { icon: UsersRound,bg: '#fce4ec', color: '#c62828' },
+  xl:      { icon: Layers,    bg: '#f9fbe7', color: '#33691e' },
+  // flavor
+  velvet:  { icon: Cherry,    bg: '#fce4ec', color: '#b71c1c' },
+  choco:   { icon: Star,      bg: '#efebe9', color: '#4e342e' },
+  pista:   { icon: Leaf,      bg: '#e8f5e9', color: '#2e7d32' },
+  rasp:    { icon: Grape,     bg: '#fce4ec', color: '#880e4f' },
+  lemon:   { icon: Citrus,    bg: '#fffde7', color: '#f57f17' },
+  // decoration
+  flower:  { icon: Flower2,   bg: '#fce4ec', color: '#ad1457' },
+  chocoDec:{ icon: Star,      bg: '#efebe9', color: '#4e342e' },
+  fruit:   { icon: Apple,     bg: '#e8f5e9', color: '#2e7d32' },
+  minimal: { icon: Sparkles,  bg: '#f5f5f5', color: '#546e7a' },
+  kids:    { icon: Smile,     bg: '#fffde7', color: '#f57f17' },
+};
+
+function OptionIcon({ id, size = 44 }) {
+  const cfg = OPTION_ICONS[id] || { icon: Star, bg: '#f5f5f5', color: '#999' };
+  const Icon = cfg.icon;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: size * 0.3,
+      background: cfg.bg, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', flexShrink: 0,
+    }}>
+      <Icon size={size * 0.52} color={cfg.color} strokeWidth={2} />
+    </div>
+  );
+}
+
 export default function SellerCreatePage({ C, onBack, onPublished }) {
   const { t } = useLocale();
-  const [step, setStep]         = useState(0);
-  const [form, setForm]         = useState({ type:null, shape:null, size:null, flavor:null, decoration:null, note:'', image:null });
+  const [step, setStep]             = useState(0);
+  const [form, setForm]             = useState({ type:null, shape:null, size:null, flavor:null, decoration:null, note:'', image:null });
   const [publishing, setPublishing] = useState(false);
-  const [imgDrag, setImgDrag]   = useState(false);
+  const [imgDrag, setImgDrag]       = useState(false);
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const CREATE_OPTIONS = useMemo(() => ({
@@ -33,7 +82,6 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
     shape: [
       { id:'round',  emoji:'⭕', label:t('cRoundLabel'),  desc:t('klassikShakl'), color:'#fce4ec' },
       { id:'square', emoji:'◼️', label:t('cSquareLabel'), desc:t('zamonaviy'),    color:'#e8f5e9' },
-      { id:'heart',  emoji:'❤️', label:t('cHeartLabel'),  desc:t('romantik'),     color:'#ffe4e1' },
     ],
     size: [
       { id:'mini', emoji:'🫐', label:t('cMiniLabel'), sub:'1–2 kishi',  desc:t('kichkina'),    priceAdd:0,     color:'#e3f2fd' },
@@ -65,17 +113,13 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
     { key:'decoration', question:t('sellerStepDecoQ'),   hint:t('sellerStepDecoH') },
   ], [t]);
 
-  const activeSteps = form.type?.id === 'tort'
-    ? CREATE_STEPS
-    : CREATE_STEPS.filter(s => s.key !== 'shape');
-
+  const activeSteps    = form.type?.id === 'tort' ? CREATE_STEPS : CREATE_STEPS.filter(s => s.key !== 'shape');
   const lastChoiceStep = activeSteps.length - 1;
   const currentStepCfg = activeSteps[step];
   const currentVal     = currentStepCfg ? form[currentStepCfg.key] : null;
   const selections     = [form.type, form.shape, form.size, form.flavor, form.decoration].filter(Boolean);
   const progress       = step / (activeSteps.length + 1);
-
-  const totalPrice = (form.type?.basePrice||0) + (form.shape?.priceAdd||0) + (form.size?.priceAdd||0) + (form.flavor?.priceAdd||0) + (form.decoration?.priceAdd||0);
+  const totalPrice     = (form.type?.basePrice||0) + (form.shape?.priceAdd||0) + (form.size?.priceAdd||0) + (form.flavor?.priceAdd||0) + (form.decoration?.priceAdd||0);
 
   const goBack = () => setStep(s => s === 5 ? lastChoiceStep : Math.max(0, s - 1));
   const goNext = () => setStep(s => s === lastChoiceStep ? 5 : Math.min(6, s + 1));
@@ -112,11 +156,14 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
   const Header = ({ backHidden }) => (
     <div style={{ position:'sticky', top:0, zIndex:10, background:C.bg, borderBottom:`1px solid ${C.border}`, padding:'0 20px' }}>
       <div style={{ display:'flex', alignItems:'center', gap:12, height:54 }}>
-        <button onClick={step === 0 ? onBack : goBack} style={{ background:'none', border:'none', cursor:'pointer', padding:6, color: backHidden ? 'transparent' : C.dark, pointerEvents: backHidden ? 'none' : 'auto', display:'flex', alignItems:'center', borderRadius:10 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <button
+          onClick={step === 0 ? onBack : goBack}
+          style={{ background:'none', border:'none', cursor:'pointer', padding:6, color: backHidden ? 'transparent' : C.dark, pointerEvents: backHidden ? 'none' : 'auto', display:'flex', alignItems:'center', borderRadius:10 }}
+        >
+          <ArrowLeft size={20} />
         </button>
         <div style={{ flex:1, height:4, background:C.s2, borderRadius:99, overflow:'hidden' }}>
-          <div style={{ height:'100%', borderRadius:99, background:`linear-gradient(90deg,#059669,#047857)`, width:`${Math.max(progress*100,4)}%`, transition:'width .4s cubic-bezier(.4,0,.2,1)' }}/>
+          <div style={{ height:'100%', borderRadius:99, background:'linear-gradient(90deg,#059669,#047857)', width:`${Math.max(progress*100,4)}%`, transition:'width .4s cubic-bezier(.4,0,.2,1)' }}/>
         </div>
         <div style={{ fontSize:12, fontWeight:700, color:C.muted, minWidth:36, textAlign:'right' }}>
           {step < CREATE_STEPS.length ? `${step+1} / ${CREATE_STEPS.length}` : ''}
@@ -125,7 +172,7 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
     </div>
   );
 
-  /* STEP 5: Details */
+  /* ── STEP 5: Details ── */
   if (step === 5) return (
     <div style={{ minHeight:'100vh', background:C.bg }}>
       <Header />
@@ -135,32 +182,39 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
         </div>
         <div style={{ color:C.muted, fontSize:13, marginBottom:24 }}>{t('productVisible')}</div>
 
+        {/* selection chips */}
         <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:28 }}>
           {selections.map(o => (
-            <div key={o.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:50, background:o.color, border:`1px solid ${C.border}`, fontSize:13, fontWeight:600, color:C.dark }}>
-              {o.emoji} {o.label}
+            <div key={o.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 12px', borderRadius:50, background:o.color, border:`1px solid ${C.border}`, fontSize:13, fontWeight:600, color:C.dark }}>
+              <OptionIcon id={o.id} size={22} />
+              {o.label}
             </div>
           ))}
         </div>
 
-        {/* Image */}
+        {/* Image upload */}
         <div style={{ marginBottom:20 }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase', marginBottom:12 }}>{t('photoLabel')}</div>
+          <div style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>
+            <ImagePlus size={14} color={C.muted} /> {t('photoLabel')}
+          </div>
           <div
             onDragOver={e => { e.preventDefault(); setImgDrag(true); }}
             onDragLeave={() => setImgDrag(false)}
             onDrop={e => { e.preventDefault(); setImgDrag(false); handleImageFile(e.dataTransfer.files[0]); }}
             onClick={() => document.getElementById('sc-img').click()}
-            style={{ position:'relative', borderRadius:16, overflow:'hidden', cursor:'pointer', border:`2px dashed ${imgDrag ? '#059669' : C.border}`, background: imgDrag ? 'rgba(5,150,105,.06)' : C.s1, height: form.image ? 160 : 100, display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s' }}>
+            style={{ position:'relative', borderRadius:16, overflow:'hidden', cursor:'pointer', border:`2px dashed ${imgDrag ? '#059669' : C.border}`, background: imgDrag ? 'rgba(5,150,105,.06)' : C.s1, height: form.image ? 160 : 110, display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s' }}
+          >
             <input id="sc-img" type="file" accept="image/*" style={{ display:'none' }} onChange={e => handleImageFile(e.target.files[0])} />
             {form.image ? (
               <>
                 <img src={form.image} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                <button onClick={e => { e.stopPropagation(); setF('image', null); }} style={{ position:'absolute', top:8, right:8, width:28, height:28, borderRadius:'50%', background:'rgba(0,0,0,.5)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>✕</button>
+                <button onClick={e => { e.stopPropagation(); setF('image', null); }} style={{ position:'absolute', top:8, right:8, width:28, height:28, borderRadius:'50%', background:'rgba(0,0,0,.5)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <Check size={14} />
+                </button>
               </>
             ) : (
-              <div style={{ textAlign:'center', color:C.muted }}>
-                <div style={{ fontSize:28, marginBottom:6 }}>📸</div>
+              <div style={{ textAlign:'center', color:C.muted, display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+                <ImagePlus size={32} color={C.border} />
                 <div style={{ fontSize:13, fontWeight:600 }}>{t('uploadPhoto')}</div>
               </div>
             )}
@@ -169,27 +223,36 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
 
         {/* Note */}
         <div style={{ marginBottom:20 }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase', marginBottom:12 }}>{t('noteLabel')}</div>
-          <textarea value={form.note} onChange={e => setF('note', e.target.value)}
+          <div style={{ fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>
+            <FileText size={14} color={C.muted} /> {t('noteLabel')}
+          </div>
+          <textarea
+            value={form.note}
+            onChange={e => setF('note', e.target.value)}
             placeholder={t('notePlaceholderSeller')}
-            rows={3} style={{ width:'100%', background:C.s1, border:`1.5px solid ${C.border}`, borderRadius:16, padding:'14px 16px', color:C.dark, fontSize:14, resize:'none', lineHeight:1.6, boxSizing:'border-box', outline:'none' }}
+            rows={3}
+            style={{ width:'100%', background:C.s1, border:`1.5px solid ${C.border}`, borderRadius:16, padding:'14px 16px', color:C.dark, fontSize:14, resize:'none', lineHeight:1.6, boxSizing:'border-box', outline:'none' }}
             onFocus={e => e.target.style.borderColor='#059669'}
-            onBlur={e => e.target.style.borderColor=C.border} />
+            onBlur={e => e.target.style.borderColor=C.border}
+          />
         </div>
 
-        {/* Price */}
+        {/* Price breakdown */}
         <div style={{ background:C.s1, borderRadius:20, border:`1px solid ${C.border}`, overflow:'hidden', marginBottom:20 }}>
           <div style={{ padding:'12px 18px', borderBottom:`1px solid ${C.border}`, fontSize:11, fontWeight:700, color:C.muted, letterSpacing:1.2, textTransform:'uppercase' }}>
             {t('priceBreakdown')}
           </div>
           {[
-            { label:form.type?.label, price:form.type?.basePrice, emoji:form.type?.emoji, base:true },
-            { label:form.size?.label, price:form.size?.priceAdd, emoji:form.size?.emoji },
-            { label:form.flavor?.label, price:form.flavor?.priceAdd, emoji:form.flavor?.emoji },
-            { label:form.decoration?.label, price:form.decoration?.priceAdd, emoji:form.decoration?.emoji },
+            { label:form.type?.label,       price:form.type?.basePrice,       id:form.type?.id,       base:true },
+            { label:form.size?.label,       price:form.size?.priceAdd,        id:form.size?.id },
+            { label:form.flavor?.label,     price:form.flavor?.priceAdd,      id:form.flavor?.id },
+            { label:form.decoration?.label, price:form.decoration?.priceAdd,  id:form.decoration?.id },
           ].filter(r => r.label).map((row, i) => (
             <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 18px', borderBottom:`1px solid ${C.border}` }}>
-              <span style={{ fontSize:13, color:C.dark }}>{row.emoji} {row.label}</span>
+              <span style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, color:C.dark }}>
+                <OptionIcon id={row.id} size={28} />
+                {row.label}
+              </span>
               <span style={{ fontSize:13, fontWeight:600, color:row.price>0?C.dark:C.muted }}>
                 {row.base ? row.price?.toLocaleString('ru-RU')+' so\'m' : row.price>0 ? '+'+row.price.toLocaleString('ru-RU') : '—'}
               </span>
@@ -206,15 +269,19 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
           background: publishing ? C.border : 'linear-gradient(135deg,#059669,#047857)',
           color: publishing ? C.muted : '#fff',
           cursor: publishing ? 'default' : 'pointer',
-          fontWeight:700, fontSize:16, boxShadow: publishing ? 'none' : '0 6px 24px rgba(5,150,105,.4)', transition:'all .25s',
+          fontWeight:700, fontSize:16,
+          boxShadow: publishing ? 'none' : '0 6px 24px rgba(5,150,105,.4)',
+          transition:'all .25s',
+          display:'flex', alignItems:'center', justifyContent:'center', gap:8,
         }}>
+          <Rocket size={18} />
           {publishing ? t('publishingBtn') : t('publishBtn')}
         </button>
       </div>
     </div>
   );
 
-  /* STEP 6: Done */
+  /* ── STEP 6: Done ── */
   if (step === 6) return (
     <div style={{ minHeight:'100vh', background:C.bg, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'24px 24px 100px', textAlign:'center' }}>
       <div style={{ width:110, height:110, borderRadius:'50%', overflow:'hidden', boxShadow:'0 12px 40px rgba(5,150,105,.25)', marginBottom:24 }}>
@@ -229,13 +296,15 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
         background:'linear-gradient(135deg,#059669,#047857)',
         color:'#fff', fontWeight:700, fontSize:15, cursor:'pointer',
         boxShadow:'0 6px 20px rgba(5,150,105,.4)',
+        display:'flex', alignItems:'center', gap:8,
       }}>
+        <Check size={18} />
         {t('goBack')}
       </button>
     </div>
   );
 
-  /* STEPS 0–4: Choices */
+  /* ── STEPS 0–4: Choices ── */
   let opts = CREATE_OPTIONS[currentStepCfg.key];
   if (currentStepCfg.key === 'size' && form.type?.id === 'bento') {
     opts = opts.filter(o => o.id === 'mini' || o.id === 'std');
@@ -245,6 +314,8 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
     <div style={{ minHeight:'100vh', background:C.bg }}>
       <Header backHidden={step === 0} />
       <div style={{ maxWidth:560, margin:'0 auto', padding:'28px 20px 120px' }}>
+
+        {/* Step question */}
         <div style={{ marginBottom:28 }}>
           <div style={{ fontFamily:"'Playfair Display',serif", fontSize:26, fontWeight:900, color:C.dark, marginBottom:6, lineHeight:1.2 }}>
             {currentStepCfg.question}
@@ -252,33 +323,49 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
           <div style={{ fontSize:14, color:C.muted }}>{currentStepCfg.hint}</div>
         </div>
 
+        {/* Option cards */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:24 }}>
           {opts.map(opt => {
-            const active = currentVal?.id === opt.id;
+            const active   = currentVal?.id === opt.id;
             const addPrice = opt.basePrice ?? opt.priceAdd;
+            const iconCfg  = OPTION_ICONS[opt.id] || {};
             return (
-              <button key={opt.id} onClick={() => {
-                setF(currentStepCfg.key, opt);
-                if (currentStepCfg.key === 'type' && opt.id !== 'tort') setF('shape', null);
-                goNext();
-              }} style={{
-                borderRadius:22, border:`2px solid ${active ? '#059669' : C.border}`,
-                background: active ? opt.color : C.s1,
-                cursor:'pointer', textAlign:'left', outline:'none', overflow:'hidden',
-                position:'relative', transition:'all .2s',
-                boxShadow: active ? '0 8px 28px rgba(5,150,105,.2)' : '0 2px 8px rgba(0,0,0,.04)',
-                transform: active ? 'translateY(-2px)' : 'none',
-              }}>
+              <button
+                key={opt.id}
+                onClick={() => {
+                  setF(currentStepCfg.key, opt);
+                  if (currentStepCfg.key === 'type' && opt.id !== 'tort') setF('shape', null);
+                  goNext();
+                }}
+                style={{
+                  borderRadius:22,
+                  border:`2px solid ${active ? '#059669' : C.border}`,
+                  background: active ? opt.color : C.s1,
+                  cursor:'pointer', textAlign:'left', outline:'none', overflow:'hidden',
+                  position:'relative', transition:'all .2s',
+                  boxShadow: active ? '0 8px 28px rgba(5,150,105,.2)' : '0 2px 8px rgba(0,0,0,.04)',
+                  transform: active ? 'translateY(-2px)' : 'none',
+                  padding: 0,
+                }}
+              >
+                {/* Active checkmark */}
                 {active && (
                   <div style={{ position:'absolute', top:12, right:12, width:26, height:26, borderRadius:'50%', background:'#059669', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1 }}>
-                    <svg width="12" height="12" viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <Check size={13} color="#fff" strokeWidth={3} />
                   </div>
                 )}
-                <CakeVisual
-                  category={currentStepCfg.key === 'type' ? opt.category : form.type?.category}
-                  shape={currentStepCfg.key === 'shape' ? opt.id : form.shape?.id}
-                  bg={opt.color} height={110}
-                />
+
+                {/* Icon banner */}
+                <div style={{
+                  height: 100,
+                  background: active ? iconCfg.bg || opt.color : C.s2,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  transition:'background .2s',
+                }}>
+                  <OptionIcon id={opt.id} size={54} />
+                </div>
+
+                {/* Text info */}
                 <div style={{ padding:'12px 14px 14px' }}>
                   <div style={{ fontSize:14, fontWeight:800, color: active ? '#059669' : C.dark, marginBottom:4 }}>{opt.label}</div>
                   {opt.sub && <div style={{ fontSize:11, color:'#059669', fontWeight:700, marginBottom:3 }}>{opt.sub}</div>}
@@ -294,11 +381,12 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
           })}
         </div>
 
+        {/* Bottom price bar */}
         {totalPrice > 0 && (
           <div style={{ background:C.s1, borderRadius:16, padding:'14px 18px', border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
             <div style={{ display:'flex', gap:8 }}>
               {selections.map(o => (
-                <div key={o.id} style={{ width:32, height:32, borderRadius:10, background:o.color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, border:`1px solid ${C.border}` }}>{o.emoji}</div>
+                <OptionIcon key={o.id} id={o.id} size={32} />
               ))}
             </div>
             <div style={{ fontSize:16, fontWeight:900, color:'#059669' }}>{totalPrice.toLocaleString('ru-RU')} so'm</div>

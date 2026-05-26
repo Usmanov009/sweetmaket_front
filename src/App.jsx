@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
 import {
   Sun, Moon, Bell,
   Trash2, Plus, Package, Settings, LogOut,
-  Heart, X, Check,
+  X, Check,
   MapPin, Clock, Star, TrendingUp,
   Pencil, Home, Gift, UserCircle2, Phone,
 } from 'lucide-react';
@@ -140,7 +140,6 @@ function BakeryPickerMap({ C, selected, onSelect, bakeries = [] }) {
 function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
   const { t } = useLocale();
   const [search,   setSearch]   = useState('');
-  const [likedIds, setLikedIds] = useState([]);
   const [allPosts, setAllPosts] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const q = search.trim().toLowerCase();
@@ -149,7 +148,6 @@ function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
     setLoading(true);
     api.get('/api/explore/posts').then(posts => {
       setAllPosts(posts);
-      setLikedIds(posts.filter(p => p.likedBy?.includes(user?.id)).map(p => p.id));
       setLoading(false);
     }).catch(() => setLoading(false));
   };
@@ -164,16 +162,6 @@ function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
     : allPosts;
 
   const topPad = isDesktop ? 16 : 56;
-
-  const toggleLike = id => {
-    const isLiked = likedIds.includes(id);
-    setLikedIds(prev => isLiked ? prev.filter(x => x !== id) : [...prev, id]);
-    api.post(`/api/explore/posts/${id}/like`).then(res => {
-      setAllPosts(prev => prev.map(p => p.id === id ? { ...p, likes: res.likes } : p));
-    }).catch(() => {
-      setLikedIds(prev => isLiked ? [...prev, id] : prev.filter(x => x !== id));
-    });
-  };
 
   const initials = (name='') => name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || '👤';
   const avatarColor = (name='') => { const h = name.split('').reduce((a,c)=>a+c.charCodeAt(0),0)%360; return `hsl(${h},55%,62%)`; };
@@ -233,8 +221,6 @@ function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
       {/* posts feed */}
       <div style={{display:'flex',flexDirection:'column',gap:0}}>
         {matchedPosts.map(card => {
-          const liked = likedIds.includes(card.id);
-          const likeCount = card.likes||0;
           const authorName = card.userName || 'Foydalanuvchi';
           const ts = card.createdAt ? new Date(card.createdAt).toLocaleDateString('ru-RU',{day:'numeric',month:'long'}) : '';
           return (
@@ -281,17 +267,6 @@ function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
                 </div>
               </div>
 
-              {/* actions */}
-              <div style={{padding:'10px 16px 4px',display:'flex',alignItems:'center',gap:14}}>
-                <button onClick={()=>toggleLike(card.id)}
-                  style={{background:'none',border:'none',cursor:'pointer',padding:0,lineHeight:1,display:'flex',
-                    transform:liked?'scale(1.2)':'scale(1)',transition:'transform .15s',color:liked?'#ef4444':C.muted}}>
-                  <Heart size={22} fill={liked?'currentColor':'none'}/>
-                </button>
-                <span style={{fontSize:13,fontWeight:600,color:C.dark}}>{likeCount.toLocaleString('ru-RU')}</span>
-                <div style={{flex:1}}/>
-              </div>
-
               {/* caption */}
               <div style={{padding:'2px 16px 14px'}}>
                 <span style={{fontSize:13,fontWeight:700,color:C.dark}}>{authorName.split(' ')[0]} </span>
@@ -333,7 +308,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
     shape: [
       {id:'round',  emoji:'⭕', label:t('oRoundLabel'),  desc:t('oRoundDesc'),  color:'#fce4ec'},
       {id:'square', emoji:'◼️', label:t('oSquareLabel'), desc:t('oSquareDesc'), color:'#e8f5e9'},
-      {id:'heart',  emoji:'❤️', label:t('cHeartLabel'),  desc:t('oHeartDesc'),  color:'#ffe4e1'},
     ],
     layers: [
       {id:'1', emoji:'1️⃣', label:t('oLayer1Label'), desc:t('oLayer1Desc'), priceAdd:0,     color:'#e3f2fd'},
