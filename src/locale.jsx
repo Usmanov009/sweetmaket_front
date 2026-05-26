@@ -911,4 +911,4 @@ export function LocaleProvider({ children }) {
 
 export function useLocale() {
   return useContext(LocaleContext);
-}
+}   
