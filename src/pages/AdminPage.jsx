@@ -337,7 +337,7 @@ export default function AdminPage({ C, onBack }) {
 
               <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                 <button onClick={() => setResetModal(null)} style={{
-                  flex: 1, padding: '14px', borderRadius: 14,
+                  flex: 1, padding: '13px', borderRadius: 14,
                   border: `1.5px solid ${C.border}`, background: 'none',
                   color: C.muted, cursor: 'pointer', fontWeight: 600, fontSize: 14,
                 }}>
