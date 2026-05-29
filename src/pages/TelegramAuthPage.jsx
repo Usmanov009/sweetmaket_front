@@ -4,7 +4,7 @@ import { useLocale } from '../locale.jsx';
 
 const BASE = import.meta.env.VITE_API_URL || '';
 
-export default function TelegramAuthPage({ onBack, onAuthSuccess, C, isDesktop }) {
+export default function TelegramAuthPage({ onBack, onAuthSuccess, C }) {
   const { t } = useLocale();
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState('');

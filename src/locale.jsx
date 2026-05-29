@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'sm_lang';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const LocaleContext = createContext({
   lang: 'uz',
   setLang: () => {},
@@ -895,7 +896,7 @@ export function LocaleProvider({ children }) {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, lang);
-    } catch {}
+    } catch (_) {}
   }, [lang]);
 
   const t = (key) => {
@@ -909,6 +910,7 @@ export function LocaleProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLocale() {
   return useContext(LocaleContext);
-}   
+}

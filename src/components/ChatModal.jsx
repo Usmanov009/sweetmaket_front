@@ -59,7 +59,7 @@ export default function ChatModal({ onClose, orderId, userId, sellerId, isSeller
         setText('');
         setImgPreview(null);
       }
-    } catch {}
+    } catch (_) {}
     finally { setSending(false); }
   };
 

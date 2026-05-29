@@ -4,7 +4,7 @@ import api from '../api';
 import { formatPhone, rawDigits, isValidPhone } from '../utils/format';
 import { useLocale } from '../locale.jsx';
 
-export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDesktop, setPage }) {
+export default function LoginPage({ onLogin, goSignup, goSellerLogin, C, isDesktop }) {
   const { t } = useLocale();
   const [phone,    setPhone]    = useState('+998');
   const [password, setPassword] = useState('');

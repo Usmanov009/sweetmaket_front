@@ -66,6 +66,27 @@ function OptionIcon({ id, size = 44 }) {
   );
 }
 
+function SellerCreateHeader({ backHidden, C, step, onBack, goBack, progress, CREATE_STEPS }) {
+  return (
+    <div style={{ position:'sticky', top:0, zIndex:10, background:C.bg, borderBottom:`1px solid ${C.border}`, padding:'0 20px' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:12, height:54 }}>
+        <button
+          onClick={step === 0 ? onBack : goBack}
+          style={{ background:'none', border:'none', cursor:'pointer', padding:6, color: backHidden ? 'transparent' : C.dark, pointerEvents: backHidden ? 'none' : 'auto', display:'flex', alignItems:'center', borderRadius:10 }}
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <div style={{ flex:1, height:4, background:C.s2, borderRadius:99, overflow:'hidden' }}>
+          <div style={{ height:'100%', borderRadius:99, background:'linear-gradient(90deg,#059669,#047857)', width:`${Math.max(progress*100,4)}%`, transition:'width .4s cubic-bezier(.4,0,.2,1)' }}/>
+        </div>
+        <div style={{ fontSize:12, fontWeight:700, color:C.muted, minWidth:36, textAlign:'right' }}>
+          {step < CREATE_STEPS.length ? `${step+1} / ${CREATE_STEPS.length}` : ''}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SellerCreatePage({ C, onBack, onPublished }) {
   const { t } = useLocale();
   const [step, setStep]             = useState(0);
@@ -153,29 +174,11 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
     }
   };
 
-  const Header = ({ backHidden }) => (
-    <div style={{ position:'sticky', top:0, zIndex:10, background:C.bg, borderBottom:`1px solid ${C.border}`, padding:'0 20px' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:12, height:54 }}>
-        <button
-          onClick={step === 0 ? onBack : goBack}
-          style={{ background:'none', border:'none', cursor:'pointer', padding:6, color: backHidden ? 'transparent' : C.dark, pointerEvents: backHidden ? 'none' : 'auto', display:'flex', alignItems:'center', borderRadius:10 }}
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div style={{ flex:1, height:4, background:C.s2, borderRadius:99, overflow:'hidden' }}>
-          <div style={{ height:'100%', borderRadius:99, background:'linear-gradient(90deg,#059669,#047857)', width:`${Math.max(progress*100,4)}%`, transition:'width .4s cubic-bezier(.4,0,.2,1)' }}/>
-        </div>
-        <div style={{ fontSize:12, fontWeight:700, color:C.muted, minWidth:36, textAlign:'right' }}>
-          {step < CREATE_STEPS.length ? `${step+1} / ${CREATE_STEPS.length}` : ''}
-        </div>
-      </div>
-    </div>
-  );
 
   /* ── STEP 5: Details ── */
   if (step === 5) return (
     <div style={{ minHeight:'100vh', background:C.bg }}>
-      <Header />
+      <SellerCreateHeader C={C} step={step} onBack={onBack} goBack={goBack} progress={progress} CREATE_STEPS={CREATE_STEPS} />
       <div style={{ maxWidth:520, margin:'0 auto', padding:'24px 20px 120px' }}>
         <div style={{ fontFamily:"'Playfair Display',serif", fontSize:24, fontWeight:900, color:C.dark, marginBottom:4 }}>
           {t('productDetails')}
@@ -312,7 +315,7 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg }}>
-      <Header backHidden={step === 0} />
+      <SellerCreateHeader backHidden={step === 0} C={C} step={step} onBack={onBack} goBack={goBack} progress={progress} CREATE_STEPS={CREATE_STEPS} />
       <div style={{ maxWidth:560, margin:'0 auto', padding:'28px 20px 120px' }}>
 
         {/* Step question */}

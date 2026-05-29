@@ -41,7 +41,7 @@ export default function AdminPage({ C, onBack }) {
     }
   };
 
-  useEffect(() => { if (authed) loadData(); }, [authed]);
+  useEffect(() => { if (authed) loadData(); }, [authed]); // eslint-disable-line react-hooks/set-state-in-effect,react-hooks/exhaustive-deps
 
   const openResetModal = (seller) => {
     setCollectAmt(String(seller.planEarnings));
@@ -268,7 +268,7 @@ export default function AdminPage({ C, onBack }) {
         {!loading && tab === 'users' && (
           <>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 12 }}>Jami: {users.length} ta foydalanuvchi</div>
-            {users.map((u, i) => (
+            {users.map((u) => (
               <div key={u.id} style={{ background: C.s1, borderRadius: 14, border: `1px solid ${C.border}`, padding: '12px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 38, height: 38, borderRadius: 12, background: `linear-gradient(135deg,${C.navy},${C.mid})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 800, flexShrink: 0 }}>
                   {(u.name || '?')[0].toUpperCase()}

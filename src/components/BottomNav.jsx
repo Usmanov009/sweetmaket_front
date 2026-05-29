@@ -21,7 +21,7 @@ const BottomNav = memo(function BottomNav({ page, setPage, C, cartCount = 0 }) {
       borderTop: `1px solid ${C.border}`,
       zIndex: 1000,
     }}>
-      {ITEMS(t).map(({ id, Icon, label, isCenter }) => {
+      {ITEMS(t).map(({ id, Icon, label, isCenter }) => { // eslint-disable-line no-unused-vars
         const active = page === id;
         if (isCenter) return (
           <button key={id} onClick={() => setPage(id)} style={{

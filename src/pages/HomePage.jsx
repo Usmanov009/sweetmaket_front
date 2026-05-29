@@ -55,7 +55,7 @@ function ProductDetailModal({ card, onClose, toast, C, addToCart }) {
   );
 }
 
-export default function HomePage({ toast, user, C, cakeCards, setCakeCards, setPage, isDesktop, addToCart, isDark, setIsDark }) {
+export default function HomePage({ toast, user, C, cakeCards, setPage, isDesktop, addToCart, isDark, setIsDark }) {
   const { t } = useLocale();
   const chips    = [t('chipAll'), t('chipTorts'), t('chipCupcakes')];
   const chipKeys = ['all','tort','keks'];

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Sun, Moon, Bell,
   Trash2, Plus, Package, Settings, LogOut,
@@ -11,7 +11,7 @@ import { useLocale } from './locale.jsx';
 import { THEMES, injectGlobal } from './constants/themes';
 import { REGIONS } from './constants/regions.js';
 import { useBreakpoint } from './hooks/useBreakpoint';
-import { sum, pluralRu, daysUntil, formatPhone, rawDigits, isValidPhone, translateAddress } from './utils/format';
+import { sum, daysUntil, translateAddress } from './utils/format';
 import Toast from './components/Toast';
 import CakeVisual from './components/CakeVisual';
 import BottomNav from './components/BottomNav';
@@ -137,7 +137,7 @@ function BakeryPickerMap({ C, selected, onSelect, bakeries = [] }) {
 /* ═══════════════════════════════════════════════════════
    EXPLORE PAGE
 ═══════════════════════════════════════════════════════ */
-function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
+function ExplorePage({ C, isDesktop, toast, addToCart }) {
   const { t } = useLocale();
   const [search,   setSearch]   = useState('');
   const [allPosts, setAllPosts] = useState([]);
@@ -151,7 +151,7 @@ function ExplorePage({ C, isDesktop, toast, user, addToCart }) {
       setLoading(false);
     }).catch(() => setLoading(false));
   };
-  useEffect(load, []);
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
   const matchedPosts = q
     ? allPosts.filter(c =>
@@ -295,7 +295,33 @@ function confectionerNumericId(b) {
   return m ? Number(m[1]) : null;
 }
 
-function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [], addToCart }) {
+/* shared header with progress bar - defined outside to avoid re-creating on render */
+function CreatePageHeader({onBack, backHidden, C, progress, step, activeSteps}) {
+  return (
+    <div style={{position:'sticky',top:0,zIndex:10,background:C.bg,
+      borderBottom:`1px solid ${C.border}`,padding:'0 20px'}}>
+      <div style={{display:'flex',alignItems:'center',gap:12,height:54}}>
+        <button onClick={onBack} style={{background:'none',border:'none',cursor:'pointer',
+          padding:6,color:backHidden?'transparent':C.dark,pointerEvents:backHidden?'none':'auto',
+          display:'flex',alignItems:'center',borderRadius:10,transition:'background .15s'}}
+          onMouseEnter={e=>e.currentTarget.style.background=C.s2}
+          onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div style={{flex:1,height:4,background:C.s2,borderRadius:99,overflow:'hidden'}}>
+          <div style={{height:'100%',borderRadius:99,
+            background:`linear-gradient(90deg,${C.navy},${C.mid})`,
+            width:`${Math.max(progress*100,4)}%`,transition:'width .4s cubic-bezier(.4,0,.2,1)'}}/>
+        </div>
+        <div style={{fontSize:12,fontWeight:700,color:C.muted,minWidth:36,textAlign:'right'}}>
+          {step >= 1 && step <= activeSteps.length ? `${step} / ${activeSteps.length}` : ''}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCart }) {
   const { t, lang } = useLocale();
 
   const DETAILS = 50; const PUBLISH = 51; const DONE = 52;
@@ -392,7 +418,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
     return cakeCards.filter(p => p.isSeller && Number(p.sellerId) === sid);
   }, [cakeCards, form.bakery]);
 
-  const restaurantBranches = useMemo(() => bakeries.filter(b => !b.isSeller), [bakeries]);
 
   const branchLabel = (br) => {
     if (!br) return '';
@@ -461,31 +486,6 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
     setPage('home');
   };
 
-  /* shared header with progress bar */
-  const Header = ({onBack, backHidden}) => (
-    <div style={{position:'sticky',top:0,zIndex:10,background:C.bg,
-      borderBottom:`1px solid ${C.border}`,padding:'0 20px'}}>
-      <div style={{display:'flex',alignItems:'center',gap:12,height:54}}>
-        <button onClick={onBack} style={{background:'none',border:'none',cursor:'pointer',
-          padding:6,color:backHidden?'transparent':C.dark,pointerEvents:backHidden?'none':'auto',
-          display:'flex',alignItems:'center',borderRadius:10,transition:'background .15s'}}
-          onMouseEnter={e=>e.currentTarget.style.background=C.s2}
-          onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        {/* progress bar */}
-        <div style={{flex:1,height:4,background:C.s2,borderRadius:99,overflow:'hidden'}}>
-          <div style={{height:'100%',borderRadius:99,
-            background:`linear-gradient(90deg,${C.navy},${C.mid})`,
-            width:`${Math.max(progress*100,4)}%`,transition:'width .4s cubic-bezier(.4,0,.2,1)'}}/>
-        </div>
-        <div style={{fontSize:12,fontWeight:700,color:C.muted,minWidth:36,textAlign:'right'}}>
-          {step >= 1 && step <= activeSteps.length ? `${step} / ${activeSteps.length}` : ''}
-        </div>
-      </div>
-    </div>
-  );
-
   const goBack = () => setStep(s => {
     if (s === DETAILS) return activeSteps.length;
     return Math.max(0, s - 1);
@@ -499,7 +499,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
   /* ── DETAILS ── */
   if (step === DETAILS) return (
     <div style={{minHeight:'100vh',background:C.bg}}>
-      <Header onBack={goBack}/>
+      <CreatePageHeader onBack={goBack} C={C} progress={progress} step={step} activeSteps={activeSteps}/>
       <div style={{maxWidth:520,margin:'0 auto',padding:'24px 20px 120px'}}>
 
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:900,color:C.dark,marginBottom:4}}>
@@ -690,7 +690,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
   /* ── PUBLISH PROMPT ── */
   if (step === PUBLISH) return (
     <div style={{minHeight:'100vh',background:C.bg}}>
-      <Header onBack={()=>setStep(DETAILS)}/>
+      <CreatePageHeader onBack={()=>setStep(DETAILS)} C={C} progress={progress} step={step} activeSteps={activeSteps}/>
       <div style={{maxWidth:440,margin:'0 auto',padding:'40px 24px 100px',textAlign:'center'}}>
         <div style={{width:140,height:140,borderRadius:40,margin:'0 auto 28px',overflow:'hidden',
           boxShadow:`0 12px 40px ${C.navy}22`,border:`2px solid ${C.border}`}}>
@@ -819,7 +819,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
   /* ── STEP 0: qandolatchi, mahsulotlar, restoranlar ── */
   if (step === 0) return (
     <div style={{minHeight:'100vh',background:C.bg}}>
-      <Header onBack={() => setPage('home')} backHidden={false}/>
+      <CreatePageHeader onBack={() => setPage('home')} backHidden={false} C={C} progress={progress} step={step} activeSteps={activeSteps}/>
       <div style={{maxWidth:560,margin:'0 auto',padding:'28px 20px 120px'}}>
         <div style={{marginBottom:24}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:C.dark,marginBottom:6,lineHeight:1.2}}>
@@ -991,7 +991,7 @@ function CreatePage({ C, isDesktop, toast, setPage, bakeries = [], cakeCards = [
 
   return (
     <div style={{minHeight:'100vh',background:C.bg}}>
-      <Header onBack={() => (step === 0 ? setPage('home') : goBack())} backHidden={false}/>
+      <CreatePageHeader onBack={() => (step === 0 ? setPage('home') : goBack())} backHidden={false} C={C} progress={progress} step={step} activeSteps={activeSteps}/>
       <div style={{maxWidth:560,margin:'0 auto',padding:'28px 20px 120px'}}>
 
         {/* question */}
@@ -1163,7 +1163,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
           <div style={{ display:'flex', gap:10 }}>
             <button onClick={() => setBdayModal(false)} style={{ flex:1, padding:14, borderRadius:12, border:'1.5px solid '+C.border, background:'none', color:C.muted, cursor:'pointer', fontWeight:600 }}>{t('cancel')}</button>
             <button disabled={!newBday.name||!newBday.date}
-              onClick={async () => { if(newBday.name&&newBday.date){ try{ const b=await api.post('/api/birthdays',newBday); setBdays(p=>[...p,b]); }catch{} setBdayModal(false); setNewBday({emoji:'🎂',name:'',date:''}); } }}
+              onClick={async () => { if(newBday.name&&newBday.date){ try{ const b=await api.post('/api/birthdays',newBday); setBdays(p=>[...p,b]); }catch(_){} setBdayModal(false); setNewBday({emoji:'🎂',name:'',date:''}); } }}
               style={{ flex:2, padding:14, borderRadius:12, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontWeight:700, opacity:(!newBday.name||!newBday.date)?.45:1 }}>
               {t('addBirthday')}
             </button>
@@ -1179,7 +1179,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
           <div style={{ display:'flex', gap:10 }}>
             <button onClick={() => setNameModal(false)} style={{ flex:1, padding:14, borderRadius:12, border:'1.5px solid '+C.border, background:'none', color:C.muted, cursor:'pointer', fontWeight:600 }}>{t('cancel')}</button>
             <button disabled={!nameForm.firstName.trim()||nameLoading}
-              onClick={async () => { setNameLoading(true); try{ const res=await api.patch('/api/auth/me',{firstName:nameForm.firstName.trim(),lastName:nameForm.lastName.trim()}); setUser(res.user); setNameModal(false); }catch{}finally{ setNameLoading(false); } }}
+              onClick={async () => { setNameLoading(true); try{ const res=await api.patch('/api/auth/me',{firstName:nameForm.firstName.trim(),lastName:nameForm.lastName.trim()}); setUser(res.user); setNameModal(false); }catch(_){}finally{ setNameLoading(false); } }}
               style={{ flex:2, padding:14, borderRadius:12, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontWeight:700, opacity:(!nameForm.firstName.trim()||nameLoading)?.45:1 }}>
               {nameLoading ? t('successSave') : t('save')}
             </button>
@@ -1354,7 +1354,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
                       <div style={{ fontSize:26, fontWeight:900, color:vSoon?'#ef4444':soon?C.navy:C.dark, lineHeight:1 }}>{days}</div>
                       <div style={{ fontSize:9, color:C.muted, fontWeight:600, marginTop:2, textTransform:'uppercase' }}>kun</div>
                     </div>
-                    <button onClick={async () => { try{ await api.del('/api/birthdays/'+b.id); }catch{} setBdays(b2=>b2.filter((_,j)=>j!==i)); }}
+                    <button onClick={async () => { try{ await api.del('/api/birthdays/'+b.id); }catch(_){} setBdays(b2=>b2.filter((_,j)=>j!==i)); }}
                       style={{ padding:'0 16px', background:'none', border:'none', cursor:'pointer', color:'#ef4444', opacity:.5, display:'flex', alignItems:'center' }}>
                       <Trash2 size={16} />
                     </button>
@@ -1416,7 +1416,7 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
               {[
                 { icon:<UserCircle2 size={20} weight="duotone"/>, color:'#4f46e5', label:t('yourName'),    val:user?.name||'—' },
                 { icon:<Phone size={20} weight="duotone"/>,      color:'#059669', label:t('phoneNumber'), val:user?.phone||'—' },
-              ].map((row,i) => (
+              ].map((row) => (
                 <div key={row.label} style={{ padding:'14px 18px', display:'flex', alignItems:'center', gap:12, borderBottom:'1px solid '+C.border }}>
                   <div style={{ width:40, height:40, borderRadius:12, background:row.color+'15', display:'flex', alignItems:'center', justifyContent:'center', color:row.color, flexShrink:0 }}>
                     {row.icon}
@@ -1523,7 +1523,7 @@ export default function App() {
 
   const [page, setPage] = useState('login');
   const [orders, setOrders] = useState([]);
-  const [cards, setCards] = useState([]);
+  const [_cards, setCards] = useState([]);
   const [cart, setCart] = useState(() => {
     try { return JSON.parse(localStorage.getItem('sm_cart') || '[]'); } catch { return []; }
   });
@@ -1546,6 +1546,7 @@ export default function App() {
   }, []);
 
   // Show RegionPicker only once per account (first login without region)
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!seller?.id) return;
     const key = `region_asked_${seller.id}`;
@@ -1553,7 +1554,7 @@ export default function App() {
       localStorage.setItem(key, '1');
       setShowRegionPicker(true);
     }
-  }, [seller?.id]);
+  }, [seller?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!user?.id) return;
     const key = `region_asked_${user.id}`;
@@ -1561,7 +1562,8 @@ export default function App() {
       localStorage.setItem(key, '1');
       setShowRegionPicker(true);
     }
-  }, [user?.id]);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Restore seller session
   useEffect(() => {
@@ -1575,6 +1577,7 @@ export default function App() {
   }, []);
 
   // Restore session from localStorage on mount, or show Telegram role-select
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const token = localStorage.getItem('sm_token');
     const inTelegram = !!window.Telegram?.WebApp?.initData;
@@ -1594,6 +1597,7 @@ export default function App() {
     // Token yo'q — Telegram ichida bo'lsa rol tanlash
     if (inTelegram) setPage('telegram-auth');
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Fetch user-specific data when user changes
   useEffect(() => {
@@ -1652,7 +1656,7 @@ export default function App() {
         const res = await api.patch('/api/auth/me', { region, city });
         setUser(res.user);
       }
-    } catch {}
+    } catch (_) {}
   };
   const handleSellerLogout = () => {
     setSeller(null);
@@ -1696,15 +1700,15 @@ export default function App() {
     if (page === 'admin' && seller?.phone?.replace(/\D/g,'').endsWith('998902021051')) return <AdminPage C={C} onBack={() => setPage('seller')} />;
     if (page === 'telegram-auth') return <TelegramAuthPage onBack={null} onAuthSuccess={handleTelegramAuth} C={C} isDesktop={isDesktop} />;
     if (page === 'seller-login') return <SellerLoginPage onLogin={handleSellerLogin} goUserLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
-    if (page === 'seller') return <SellerDashboardPage seller={seller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} setPage={setPage} />;
+    if (page === 'seller') return <SellerDashboardPage seller={seller} setSeller={setSeller} onLogout={handleSellerLogout} C={C} isDesktop={isDesktop} setPage={setPage} />;
     if (page === 'login') return <LoginPage onLogin={handleLogin} goSignup={() => setPage('signup')} goSellerLogin={() => setPage('seller-login')} C={C} isDesktop={isDesktop} setPage={setPage} />;
     if (page === 'signup') return <SignupPage onLogin={handleLogin} goLogin={() => setPage('login')} C={C} isDesktop={isDesktop} />;
         if (page === 'camera') return <CameraPage onBack={() => setPage('home')} onPhotoTaken={() => { toast('📸 Фото добавлено!'); setPage('home'); }} C={C} />;
-    if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} user={user} addToCart={addToCart} />;
-    if (page === 'create') return <CreatePage C={C} isDesktop={isDesktop} toast={toast} setPage={setPage} bakeries={bakeries} cakeCards={cakeCards} addToCart={addToCart} />;
+    if (page === 'explore') return <ExplorePage C={C} isDesktop={isDesktop} toast={toast} addToCart={addToCart} />;
+    if (page === 'create') return <CreatePage C={C} toast={toast} setPage={setPage} bakeries={bakeries} cakeCards={cakeCards} addToCart={addToCart} />;
     if (page === 'cart') return <CartPage C={C} isDesktop={isDesktop} cart={cart} onUpdateQty={updateCartQty} onRemove={removeFromCart} onClear={clearCart} onOrder={(items, total, bakery, address) => handleAddToOrder(items, total, bakery, address)} toast={toast} setPage={setPage} user={user} />;
     if (page === 'profile') return <ProfilePage C={C} isDesktop={isDesktop} user={user} orders={orders} onLogout={handleLogout} isDark={isDark} setIsDark={setIsDark} setUser={setUser} setPage={setPage} onChangeLocation={() => setShowRegionPicker(true)} />;
-    return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setCakeCards={setCakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;
+    return <HomePage toast={toast} user={user} C={C} cakeCards={cakeCards} setPage={setPage} isDesktop={isDesktop} addToCart={addToCart} isDark={isDark} setIsDark={setIsDark} />;
   };
 
   const showNav = user && !['login','signup','seller-login','seller','telegram-auth'].includes(page);

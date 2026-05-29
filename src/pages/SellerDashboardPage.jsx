@@ -151,10 +151,10 @@ function OrderCard({ order, C, onConfirm, onCancel, onReady, onDeliver, onChat, 
 }
 
 /* ─── Main component ─────────────────────────────────── */
-export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, setPage }) {
-  const { t } = useLocale();
+export default function SellerDashboardPage({ seller, setSeller, onLogout, C, isDesktop, setPage }) {
+  const { t, lang } = useLocale();
   const isAdmin = (seller?.phone || '').replace(/\D/g, '').endsWith(ADMIN_PHONE.replace(/\D/g, ''));
-  const [tapCount, setTapCount] = useState(0);
+  const [_tapCount, setTapCount] = useState(0);
   const tapTimerRef = useRef(null);
 
   const handleSecretTap = () => {
@@ -248,8 +248,8 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
       setEditBranch(null);
       setBranchForm({ name: '', address: '', phone: '', workingHours: '' });
       loadBranches();
-    } catch(e) {
-      alert(e.message);
+    } catch(err) {
+      alert(err.message);
     } finally {
       setBranchLoading(false);
     }
@@ -261,12 +261,14 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
     sellerFetch('DELETE', `/api/seller/branches/${id}`).catch(() => loadBranches());
   };
 
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
   useEffect(() => {
     loadOrders();
     sellerFetch('GET', '/api/seller/plan').then(data => setPlan(data || { totalEarnings: 0, orders: [] })).catch(() => {});
     loadProducts();
     loadBranches();
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   const deleteProduct = async (id) => {
     setProducts(prev => prev.filter(p => p.id !== id));
@@ -283,7 +285,7 @@ export default function SellerDashboardPage({ seller, onLogout, C, isDesktop, se
           .then(data => setPlan(data || { totalEarnings: 0, orders: [] }))
           .catch(() => {});
       }
-    } catch(e) {
+    } catch(_) {
       // Revert on error
       loadOrders();
     }

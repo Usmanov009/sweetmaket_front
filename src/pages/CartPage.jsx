@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import CakeVisual from '../components/CakeVisual';
 import { sum, translateAddress } from '../utils/format';
-import api from '../api';
 import { useLocale } from '../locale.jsx';
 import { REGIONS } from '../constants/regions.js';
 
@@ -23,6 +22,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
   const total = cart.reduce((s, item) => s + item.price * item.qty, 0);
   const topPad = isDesktop ? 16 : 60;
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setSellersLoading(true);
     fetch(BASE + '/api/bakeries')
@@ -30,6 +30,7 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
       .then(data => { setSellers(Array.isArray(data) ? data : []); setSellersLoading(false); })
       .catch(() => setSellersLoading(false));
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // If all cart items belong to same bakery — auto-filter to that bakery's branches
   const cartBakeryId = useMemo(() => {

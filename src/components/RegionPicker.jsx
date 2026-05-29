@@ -7,12 +7,10 @@ export default function RegionPicker({ C, onSave }) {
   const { t, lang, setLang } = useLocale();
   const [step,   setStep]   = useState(0); // 0=region, 1=city
   const [region, setRegion] = useState(null);
-  const [city,   setCity]   = useState('');
 
   const handleRegion = (r) => {
     setRegion(r);
     if (r.cities.length === 1) {
-      setCity(r.cities[0]);
       onSave(r.name, r.cities[0]);
     } else {
       setStep(1);
@@ -20,7 +18,6 @@ export default function RegionPicker({ C, onSave }) {
   };
 
   const handleCity = (c) => {
-    setCity(c);
     onSave(region.name, c);
   };
 

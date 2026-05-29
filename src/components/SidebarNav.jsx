@@ -29,7 +29,7 @@ const SidebarNav = memo(function SidebarNav({ page, setPage, C, isDark, setIsDar
 
       {/* Nav items */}
       <nav style={{ flex:1, display:'flex', flexDirection:'column', gap:2 }}>
-        {ITEMS(t).map(({ id, Icon, label }) => {
+        {ITEMS(t).map(({ id, Icon, label }) => { // eslint-disable-line no-unused-vars
           const active = page===id || (page==='notifications' && id==='profile');
           return (
             <button key={id} onClick={() => setPage(id)}
