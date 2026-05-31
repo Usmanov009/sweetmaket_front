@@ -498,9 +498,9 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
 
   /* ── DETAILS ── */
   if (step === DETAILS) return (
-    <div style={{minHeight:'100vh',background:C.bg}}>
+    <div style={{background:C.bg}}>
       <CreatePageHeader onBack={goBack} C={C} progress={progress} step={step} activeSteps={activeSteps}/>
-      <div style={{maxWidth:520,margin:'0 auto',padding:'24px 20px 120px'}}>
+      <div style={{maxWidth:520,margin:'0 auto',padding:'20px 20px 130px'}}>
 
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:900,color:C.dark,marginBottom:4}}>
           {t('orderHeader')}
@@ -673,15 +673,15 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
           </div>
         </div>
 
-        <button onClick={handleOrder} disabled={!form.pickupBranch}
+        <button onClick={handleOrder} disabled={!form.pickupBranch && !form.sellerBranch}
           style={{width:'100%',padding:'17px',borderRadius:16,border:'none',
-            background: form.pickupBranch ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.border,
-            color: form.pickupBranch ? '#fff' : C.muted,
-            cursor: form.pickupBranch ? 'pointer' : 'default',
+            background: (form.pickupBranch || form.sellerBranch) ? `linear-gradient(135deg,${C.navy},${C.mid})` : C.border,
+            color: (form.pickupBranch || form.sellerBranch) ? '#fff' : C.muted,
+            cursor: (form.pickupBranch || form.sellerBranch) ? 'pointer' : 'default',
             fontWeight:700,fontSize:16,
-            boxShadow: form.pickupBranch ? `0 6px 24px ${C.navy}44` : 'none',
+            boxShadow: (form.pickupBranch || form.sellerBranch) ? `0 6px 24px ${C.navy}44` : 'none',
             transition:'all .25s'}}>
-          {form.pickupBranch ? `${t('addToCart')} — ${totalPrice.toLocaleString('ru-RU')} so'm` : t('selectPickupFirst')}
+          {(form.pickupBranch || form.sellerBranch) ? `${t('addToCart')} — ${totalPrice.toLocaleString('ru-RU')} so'm` : t('selectPickupFirst')}
         </button>
       </div>
     </div>
@@ -689,7 +689,7 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
 
   /* ── PUBLISH PROMPT ── */
   if (step === PUBLISH) return (
-    <div style={{minHeight:'100vh',background:C.bg}}>
+    <div style={{background:C.bg}}>
       <CreatePageHeader onBack={()=>setStep(DETAILS)} C={C} progress={progress} step={step} activeSteps={activeSteps}/>
       <div style={{maxWidth:440,margin:'0 auto',padding:'40px 24px 100px',textAlign:'center'}}>
         <div style={{width:140,height:140,borderRadius:40,margin:'0 auto 28px',overflow:'hidden',
@@ -818,9 +818,9 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
 
   /* ── STEP 0: qandolatchi, mahsulotlar, restoranlar ── */
   if (step === 0) return (
-    <div style={{minHeight:'100vh',background:C.bg}}>
+    <div style={{background:C.bg}}>
       <CreatePageHeader onBack={() => setPage('home')} backHidden={false} C={C} progress={progress} step={step} activeSteps={activeSteps}/>
-      <div style={{maxWidth:560,margin:'0 auto',padding:'28px 20px 120px'}}>
+      <div style={{maxWidth:560,margin:'0 auto',padding:'20px 20px 130px'}}>
         <div style={{marginBottom:24}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:C.dark,marginBottom:6,lineHeight:1.2}}>
             {t('createPickSellerQ')}
@@ -922,7 +922,7 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
             {sellerProducts.length === 0 ? (
               <div style={{fontSize:13,color:C.muted,marginBottom:24,lineHeight:1.55}}>{t('createNoSellerProducts')}</div>
             ) : (
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:24}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:24}}>
                 {sellerProducts.map(p => (
                   <div key={p.id} style={{
                     borderRadius:18,border:`1px solid ${C.border}`,overflow:'hidden',background:C.s1,
@@ -990,9 +990,9 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
   const displayH = currentStepCfg.key === 'fillingDetail' ? fillingDetailH : currentStepCfg.hint;
 
   return (
-    <div style={{minHeight:'100vh',background:C.bg}}>
+    <div style={{background:C.bg}}>
       <CreatePageHeader onBack={() => (step === 0 ? setPage('home') : goBack())} backHidden={false} C={C} progress={progress} step={step} activeSteps={activeSteps}/>
-      <div style={{maxWidth:560,margin:'0 auto',padding:'28px 20px 120px'}}>
+      <div style={{maxWidth:560,margin:'0 auto',padding:'20px 20px 130px'}}>
 
         {/* question */}
         <div style={{marginBottom:28}}>
@@ -1003,7 +1003,7 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
         </div>
 
         {/* options grid */}
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:24}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:24}}>
           {opts.map(opt => {
             const active = currentVal?.id === opt.id;
             const addPrice = opt.basePrice ?? opt.priceAdd;
@@ -1014,7 +1014,7 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
                   if (currentStepCfg.key === 'fillingType') setF('fillingDetail', null);
                   goNext();
                 }}
-                style={{borderRadius:22,border:`2px solid ${active?C.navy:C.border}`,
+                style={{borderRadius:16,border:`2px solid ${active?C.navy:C.border}`,
                   background: active ? opt.color : C.s1,
                   cursor:'pointer',textAlign:'left',outline:'none',overflow:'hidden',
                   position:'relative',transition:'all .2s',
@@ -1033,13 +1033,13 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
                   category={currentStepCfg.key === 'type' ? opt.category : form.type?.category}
                   shape={currentStepCfg.key === 'shape' ? opt.id : form.shape?.id}
                   bg={opt.color}
-                  height={110}
+                  height={88}
                 />
 
-                <div style={{padding:'12px 14px 14px'}}>
-                  <div style={{fontSize:14,fontWeight:800,color:active?C.navy:C.dark,marginBottom:4}}>{opt.label}</div>
+                <div style={{padding:'10px 12px 12px'}}>
+                  <div style={{fontSize:13,fontWeight:800,color:active?C.navy:C.dark,marginBottom:3}}>{opt.label}</div>
                   {opt.sub && <div style={{fontSize:11,color:C.navy,fontWeight:700,marginBottom:3}}>{opt.sub}</div>}
-                  <div style={{fontSize:12,color:C.muted,lineHeight:1.4}}>{opt.desc}</div>
+                  <div style={{fontSize:11,color:C.muted,lineHeight:1.3}}>{opt.desc}</div>
                   {addPrice != null && (
                     <div style={{marginTop:8,display:'inline-block',background:active?`${C.navy}18`:C.s2,
                       borderRadius:50,padding:'3px 10px',fontSize:11,fontWeight:700,color:active?C.navy:C.muted}}>
