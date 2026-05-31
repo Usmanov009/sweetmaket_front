@@ -384,6 +384,33 @@ router.delete('/products/:id', sellerAuth, async (req, res) => {
   }
 });
 
+// PATCH /api/seller/products/:id — narx/nom yangilash
+router.patch('/products/:id', sellerAuth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT COALESCE(products, '[]'::jsonb) as products FROM sellers WHERE id = $1`,
+      [req.seller.id]
+    );
+    const products = rows[0]?.products || [];
+    const idx = products.findIndex(p => p.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Mahsulot topilmadi' });
+    const { name, price, desc, emoji, active } = req.body;
+    if (name  !== undefined) products[idx].name  = name;
+    if (price !== undefined) products[idx].price = Number(price);
+    if (desc  !== undefined) products[idx].desc  = desc;
+    if (emoji !== undefined) products[idx].emoji = emoji;
+    if (active !== undefined) products[idx].active = active;
+    await pool.query(
+      'UPDATE sellers SET products = $1 WHERE id = $2',
+      [JSON.stringify(products), req.seller.id]
+    );
+    res.json(products[idx]);
+  } catch(e) {
+    console.error('Patch seller product error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // PATCH /api/seller/location — region va city saqlash
 router.patch('/location', sellerAuth, async (req, res) => {
   try {

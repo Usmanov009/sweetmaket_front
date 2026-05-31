@@ -182,6 +182,8 @@ export default function SellerDashboardPage({ seller, setSeller, onLogout, C, is
   // Products state
   const [products,      setProducts]      = useState([]);
   const [showCreate,    setShowCreate]    = useState(false);
+  const [editProduct,   setEditProduct]   = useState(null); // { id, name, price, desc }
+  const [editProductSaving, setEditProductSaving] = useState(false);
 
   // Address edit state
   const [editAddress,     setEditAddress]   = useState(false);
@@ -273,6 +275,21 @@ export default function SellerDashboardPage({ seller, setSeller, onLogout, C, is
   const deleteProduct = async (id) => {
     setProducts(prev => prev.filter(p => p.id !== id));
     sellerFetch('DELETE', `/api/seller/publish/${id}`).catch(() => loadProducts());
+  };
+
+  const updateProduct = async () => {
+    if (!editProduct) return;
+    setEditProductSaving(true);
+    try {
+      const updated = await sellerFetch('PATCH', `/api/seller/products/${editProduct.id}`, {
+        name: editProduct.name,
+        price: editProduct.price,
+        desc: editProduct.desc,
+      });
+      setProducts(prev => prev.map(p => p.id === editProduct.id ? { ...p, ...updated } : p));
+      setEditProduct(null);
+    } catch(e) { alert(e.message); }
+    finally { setEditProductSaving(false); }
   };
 
   const updateStatus = async (orderId, status) => {
@@ -530,11 +547,79 @@ export default function SellerDashboardPage({ seller, setSeller, onLogout, C, is
                     {p.desc && <div style={{ fontSize: 12, color: C.muted, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.desc}</div>}
                     <div style={{ fontSize: 13, fontWeight: 800, color: '#059669' }}>{Number(p.price).toLocaleString('ru-RU')} so'm</div>
                   </div>
-                  <button onClick={() => deleteProduct(p.id)} style={{ background: 'rgba(220,38,38,.08)', border: 'none', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Trash2 size={16} />
-                  </button>
+                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <button onClick={() => setEditProduct({ id: p.id, name: p.name, price: p.price, desc: p.desc || '', emoji: p.emoji })}
+                      style={{ background: 'rgba(5,150,105,.1)', border: 'none', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Pencil size={15} />
+                    </button>
+                    <button onClick={() => deleteProduct(p.id)}
+                      style={{ background: 'rgba(220,38,38,.08)', border: 'none', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               ))}
+
+              {/* ── Edit product modal ── */}
+              {editProduct && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  <div style={{ width: '100%', maxWidth: 560, background: C.s1, borderRadius: '24px 24px 0 0', padding: '24px 20px 40px', boxShadow: '0 -8px 40px rgba(0,0,0,.2)' }}>
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: C.dark }}>Mahsulotni tahrirlash</div>
+                      <button onClick={() => setEditProduct(null)} style={{ width: 32, height: 32, borderRadius: '50%', background: C.s2, border: `1px solid ${C.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <X size={15} color={C.muted} />
+                      </button>
+                    </div>
+                    {/* Emoji + Name */}
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+                      <div style={{ width: 52, height: 52, borderRadius: 14, background: C.s2, border: `1.5px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
+                        {editProduct.emoji}
+                      </div>
+                      <input
+                        value={editProduct.name}
+                        onChange={e => setEditProduct(p => ({ ...p, name: e.target.value }))}
+                        placeholder="Mahsulot nomi"
+                        style={{ flex: 1, background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '0 14px', color: C.dark, fontSize: 14, fontWeight: 700, outline: 'none' }}
+                      />
+                    </div>
+                    {/* Price */}
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Narx (so'm)</div>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="number"
+                          value={editProduct.price}
+                          onChange={e => setEditProduct(p => ({ ...p, price: e.target.value }))}
+                          style={{ width: '100%', background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '12px 60px 12px 14px', color: C.dark, fontSize: 15, fontWeight: 800, outline: 'none', boxSizing: 'border-box' }}
+                        />
+                        <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, fontWeight: 700, color: '#059669' }}>so'm</span>
+                      </div>
+                    </div>
+                    {/* Desc */}
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Tavsif</div>
+                      <textarea
+                        value={editProduct.desc}
+                        onChange={e => setEditProduct(p => ({ ...p, desc: e.target.value }))}
+                        placeholder="Mahsulot haqida qisqacha..."
+                        rows={2}
+                        style={{ width: '100%', background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '12px 14px', color: C.dark, fontSize: 13, resize: 'none', boxSizing: 'border-box', outline: 'none', lineHeight: 1.5 }}
+                      />
+                    </div>
+                    {/* Buttons */}
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button onClick={() => setEditProduct(null)} style={{ flex: 1, padding: '13px 0', borderRadius: 14, border: `1.5px solid ${C.border}`, background: 'transparent', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.muted }}>
+                        Bekor
+                      </button>
+                      <button onClick={updateProduct} disabled={editProductSaving} style={{ flex: 2, padding: '13px 0', borderRadius: 14, border: 'none', background: editProductSaving ? C.border : 'linear-gradient(135deg,#059669,#047857)', color: '#fff', cursor: editProductSaving ? 'default' : 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                        {editProductSaving ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={16} />}
+                        Saqlash
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

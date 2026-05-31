@@ -5,7 +5,7 @@ import {
   Flower2, Apple, Sparkles, Smile,
   Users, User, UserRound, UsersRound,
   ImagePlus, FileText, Rocket, Check, ArrowLeft,
-  Layers,
+  Layers, Plus, Trash2, Loader2,
 } from 'lucide-react';
 import CakeVisual from '../components/CakeVisual';
 import { useLocale } from '../locale.jsx';
@@ -95,6 +95,34 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
   const [imgDrag, setImgDrag]       = useState(false);
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  // Mahsulotlar ro'yxati (step 7 — majburiy)
+  const [products, setProducts]       = useState([]);
+  const [prodForm, setProdForm]       = useState({ name:'', price:'', desc:'', emoji:'🎂' });
+  const [addingProd, setAddingProd]   = useState(false);
+  const [prodError, setProdError]     = useState('');
+  const EMOJIS = ['🎂','🎁','🍰','🧁','🍫','🌸','✨','🎉'];
+
+  const addProduct = async () => {
+    if (!prodForm.name.trim() || !prodForm.price) { setProdError("Nom va narx kiritish shart"); return; }
+    setAddingProd(true); setProdError('');
+    try {
+      const token = localStorage.getItem('sm_seller_token') || '';
+      const BASE = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(BASE + '/api/seller/products', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+        body: JSON.stringify({ name: prodForm.name, emoji: prodForm.emoji, price: Number(prodForm.price), desc: prodForm.desc, category:'tort', ingredients:[] }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Xato');
+      setProducts(prev => [...prev, data]);
+      setProdForm({ name:'', price:'', desc:'', emoji:'🎂' });
+    } catch(e) { setProdError(e.message); }
+    finally { setAddingProd(false); }
+  };
+
+  const removeProduct = (id) => setProducts(prev => prev.filter(p => p.id !== id));
+
   const CREATE_OPTIONS = useMemo(() => ({
     type: [
       { id:'tort',  category:'tort', emoji:'🎂', label:t('cTortLabel'),  desc:t('klassikTortlar'),  basePrice:89000, color:'#fce4ec' },
@@ -166,13 +194,122 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
         desc: [form.size?.label, form.decoration?.label].filter(Boolean).join(', '),
         note: form.note,
       });
-      setStep(6);
+      setStep(7); // mahsulotlar qo'shish stepiga o'tish
     } catch(e) {
       alert(e.message);
     } finally {
       setPublishing(false);
     }
   };
+
+  /* ── STEP 7: Mahsulotlar qo'shish (majburiy) ── */
+  if (step === 7) return (
+    <div style={{ background: C.bg, minHeight: '100vh' }}>
+      <SellerCreateHeader C={C} step={step} onBack={onBack} goBack={() => setStep(5)} progress={1} CREATE_STEPS={CREATE_STEPS} />
+      <div style={{ maxWidth: 520, margin: '0 auto', padding: '24px 20px 120px' }}>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.dark, marginBottom: 4 }}>
+          🛍️ Mahsulotlaringiz
+        </div>
+        <div style={{ color: C.muted, fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>
+          Kamida 1 ta mahsulot qo'shing. Mijozlar ana shu narhlarni ko'radi.
+        </div>
+
+        {/* Qo'shilgan mahsulotlar */}
+        {products.map(p => (
+          <div key={p.id} style={{ background: C.s1, borderRadius: 14, border: `1px solid ${C.border}`, padding: '12px 14px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontSize: 26, width: 40, textAlign: 'center', flexShrink: 0 }}>{p.emoji}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.dark }}>{p.name}</div>
+              {p.desc && <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.desc}</div>}
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#059669', marginTop: 2 }}>{Number(p.price).toLocaleString('ru-RU')} so'm</div>
+            </div>
+            <button onClick={() => removeProduct(p.id)} style={{ background: 'rgba(220,38,38,.08)', border: 'none', borderRadius: 10, width: 34, height: 34, cursor: 'pointer', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Trash2 size={15} />
+            </button>
+          </div>
+        ))}
+
+        {/* Yangi mahsulot qo'shish formasi */}
+        <div style={{ background: C.s1, borderRadius: 20, border: `1.5px dashed ${C.border}`, padding: '18px 16px', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 12 }}>➕ Yangi mahsulot</div>
+
+          {/* Emoji tanlash */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+            {EMOJIS.map(e => (
+              <button key={e} onClick={() => setProdForm(f => ({ ...f, emoji: e }))} style={{
+                width: 38, height: 38, borderRadius: 10, border: `2px solid ${prodForm.emoji === e ? '#059669' : C.border}`,
+                background: prodForm.emoji === e ? 'rgba(5,150,105,.1)' : C.s2,
+                fontSize: 20, cursor: 'pointer',
+              }}>{e}</button>
+            ))}
+          </div>
+
+          {/* Nom */}
+          <input
+            value={prodForm.name}
+            onChange={e => setProdForm(f => ({ ...f, name: e.target.value }))}
+            placeholder="Mahsulot nomi (masalan: Velvet tort)"
+            style={{ width: '100%', background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '11px 14px', color: C.dark, fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 10 }}
+          />
+
+          {/* Narx */}
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <input
+              type="number"
+              value={prodForm.price}
+              onChange={e => setProdForm(f => ({ ...f, price: e.target.value }))}
+              placeholder="Narx"
+              style={{ width: '100%', background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '11px 60px 11px 14px', color: C.dark, fontSize: 14, fontWeight: 700, outline: 'none', boxSizing: 'border-box' }}
+            />
+            <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, fontWeight: 700, color: '#059669' }}>so'm</span>
+          </div>
+
+          {/* Tavsif */}
+          <textarea
+            value={prodForm.desc}
+            onChange={e => setProdForm(f => ({ ...f, desc: e.target.value }))}
+            placeholder="Qisqacha tavsif (ixtiyoriy)"
+            rows={2}
+            style={{ width: '100%', background: C.s2, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '11px 14px', color: C.dark, fontSize: 13, resize: 'none', boxSizing: 'border-box', outline: 'none', lineHeight: 1.5, marginBottom: 10 }}
+          />
+
+          {prodError && <div style={{ fontSize: 13, color: '#dc2626', marginBottom: 10 }}>{prodError}</div>}
+
+          <button onClick={addProduct} disabled={addingProd} style={{
+            width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+            background: addingProd ? C.border : 'linear-gradient(135deg,#059669,#047857)',
+            color: '#fff', fontWeight: 700, fontSize: 14, cursor: addingProd ? 'default' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>
+            {addingProd ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={16} />}
+            Mahsulot qo'shish
+          </button>
+        </div>
+
+        {/* Keyingi bosqich */}
+        <button
+          onClick={() => { if (products.length === 0) { setProdError("Kamida 1 ta mahsulot qo'shing"); return; } setStep(8); }}
+          style={{
+            width: '100%', padding: '17px', borderRadius: 16, border: 'none',
+            background: products.length === 0
+              ? C.border
+              : 'linear-gradient(135deg,#059669,#047857)',
+            color: products.length === 0 ? C.muted : '#fff',
+            cursor: products.length === 0 ? 'default' : 'pointer',
+            fontWeight: 700, fontSize: 16,
+            boxShadow: products.length === 0 ? 'none' : '0 6px 24px rgba(5,150,105,.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>
+          <Rocket size={18} />
+          Davom etish ({products.length} mahsulot)
+        </button>
+        <div style={{ fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 10 }}>
+          Keyinchalik ham mahsulot qo'sha olasiz
+        </div>
+      </div>
+      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
 
 
   /* ── STEP 5: Details ── */
@@ -284,8 +421,8 @@ export default function SellerCreatePage({ C, onBack, onPublished }) {
     </div>
   );
 
-  /* ── STEP 6: Done ── */
-  if (step === 6) return (
+  /* ── STEP 8: Done ── */
+  if (step === 8) return (
     <div style={{ minHeight:'100vh', background:C.bg, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'24px 24px 100px', textAlign:'center' }}>
       <div style={{ width:110, height:110, borderRadius:'50%', overflow:'hidden', boxShadow:'0 12px 40px rgba(5,150,105,.25)', marginBottom:24 }}>
         <CakeVisual category={form.type?.category} shape={form.shape?.id} bg={form.type?.color||'#fce4ec'} height={110} />
