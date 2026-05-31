@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   ShoppingCart, Trash2, Plus, Minus, ArrowRight,
   Package, Loader2, CheckCircle, MapPin, Store,
-  Building2, Phone, Clock,
+  Building2, Phone, Clock, Truck, Navigation,
 } from 'lucide-react';
 import CakeVisual from '../components/CakeVisual';
+import LocationPicker from '../components/LocationPicker';
 import { sum, translateAddress } from '../utils/format';
 import { useLocale } from '../locale.jsx';
 import { REGIONS } from '../constants/regions.js';
@@ -18,6 +19,11 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
   const [sellers,   setSellers]   = useState([]);
   const [sellersLoading, setSellersLoading] = useState(true);
   const [selected,  setSelected]  = useState(null); // selected branch
+
+  // Delivery mode: 'pickup' | 'delivery'
+  const [deliveryMode, setDeliveryMode] = useState('pickup');
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [deliveryLocation, setDeliveryLocation] = useState(null); // { lat, lng, address }
 
   const total = cart.reduce((s, item) => s + item.price * item.qty, 0);
   const topPad = isDesktop ? 16 : 60;
@@ -57,12 +63,18 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
 
   const handleOrder = async () => {
     if (!cart.length) return;
-    if (!selected) { toast(t('selectBakery')); return; }
+    if (deliveryMode === 'pickup' && !selected) { toast(t('selectBakery')); return; }
+    if (deliveryMode === 'delivery' && !deliveryLocation) {
+      toast(lang === 'ru' ? 'Yetkazib berish manzilini tanlang' : 'Yetkazib berish manzilini tanlang');
+      return;
+    }
     setOrdering(true);
     try {
-      // Pass bakery info along with selected branch
       const bakeryInfo = cartBakery || selected;
-      await onOrder(cart, total, { ...bakeryInfo, selectedBranch: selected }, '');
+      const addressStr = deliveryMode === 'delivery'
+        ? `📍 ${deliveryLocation.address} (${deliveryLocation.lat.toFixed(5)}, ${deliveryLocation.lng.toFixed(5)})`
+        : '';
+      await onOrder(cart, total, { ...bakeryInfo, selectedBranch: selected, deliveryMode }, addressStr);
       setDone(true);
       setTimeout(() => {
         onClear();
@@ -185,6 +197,80 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
         ))}
       </div>
 
+      {/* Delivery Mode Toggle */}
+      <div style={{ padding: '20px 20px 0' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 10 }}>
+          {lang === 'ru' ? 'Способ получения' : 'Qabul qilish usuli'}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[
+            { key: 'pickup', icon: Store, labelUz: "O'zim olaman", labelRu: 'Самовывоз' },
+            { key: 'delivery', icon: Truck, labelUz: 'Yetkazib berish', labelRu: 'Доставка' },
+          ].map(({ key, icon: Icon, labelUz, labelRu }) => {
+            const active = deliveryMode === key;
+            return (
+              <button key={key} onClick={() => setDeliveryMode(key)} style={{
+                flex: 1, padding: '12px 8px', borderRadius: 14,
+                border: `2px solid ${active ? C.navy : C.border}`,
+                background: active ? `${C.navy}0d` : C.s1,
+                cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 6, transition: 'all .15s',
+              }}>
+                <Icon size={20} color={active ? C.navy : C.muted} weight={active ? 'fill' : 'regular'} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: active ? C.navy : C.muted }}>
+                  {lang === 'ru' ? labelRu : labelUz}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Delivery Location */}
+      {deliveryMode === 'delivery' && (
+        <div style={{ padding: '14px 20px 0' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.dark, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <MapPin size={15} color={C.navy} weight="fill" />
+            {lang === 'ru' ? 'Адрес доставки' : 'Yetkazib berish manzili'}
+          </div>
+          <div
+            onClick={() => setShowLocationPicker(true)}
+            style={{
+              padding: '13px 16px', borderRadius: 14,
+              border: `2px dashed ${deliveryLocation ? C.navy : C.border}`,
+              background: deliveryLocation ? `${C.navy}08` : C.s2,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
+              transition: 'all .15s',
+            }}
+          >
+            <div style={{
+              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+              background: deliveryLocation ? `${C.navy}18` : C.border,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Navigation size={16} color={deliveryLocation ? C.navy : C.muted} weight="fill" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {deliveryLocation ? (
+                <>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginBottom: 2 }}>
+                    {lang === 'ru' ? 'Адрес выбран' : 'Manzil tanlandi'}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {deliveryLocation.address}
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.muted }}>
+                  {lang === 'ru' ? 'Нажмите, чтобы выбрать на карте' : "Xaritadan joy tanlash uchun bosing"}
+                </div>
+              )}
+            </div>
+            <MapPin size={18} color={deliveryLocation ? C.navy : C.border} weight="fill" />
+          </div>
+        </div>
+      )}
+
       {/* Seller / Branch selector */}
       <div style={{ padding: '20px 20px 0' }}>
 
@@ -302,7 +388,15 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
               {sum(total)}
             </span>
           </div>
-          {selected && (
+          {deliveryMode === 'delivery' && deliveryLocation && (
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 5 }}>
+              <Truck size={12} color={C.navy} style={{ marginTop: 1, flexShrink: 0 }} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {deliveryLocation.address}
+              </span>
+            </div>
+          )}
+          {deliveryMode === 'pickup' && selected && (
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
               <Store size={12} color={C.navy} />
               {cartBakery && <span style={{ color: C.navy, fontWeight: 600 }}>{cartBakery.name}</span>}
@@ -328,6 +422,21 @@ export default function CartPage({ C, isDesktop, cart, onUpdateQty, onRemove, on
           </button>
         </div>
       </div>
+
+      {/* Location Picker Modal */}
+      {showLocationPicker && (
+        <LocationPicker
+          C={C}
+          lang={lang}
+          initialLat={deliveryLocation?.lat}
+          initialLng={deliveryLocation?.lng}
+          onConfirm={(loc) => {
+            setDeliveryLocation(loc);
+            setShowLocationPicker(false);
+          }}
+          onClose={() => setShowLocationPicker(false)}
+        />
+      )}
     </div>
   );
 }
