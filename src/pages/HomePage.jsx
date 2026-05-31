@@ -98,8 +98,58 @@ export default function HomePage({ toast, user, C, cakeCards, setPage, isDesktop
       <div style={{ padding:`${topPad}px 20px 14px` }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
           <div>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:isDesktop?30:24, fontWeight:900, color:C.dark }}>
+              {isDesktop ? t('home') : <><span>Sweet</span><span style={{ color:C.navy }}>Market</span></>}
             </div>
-      )}
+            <div style={{ color:C.muted, fontSize:13, marginTop:2 }}>{t('welcomeBack')}, {firstName}! 🎉</div>
+          </div>
+          {!isDesktop && (
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              <button onClick={()=>setSearchOpen(o=>!o)} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
+                <Search size={18}/>
+              </button>
+              <button onClick={()=>setIsDark(d=>!d)} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
+                {isDark ? <Sun size={18}/> : <Moon size={18}/>}
+              </button>
+              <div onClick={()=>setPage('profile')} style={{ width:40, height:40, borderRadius:'50%', background:`linear-gradient(135deg,${C.navy},${C.mid})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color:'#fff', cursor:'pointer', flexShrink:0 }}>
+                {initials}
+              </div>
+            </div>
+          )}
+          {isDesktop && (
+            <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+              <div style={{ position:'relative' }}>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t('searchCake')}
+                  style={{ background:C.s1, border:`1px solid ${C.border}`, borderRadius:50, padding:'9px 16px 9px 36px', color:C.dark, fontSize:13, width:220 }}/>
+                <Search size={14} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:C.muted }}/>
+              </div>
+              <button onClick={()=>setIsDark(d=>!d)} style={{ width:38, height:38, borderRadius:12, background:C.s1, border:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:C.dark }}>
+                {isDark ? <Sun size={18}/> : <Moon size={18}/>}
+              </button>
+            </div>
+          )}
+        </div>
+        {searchOpen && !isDesktop && (
+          <div style={{ marginTop:10, position:'relative' }}>
+            <input autoFocus value={search} onChange={e=>setSearch(e.target.value)} placeholder={t('searchCake')}
+              style={{ width:'100%', background:C.s1, border:`1px solid ${C.border}`, borderRadius:50, padding:'10px 16px 10px 38px', color:C.dark, fontSize:14 }}/>
+            <Search size={14} style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:C.muted }}/>
+            {search && <button onClick={()=>setSearch('')} style={{ position:'absolute', right:14, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:C.muted, display:'flex' }}><X size={16}/></button>}
+          </div>
+        )}
+      </div>
+
+      {/* Chips */}
+      <div style={{ display:'flex', gap:8, padding:'0 20px', overflowX:'auto', marginBottom:18, scrollbarWidth:'none' }}>
+        {chips.map((chip,i) => (
+          <button key={chip} onClick={()=>setActiveChip(i)} style={{
+            padding:'8px 18px', borderRadius:50, border:`1.5px solid ${i===activeChip?C.navy:C.border}`,
+            fontSize:13, fontWeight:i===activeChip?700:500, whiteSpace:'nowrap', cursor:'pointer',
+            background:i===activeChip?C.navy:C.s1, color:i===activeChip?'#fff':C.muted, transition:'all .2s',
+          }}>{chip}</button>
+        ))}
+      </div>
+
 
       {/* Products heading */}
       <div style={{ padding:'0 20px', display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
