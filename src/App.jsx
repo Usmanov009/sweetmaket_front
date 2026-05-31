@@ -328,41 +328,41 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
 
   const CREATE_OPTIONS = {
     type: [
-      {id:'tort',  category:'tort', emoji:'🎂', label:t('oTortLabel2'),  desc:t('oTortDesc'),  basePrice:89000, color:'#fce4ec'},
-      {id:'bento', category:'tort', emoji:'🎁', label:t('oBentoLabel2'), desc:t('oBentoDesc'), basePrice:69000, color:'#e8f5e9'},
+      {id:'tort',  category:'tort', emoji:'🎂', label:t('oTortLabel2'),  desc:t('oTortDesc'),  basePrice:getPrice('type_tort',89000),  color:'#fce4ec'},
+      {id:'bento', category:'tort', emoji:'🎁', label:t('oBentoLabel2'), desc:t('oBentoDesc'), basePrice:getPrice('type_bento',69000), color:'#e8f5e9'},
     ],
     shape: [
-      {id:'round',  emoji:'⭕', label:t('oRoundLabel'),  desc:t('oRoundDesc'),  color:'#fce4ec'},
-      {id:'square', emoji:'◼️', label:t('oSquareLabel'), desc:t('oSquareDesc'), color:'#e8f5e9'},
+      {id:'round',  emoji:'⭕', label:t('oRoundLabel'),  desc:t('oRoundDesc'),  priceAdd:getPrice('shape_round',0),  color:'#fce4ec'},
+      {id:'square', emoji:'◼️', label:t('oSquareLabel'), desc:t('oSquareDesc'), priceAdd:getPrice('shape_square',0), color:'#e8f5e9'},
     ],
     layers: [
-      {id:'1', emoji:'1️⃣', label:t('oLayer1Label'), desc:t('oLayer1Desc'), priceAdd:0,     color:'#e3f2fd'},
-      {id:'2', emoji:'2️⃣', label:t('oLayer2Label'), desc:t('oLayer2Desc'), priceAdd:20000, color:'#fce4ec'},
-      {id:'3', emoji:'3️⃣', label:t('oLayer3Label'), desc:t('oLayer3Desc'), priceAdd:40000, color:'#e8f5e9'},
-      {id:'4', emoji:'4️⃣', label:t('oLayer4Label'), desc:t('oLayer4Desc'), priceAdd:70000, color:'#fff8e1'},
+      {id:'1', emoji:'1️⃣', label:t('oLayer1Label'), desc:t('oLayer1Desc'), priceAdd:getPrice('layers_1',0),     color:'#e3f2fd'},
+      {id:'2', emoji:'2️⃣', label:t('oLayer2Label'), desc:t('oLayer2Desc'), priceAdd:getPrice('layers_2',20000), color:'#fce4ec'},
+      {id:'3', emoji:'3️⃣', label:t('oLayer3Label'), desc:t('oLayer3Desc'), priceAdd:getPrice('layers_3',40000), color:'#e8f5e9'},
+      {id:'4', emoji:'4️⃣', label:t('oLayer4Label'), desc:t('oLayer4Desc'), priceAdd:getPrice('layers_4',70000), color:'#fff8e1'},
     ],
     size: [
-      {id:'mini', emoji:'🫐', label:t('cMiniLabel'), sub:'1–3 kishi',  desc:t('oMiniDesc'), priceAdd:0,     color:'#e3f2fd'},
-      {id:'std',  emoji:'🍓', label:t('cStdLabel'),  sub:'4–8 kishi',  desc:t('oStdDesc'),  priceAdd:20000, color:'#fff8e1'},
-      {id:'big',  emoji:'🍒', label:t('cBigLabel'),  sub:'9–15 kishi', desc:t('oBigDesc'),  priceAdd:40000, color:'#fce4ec'},
-      {id:'xl',   emoji:'🎉', label:t('cXlLabel'),   sub:'16+ kishi',  desc:t('oXlDesc'),   priceAdd:80000, color:'#f9fbe7'},
+      {id:'mini', emoji:'🫐', label:t('cMiniLabel'), sub:'1–3 kishi',  desc:t('oMiniDesc'), priceAdd:getPrice('size_mini',0),     color:'#e3f2fd'},
+      {id:'std',  emoji:'🍓', label:t('cStdLabel'),  sub:'4–8 kishi',  desc:t('oStdDesc'),  priceAdd:getPrice('size_std',20000),  color:'#fff8e1'},
+      {id:'big',  emoji:'🍒', label:t('cBigLabel'),  sub:'9–15 kishi', desc:t('oBigDesc'),  priceAdd:getPrice('size_big',40000),  color:'#fce4ec'},
+      {id:'xl',   emoji:'🎉', label:t('cXlLabel'),   sub:'16+ kishi',  desc:t('oXlDesc'),   priceAdd:getPrice('size_xl',80000),   color:'#f9fbe7'},
     ],
     biscuit: [
-      {id:'klassik',  emoji:'🍞', label:t('oBiscKlassikLabel'), desc:t('oBiscKlassikDesc'),  priceAdd:0,     color:'#fff8e1'},
-      {id:'shokolad', emoji:'🍫', label:t('cChocoLabel'),      desc:t('oBiscShokoladDesc'), priceAdd:5000,  color:'#efebe9'},
-      {id:'limon',    emoji:'🍋', label:t('cLemonLabel'),      desc:t('oBiscLimonDesc'),    priceAdd:5000,  color:'#fffde7'},
-      {id:'kadifa',   emoji:'🌹', label:t('oBiscKadifaLabel'), desc:t('oBiscKadifaDesc'), priceAdd:10000, color:'#fce4ec'},
+      {id:'klassik',  emoji:'🍞', label:t('oBiscKlassikLabel'), desc:t('oBiscKlassikDesc'),  priceAdd:getPrice('biscuit_klassik',0),     color:'#fff8e1'},
+      {id:'shokolad', emoji:'🍫', label:t('cChocoLabel'),       desc:t('oBiscShokoladDesc'), priceAdd:getPrice('biscuit_shokolad',5000), color:'#efebe9'},
+      {id:'limon',    emoji:'🍋', label:t('cLemonLabel'),       desc:t('oBiscLimonDesc'),    priceAdd:getPrice('biscuit_limon',5000),    color:'#fffde7'},
+      {id:'kadifa',   emoji:'🌹', label:t('oBiscKadifaLabel'),  desc:t('oBiscKadifaDesc'),   priceAdd:getPrice('biscuit_kadifa',10000),  color:'#fce4ec'},
     ],
     propitka: [
-      {id:'shakar', emoji:'🍬', label:t('oPropShakarLabel'), desc:t('oPropShakarDesc'), priceAdd:0,    color:'#fff8e1'},
-      {id:'limonp', emoji:'🍋', label:t('oPropLimonLabel'),  desc:t('oPropLimonDesc'),  priceAdd:3000, color:'#fffde7'},
-      {id:'kofe',   emoji:'☕', label:t('oPropKofeLabel'),   desc:t('oPropKofeDesc'),   priceAdd:5000, color:'#efebe9'},
-      {id:'mevap',  emoji:'🍓', label:t('oPropMevaLabel'),   desc:t('oPropMevaDesc'),   priceAdd:5000, color:'#fce4ec'},
+      {id:'shakar', emoji:'🍬', label:t('oPropShakarLabel'), desc:t('oPropShakarDesc'), priceAdd:getPrice('propitka_shakar',0),    color:'#fff8e1'},
+      {id:'limonp', emoji:'🍋', label:t('oPropLimonLabel'),  desc:t('oPropLimonDesc'),  priceAdd:getPrice('propitka_limonp',3000), color:'#fffde7'},
+      {id:'kofe',   emoji:'☕', label:t('oPropKofeLabel'),   desc:t('oPropKofeDesc'),   priceAdd:getPrice('propitka_kofe',5000),   color:'#efebe9'},
+      {id:'mevap',  emoji:'🍓', label:t('oPropMevaLabel'),   desc:t('oPropMevaDesc'),   priceAdd:getPrice('propitka_mevap',5000),  color:'#fce4ec'},
     ],
     fillingType: [
-      {id:'mevali',   emoji:'🍓', label:t('oFillMevaliLabel'),   desc:t('oFillMevaliDesc'),   priceAdd:15000, color:'#fce4ec'},
-      {id:'yongoqli', emoji:'🥜', label:t('oFillYongoqliLabel'), desc:t('oFillYongoqliDesc'), priceAdd:20000, color:'#fff8e1'},
-      {id:'oddiy',    emoji:'🍦', label:t('oFillOddiyLabel'),    desc:t('oFillOddiyDesc'),    priceAdd:0,     color:'#e8f5e9'},
+      {id:'mevali',   emoji:'🍓', label:t('oFillMevaliLabel'),   desc:t('oFillMevaliDesc'),   priceAdd:getPrice('filling_mevali',15000),   color:'#fce4ec'},
+      {id:'yongoqli', emoji:'🥜', label:t('oFillYongoqliLabel'), desc:t('oFillYongoqliDesc'), priceAdd:getPrice('filling_yongoqli',20000), color:'#fff8e1'},
+      {id:'oddiy',    emoji:'🍦', label:t('oFillOddiyLabel'),    desc:t('oFillOddiyDesc'),    priceAdd:getPrice('filling_oddiy',0),        color:'#e8f5e9'},
     ],
     fillingDetail_mevali: [
       {id:'qulupnay', emoji:'🍓', label:t('oQulupnayLabel'), desc:t('oQulupnayDesc'), priceAdd:5000, color:'#fce4ec'},
@@ -384,13 +384,13 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
       {id:'margarin',  emoji:'🧈', label:t('oMargarinLabel'),  desc:t('oMargarinDesc'),  priceAdd:0,    color:'#fffde7'},
     ],
     decoration: [
-      {id:'flower',   emoji:'🌸', label:t('cFlowerLabel'),    desc:t('oFlowerDesc2'),   priceAdd:15000, color:'#fce4ec'},
-      {id:'chocoDec', emoji:'🍫', label:t('cChocoDecLabel'),  desc:t('oChocoDecDesc2'), priceAdd:10000, color:'#efebe9'},
-      {id:'macaroon', emoji:'🧁', label:t('oMacaroonLabel'),  desc:t('oMacaroonDesc'),  priceAdd:18000, color:'#e8f5e9'},
-      {id:'fondant',  emoji:'🎨', label:t('oFondantLabel'),   desc:t('oFondantDesc'),   priceAdd:25000, color:'#f3e5f5'},
-      {id:'minimal',  emoji:'✨', label:t('oMinimalLabel2'),  desc:t('oMinimalDesc2'),  priceAdd:0,     color:'#f5f5f5'},
-      {id:'kids',     emoji:'🎠', label:t('cKidsLabel'),      desc:t('oKidsDesc2'),     priceAdd:20000, color:'#fffde7'},
-      {id:'letters',  emoji:'✍️', label:t('oLettersLabel'),   desc:t('oLettersDesc'),   priceAdd:8000,  color:'#e3f2fd'},
+      {id:'flower',   emoji:'🌸', label:t('cFlowerLabel'),    desc:t('oFlowerDesc2'),   priceAdd:getPrice('deco_flower',15000),   color:'#fce4ec'},
+      {id:'chocoDec', emoji:'🍫', label:t('cChocoDecLabel'),  desc:t('oChocoDecDesc2'), priceAdd:getPrice('deco_chocoDec',10000), color:'#efebe9'},
+      {id:'macaroon', emoji:'🧁', label:t('oMacaroonLabel'),  desc:t('oMacaroonDesc'),  priceAdd:getPrice('deco_macaroon',18000), color:'#e8f5e9'},
+      {id:'fondant',  emoji:'🎨', label:t('oFondantLabel'),   desc:t('oFondantDesc'),   priceAdd:getPrice('deco_fondant',25000),  color:'#f3e5f5'},
+      {id:'minimal',  emoji:'✨', label:t('oMinimalLabel2'),  desc:t('oMinimalDesc2'),  priceAdd:getPrice('deco_minimal',0),      color:'#f5f5f5'},
+      {id:'kids',     emoji:'🎠', label:t('cKidsLabel'),      desc:t('oKidsDesc2'),     priceAdd:getPrice('deco_kids',20000),     color:'#fffde7'},
+      {id:'letters',  emoji:'✍️', label:t('oLettersLabel'),   desc:t('oLettersDesc'),   priceAdd:getPrice('deco_letters',8000),   color:'#e3f2fd'},
     ],
   };
 
@@ -410,7 +410,25 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
   const [form, setForm] = useState({type:null,shape:null,layers:null,size:null,biscuit:null,propitka:null,fillingType:null,fillingDetail:null,decoration:null,bakery:null,sellerBranch:null,pickupBranch:null,note:'',image:null});
   const [publishing, setPublishing] = useState(false);
   const [imgDrag, setImgDrag] = useState(false);
+  const [sellerPriceConfig, setSellerPriceConfig] = useState({});
   const setF = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  // Seller tanlanganda uning narx konfigini yuklash
+  const loadSellerPriceConfig = async (sellerId) => {
+    if (!sellerId) { setSellerPriceConfig({}); return; }
+    try {
+      const BASE = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${BASE}/api/seller/${sellerId}/price-config`);
+      const cfg = await res.json();
+      setSellerPriceConfig(cfg || {});
+    } catch { setSellerPriceConfig({}); }
+  };
+
+  // priceConfig dan narx olish (seller o'rnatmagan bo'lsa default)
+  const getPrice = (key, defaultVal) => {
+    const v = sellerPriceConfig[key];
+    return v !== undefined ? v : defaultVal;
+  };
 
   const sellerProducts = useMemo(() => {
     const sid = confectionerNumericId(form.bakery);
@@ -852,6 +870,8 @@ function CreatePage({ C, toast, setPage, bakeries = [], cakeCards = [], addToCar
                   bakery: { ...b, branches: branchList },
                   sellerBranch: branchList.length === 1 ? branchList[0] : null,
                 }));
+                const sid = confectionerNumericId(b);
+                if (sid) loadSellerPriceConfig(sid);
               }}
                 style={{display:'flex',gap:14,alignItems:'center',padding:'14px 16px',borderRadius:18,
                   border:`2px solid ${active ? C.navy : C.border}`,

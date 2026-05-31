@@ -552,6 +552,48 @@ router.delete('/announcements/:id', sellerAuth, async (req, res) => {
   }
 });
 
+// GET /api/seller/price-config
+router.get('/price-config', sellerAuth, async (req, res) => {
+  try {
+    await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS price_config JSONB DEFAULT '{}'`).catch(()=>{});
+    const { rows } = await pool.query(
+      `SELECT COALESCE(price_config, '{}') as price_config FROM sellers WHERE id = $1`,
+      [req.seller.id]
+    );
+    res.json(rows[0]?.price_config || {});
+  } catch(e) {
+    res.json({});
+  }
+});
+
+// PATCH /api/seller/price-config
+router.patch('/price-config', sellerAuth, async (req, res) => {
+  try {
+    await pool.query(`ALTER TABLE sellers ADD COLUMN IF NOT EXISTS price_config JSONB DEFAULT '{}'`).catch(()=>{});
+    const config = req.body; // { type_tort: 89000, size_mini: 0, size_std: 20000, ... }
+    await pool.query(
+      `UPDATE sellers SET price_config = $1 WHERE id = $2`,
+      [JSON.stringify(config), req.seller.id]
+    );
+    res.json({ ok: true, config });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/seller/:id/price-config — public (user uchun)
+router.get('/:id/price-config', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT COALESCE(price_config, '{}') as price_config FROM sellers WHERE id = $1`,
+      [req.params.id]
+    );
+    res.json(rows[0]?.price_config || {});
+  } catch(e) {
+    res.json({});
+  }
+});
+
 module.exports = router;
 // ─── Filiallar ─────────────────────────────────────────────────────────────
 

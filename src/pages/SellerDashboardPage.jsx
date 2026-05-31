@@ -185,6 +185,10 @@ export default function SellerDashboardPage({ seller, setSeller, onLogout, C, is
   const [editProduct,   setEditProduct]   = useState(null); // { id, name, price, desc }
   const [editProductSaving, setEditProductSaving] = useState(false);
 
+  // Price config state
+  const [priceConfig,   setPriceConfig]   = useState({});
+  const [priceSaving,   setPriceSaving]   = useState(false);
+
   // Address edit state
   const [editAddress,     setEditAddress]   = useState(false);
   const [addrStep,        setAddrStep]      = useState('region'); // 'region' | 'city' | 'street'
@@ -269,8 +273,22 @@ export default function SellerDashboardPage({ seller, setSeller, onLogout, C, is
     sellerFetch('GET', '/api/seller/plan').then(data => setPlan(data || { totalEarnings: 0, orders: [] })).catch(() => {});
     loadProducts();
     loadBranches();
+    sellerFetch('GET', '/api/seller/price-config').then(cfg => setPriceConfig(cfg || {})).catch(() => {});
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+
+  const savePriceConfig = async () => {
+    setPriceSaving(true);
+    try {
+      await sellerFetch('PATCH', '/api/seller/price-config', priceConfig);
+    } catch(e) { alert(e.message); }
+    finally { setPriceSaving(false); }
+  };
+
+  const setPrice = (key, val) => {
+    const n = parseInt(val) || 0;
+    setPriceConfig(c => ({ ...c, [key]: n }));
+  };
 
   const deleteProduct = async (id) => {
     setProducts(prev => prev.filter(p => p.id !== id));
@@ -323,6 +341,7 @@ export default function SellerDashboardPage({ seller, setSeller, onLogout, C, is
   const TABS = [
     { id: 'orders',   icon: <Package size={20} />,    label: t('tabOrders'),   badge: pendingCount },
     { id: 'products', icon: <Plus size={20} />,       label: t('tabProducts') },
+    { id: 'pricing',  icon: <DollarSign size={20} />, label: 'Narxlar' },
     { id: 'plan',     icon: <TrendingUp size={20} />,    label: t('tabPlan') },
     { id: 'profile',  icon: <UserCircle2 size={20} />, label: t('navProfile') },
   ];
@@ -458,6 +477,131 @@ export default function SellerDashboardPage({ seller, setSeller, onLogout, C, is
               />
             ))
           )}
+
+          {/* ── Pricing tab ── */}
+          {tab === 'pricing' && (() => {
+            const PRICE_GROUPS = [
+              {
+                title: '🎂 Tort turi — asosiy narx',
+                items: [
+                  { key: 'type_tort',  label: 'Klassik tort',  emoji: '🎂', defaultVal: 89000 },
+                  { key: 'type_bento', label: 'Bento tort',    emoji: '🎁', defaultVal: 69000 },
+                ],
+              },
+              {
+                title: '📐 Shakl qo\'shuvchi narx',
+                items: [
+                  { key: 'shape_round',  label: 'Dumaloq',  emoji: '⭕', defaultVal: 0 },
+                  { key: 'shape_square', label: 'Kvadrat',  emoji: '◼️', defaultVal: 0 },
+                ],
+              },
+              {
+                title: '📏 Qatlamlar qo\'shuvchi narx',
+                items: [
+                  { key: 'layers_1', label: '1 qatlam',  emoji: '1️⃣', defaultVal: 0 },
+                  { key: 'layers_2', label: '2 qatlam',  emoji: '2️⃣', defaultVal: 20000 },
+                  { key: 'layers_3', label: '3 qatlam',  emoji: '3️⃣', defaultVal: 40000 },
+                  { key: 'layers_4', label: '4 qatlam',  emoji: '4️⃣', defaultVal: 70000 },
+                ],
+              },
+              {
+                title: '👥 O\'lcham qo\'shuvchi narx',
+                items: [
+                  { key: 'size_mini', label: 'Mini (1–3 kishi)',   emoji: '🫐', defaultVal: 0 },
+                  { key: 'size_std',  label: 'Standart (4–8)',     emoji: '🍓', defaultVal: 20000 },
+                  { key: 'size_big',  label: 'Katta (9–15)',       emoji: '🍒', defaultVal: 40000 },
+                  { key: 'size_xl',   label: 'XL (16+ kishi)',     emoji: '🎉', defaultVal: 80000 },
+                ],
+              },
+              {
+                title: '🍞 Biskvit qo\'shuvchi narx',
+                items: [
+                  { key: 'biscuit_klassik',  label: 'Klassik',   emoji: '🍞', defaultVal: 0 },
+                  { key: 'biscuit_shokolad', label: 'Shokolad',  emoji: '🍫', defaultVal: 5000 },
+                  { key: 'biscuit_limon',    label: 'Limon',     emoji: '🍋', defaultVal: 5000 },
+                  { key: 'biscuit_kadifa',   label: 'Qadifa',    emoji: '🌹', defaultVal: 10000 },
+                ],
+              },
+              {
+                title: '💧 Propitka qo\'shuvchi narx',
+                items: [
+                  { key: 'propitka_shakar', label: 'Shakar',  emoji: '🍬', defaultVal: 0 },
+                  { key: 'propitka_limonp', label: 'Limon',   emoji: '🍋', defaultVal: 3000 },
+                  { key: 'propitka_kofe',   label: 'Kofe',    emoji: '☕', defaultVal: 5000 },
+                  { key: 'propitka_mevap',  label: 'Meva',    emoji: '🍓', defaultVal: 5000 },
+                ],
+              },
+              {
+                title: '🍓 Krem turi qo\'shuvchi narx',
+                items: [
+                  { key: 'filling_mevali',   label: 'Mevali',   emoji: '🍓', defaultVal: 15000 },
+                  { key: 'filling_yongoqli', label: "Yong'oqli", emoji: '🥜', defaultVal: 20000 },
+                  { key: 'filling_oddiy',    label: 'Oddiy',    emoji: '🍦', defaultVal: 0 },
+                ],
+              },
+              {
+                title: '🌸 Bezak qo\'shuvchi narx',
+                items: [
+                  { key: 'deco_flower',   label: 'Gullar',     emoji: '🌸', defaultVal: 15000 },
+                  { key: 'deco_chocoDec', label: 'Shokolad',   emoji: '🍫', defaultVal: 10000 },
+                  { key: 'deco_macaroon', label: 'Makaroon',   emoji: '🧁', defaultVal: 18000 },
+                  { key: 'deco_fondant',  label: 'Fondant',    emoji: '🎨', defaultVal: 25000 },
+                  { key: 'deco_minimal',  label: 'Minimal',    emoji: '✨', defaultVal: 0 },
+                  { key: 'deco_kids',     label: 'Bolalar',    emoji: '🎠', defaultVal: 20000 },
+                  { key: 'deco_letters',  label: 'Yozuvlar',   emoji: '✍️', defaultVal: 8000 },
+                ],
+              },
+            ];
+
+            return (
+              <div>
+                <div style={{ fontSize: 13, color: C.muted, marginBottom: 20, lineHeight: 1.6, padding: '12px 16px', background: `${C.navy}08`, borderRadius: 14, border: `1px solid ${C.navy}18` }}>
+                  💡 Bu narxlar mijozlar tort buyurtma qilganda ko'rsatiladi. 0 qoldirsangiz — standart narx ishlatiladi.
+                </div>
+
+                {PRICE_GROUPS.map(group => (
+                  <div key={group.title} style={{ marginBottom: 20, background: C.s1, borderRadius: 18, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 16px', borderBottom: `1px solid ${C.border}`, fontSize: 12, fontWeight: 800, color: C.dark }}>
+                      {group.title}
+                    </div>
+                    {group.items.map((item, i, arr) => (
+                      <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                        <span style={{ fontSize: 22, width: 32, textAlign: 'center', flexShrink: 0 }}>{item.emoji}</span>
+                        <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: C.dark }}>{item.label}</span>
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                          <input
+                            type="number"
+                            value={priceConfig[item.key] !== undefined ? priceConfig[item.key] : item.defaultVal}
+                            onChange={e => setPrice(item.key, e.target.value)}
+                            style={{
+                              width: 110, textAlign: 'right',
+                              background: C.s2, border: `1.5px solid ${C.border}`,
+                              borderRadius: 10, padding: '7px 38px 7px 10px',
+                              color: C.dark, fontSize: 13, fontWeight: 700, outline: 'none',
+                            }}
+                          />
+                          <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 10, fontWeight: 700, color: C.muted, pointerEvents: 'none' }}>so'm</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+
+                <button onClick={savePriceConfig} disabled={priceSaving} style={{
+                  width: '100%', padding: '15px', borderRadius: 14, border: 'none',
+                  background: priceSaving ? C.border : 'linear-gradient(135deg,#059669,#047857)',
+                  color: priceSaving ? C.muted : '#fff',
+                  fontWeight: 700, fontSize: 15, cursor: priceSaving ? 'default' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  boxShadow: priceSaving ? 'none' : '0 6px 20px rgba(5,150,105,.35)',
+                  marginBottom: 16,
+                }}>
+                  {priceSaving ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={16} />}
+                  {priceSaving ? 'Saqlanmoqda...' : 'Narxlarni saqlash'}
+                </button>
+              </div>
+            );
+          })()}
 
           {tab === 'plan' && (
             <div>
