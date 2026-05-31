@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
-const { products: staticProducts } = require('../db/static.json');
 
 // GET /api/products — static + seller published
 router.get('/', async (req, res) => {
@@ -29,17 +28,11 @@ router.get('/', async (req, res) => {
       isSeller: true,
     }));
 
-    res.json([...(staticProducts || []), ...sellerProducts]);
+    res.json(sellerProducts);
   } catch (e) {
-    res.json(staticProducts || []);
+    res.json([]);
   }
 });
 
-// GET /api/products/:id
-router.get('/:id', async (req, res) => {
-  const product = (staticProducts || []).find(p => p.id == req.params.id);
-  if (!product) return res.status(404).json({ error: 'Mahsulot topilmadi' });
-  res.json(product);
-});
 
 module.exports = router;

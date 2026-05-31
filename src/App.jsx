@@ -4,14 +4,14 @@ import {
   Trash2, Plus, Package, Settings, LogOut,
   X, Check,
   MapPin, Clock, Star, TrendingUp,
-  Pencil, Home, Gift, UserCircle2, Phone,
+  Pencil, Home, UserCircle2, Phone,
 } from 'lucide-react';
 import api from './api';
 import { useLocale } from './locale.jsx';
 import { THEMES, injectGlobal } from './constants/themes';
 import { REGIONS } from './constants/regions.js';
 import { useBreakpoint } from './hooks/useBreakpoint';
-import { sum, daysUntil, translateAddress } from './utils/format';
+import { sum, translateAddress } from './utils/format';
 import Toast from './components/Toast';
 import CakeVisual from './components/CakeVisual';
 import BottomNav from './components/BottomNav';
@@ -1115,19 +1115,11 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
     cancelled: { label: t('orderCancelled'), color: '#dc2626', bg: 'rgba(220,38,38,.1)'   },
   };
   const [activeTab, setActiveTab] = useState('orders');
-  const [bdays,     setBdays]     = useState([]);
-  const [bdayModal, setBdayModal] = useState(false);
-  const [newBday,   setNewBday]   = useState({ emoji: '🎂', name: '', date: '' });
   const [nameModal,   setNameModal]   = useState(false);
   const [nameForm,    setNameForm]    = useState({ firstName: '', lastName: '' });
   const [nameLoading, setNameLoading] = useState(false);
   const [showChat,   setShowChat]   = useState(false);
   const [chatData,   setChatData]   = useState(null);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    api.get('/api/birthdays').then(setBdays).catch(() => {});
-  }, [user?.id]);
 
   const initials   = user?.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'SM';
   const totalSpent = orders.reduce((s, o) => s + o.total, 0);
@@ -1141,35 +1133,11 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
 
   const TABS = [
     { id: 'orders',   icon: <Package size={20} />, label: t('tabOrders') },
-    { id: 'bdays',    icon: <Gift size={20} />,    label: t('tabBirthdays') },
     { id: 'settings', icon: <Settings size={20} />,    label: t('tabSettings') },
   ];
 
   return (
     <>
-      {/* Birthday Modal */}
-      {bdayModal && (
-        <BottomModal C={C} onClose={() => setBdayModal(false)} title={t('addBirthdayTitle')}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            {['🎂','🎉','🎈','🎁','🌸','⭐'].map(e => (
-              <button key={e} onClick={() => setNewBday(b => ({ ...b, emoji: e }))}
-                style={{ flex:1, fontSize:22, border:'2px solid '+(newBday.emoji===e?C.navy:C.border), borderRadius:12, padding:'8px 4px', background:newBday.emoji===e?C.s2:'transparent', cursor:'pointer' }}>
-                {e}
-              </button>
-            ))}
-          </div>
-          <input value={newBday.name} onChange={e => setNewBday(b => ({ ...b, name: e.target.value }))} placeholder={t('firstName')} style={inp} />
-          <input value={newBday.date} onChange={e => setNewBday(b => ({ ...b, date: e.target.value }))} placeholder={t('dateExample')} style={{ ...inp, marginBottom: 20 }} />
-          <div style={{ display:'flex', gap:10 }}>
-            <button onClick={() => setBdayModal(false)} style={{ flex:1, padding:14, borderRadius:12, border:'1.5px solid '+C.border, background:'none', color:C.muted, cursor:'pointer', fontWeight:600 }}>{t('cancel')}</button>
-            <button disabled={!newBday.name||!newBday.date}
-              onClick={async () => { if(newBday.name&&newBday.date){ try{ const b=await api.post('/api/birthdays',newBday); setBdays(p=>[...p,b]); }catch(_){} setBdayModal(false); setNewBday({emoji:'🎂',name:'',date:''}); } }}
-              style={{ flex:2, padding:14, borderRadius:12, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontWeight:700, opacity:(!newBday.name||!newBday.date)?.45:1 }}>
-              {t('addBirthday')}
-            </button>
-          </div>
-        </BottomModal>
-      )}
 
       {/* Name Modal */}
       {nameModal && (
@@ -1323,47 +1291,6 @@ function ProfilePage({ C, isDesktop, user, orders, onLogout, isDark, setIsDark, 
           />
         )}
 
-        {activeTab==='bdays' && (
-          <div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-              <div style={{ fontSize:16, fontWeight:800, color:C.dark }}>{t('birthdaysTitle')}</div>
-              <button onClick={() => setBdayModal(true)} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:50, border:'none', background:'linear-gradient(135deg,'+C.navy+','+C.mid+')', color:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, boxShadow:'0 4px 14px '+C.navy+'44' }}>
-                <Plus size={15} /> {t('addBirthday')}
-              </button>
-            </div>
-            {bdays.length===0 && (
-              <div style={{ textAlign:'center', padding:'48px 0' }}>
-                <Gift size={56} weight="duotone" color={C.muted} style={{ opacity:.3, marginBottom:12 }} />
-                <div style={{ fontSize:16, fontWeight:700, color:C.dark, marginBottom:6 }}>{t('noBirthdays')}</div>
-                <div style={{ fontSize:13, color:C.muted }}>{t('noBirthdaysHint')}</div>
-              </div>
-            )}
-            {bdays.map((b,i) => {
-              const days=daysUntil(b.date), soon=days<=7, vSoon=days<=3;
-              return (
-                <div key={i} style={{ background:C.s1, borderRadius:20, marginBottom:12, overflow:'hidden', border:'1.5px solid '+(vSoon?'#ef4444':soon?C.navy:C.border), boxShadow:soon?'0 6px 20px '+(vSoon?'rgba(239,68,68,.15)':C.navy+'22'):'none' }}>
-                  <div style={{ display:'flex', alignItems:'center' }}>
-                    <div style={{ width:6, alignSelf:'stretch', background:vSoon?'linear-gradient(180deg,#ef4444,#f97316)':soon?'linear-gradient(180deg,'+C.navy+','+C.mid+')':C.border, flexShrink:0 }} />
-                    <div style={{ width:64, height:72, display:'flex', alignItems:'center', justifyContent:'center', fontSize:34, flexShrink:0 }}>{b.emoji}</div>
-                    <div style={{ flex:1, padding:'14px 4px 14px 0' }}>
-                      <div style={{ fontSize:15, fontWeight:700, color:C.dark }}>{b.name}</div>
-                      <div style={{ fontSize:12, color:C.muted, marginTop:3 }}>{b.date}</div>
-                      {soon && <div style={{ fontSize:11, fontWeight:700, color:vSoon?'#ef4444':C.navy, marginTop:4 }}>{vSoon?'Yaqin qoldi!':days+' kun qoldi'}</div>}
-                    </div>
-                    <div style={{ textAlign:'center', padding:'0 12px 0 8px' }}>
-                      <div style={{ fontSize:26, fontWeight:900, color:vSoon?'#ef4444':soon?C.navy:C.dark, lineHeight:1 }}>{days}</div>
-                      <div style={{ fontSize:9, color:C.muted, fontWeight:600, marginTop:2, textTransform:'uppercase' }}>kun</div>
-                    </div>
-                    <button onClick={async () => { try{ await api.del('/api/birthdays/'+b.id); }catch(_){} setBdays(b2=>b2.filter((_,j)=>j!==i)); }}
-                      style={{ padding:'0 16px', background:'none', border:'none', cursor:'pointer', color:'#ef4444', opacity:.5, display:'flex', alignItems:'center' }}>
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         {activeTab==='settings' && (
           <div>
